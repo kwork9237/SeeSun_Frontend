@@ -8,6 +8,8 @@ import MyPage from './pages/mypage/MyPage';
 // 강의
 import LectureList from './pages/lecture/LectureList';
 import LectureDetail from './pages/lecture/LectureDetail';
+import LectureRealtime from './pages/lecture/LectureRealtime';
+import WebRTCTest from './pages/lecture/WebRTCTest'
 
 // 회원가입
 import Join from './pages/member/Join';
@@ -39,10 +41,14 @@ function App() {
 
           {/* 강의 목록 */}
           <Route path='/lecture' element={<LectureList/>}/>
-          <Route path='/lectre/detail/:id' element={<LectureDetail/>}/>
+          <Route path='/lecture/detail/:id' element={<LectureDetail/>}/>
           
           {/* 강의 생성 (멘토) */}
           <Route path='/lecture/create' element={<Create/>}/>
+
+          {/* 강의 실시간(WebRTC 테스트) */}
+          <Route path='/lecture/realtime' element={<LectureRealtime/>}/>
+          <Route path='/webrtctest' element={<WebRTCTest/>}/>
 
         </Route>
       </Routes>

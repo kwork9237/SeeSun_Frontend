@@ -10,9 +10,9 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 0
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
   <component name="ProjectId" id="38SXDLDHFJ5gFQpA0J5jVGrvXef" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -24,7 +24,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "jin-dev",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/KDT4/SeeSun/SeeSun_Frontend",
     "nodejs_package_manager_path": "npm",
@@ -47,6 +47,7 @@
       <option name="presentableId" value="Default" />
       <updated>1768793824949</updated>
       <workItem from="1768793827585" duration="19000" />
+      <workItem from="1768812446819" duration="194000" />
     </task>
     <servers />
   </component>
