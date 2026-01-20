@@ -3,7 +3,7 @@ import { loadTossPayments } from "@tosspayments/payment-sdk"; // 👈 위젯 대
 import axios from "axios";
 
 // 아까 test.html에서 성공했던 그 키를 넣으세요!
-const clientKey = "test_ck_Z1aOwX7K8mWjmLqp6d7qVyQxzvNP"; 
+const clientKey = process.env.REACT_APP_TOSS_CLIENT_KEY; 
 
 export default function PaymentButton({ memberId, lectureId, price }) {
 
