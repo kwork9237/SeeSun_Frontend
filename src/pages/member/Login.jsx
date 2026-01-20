@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
 
-
 const Login = () => {
   const navigate = useNavigate();
 
@@ -35,8 +34,7 @@ const Login = () => {
        * 백엔드 응답 구조에 맞게 수정
        */
       const accessToken =
-        res.data.accessToken ||
-        res.headers["authorization"]?.replace("Bearer ", "");
+        res.data.accessToken || res.headers["authorization"]?.replace("Bearer ", "");
 
       if (!accessToken) {
         throw new Error("토큰이 존재하지 않음");
@@ -81,10 +79,9 @@ const Login = () => {
       </form>
     </div>
   );
-}
+};
 
 export default Login;
-
 
 const styles = {
   wrapper: {
