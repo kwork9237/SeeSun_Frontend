@@ -11,9 +11,10 @@ import LectureDetail from './pages/lecture/LectureDetail';
 
 // 회원가입
 import Join from './pages/member/Join';
-import Mento from './pages/member/JoinDetail/mento';
-import Mentee from './pages/member/JoinDetail/mentee';
+import Mento from './pages/member/JoinDetail/Mento';
+import Mentee from './pages/member/JoinDetail/Mentee';
 import Create from './pages/lecture/mento/Create';
+
 
 function App() {
   return (
