@@ -35,7 +35,7 @@ function App() {
           <Route path='/Login' element={<Login/>}/>
 
           {/* 마이페이지 */}
-          <Route path='/Mypage' element={<MyPage/>}/>
+          <Route path='/mypage' element={<MyPage/>}/>
 
           {/* 강의 목록 */}
           <Route path='/lecture' element={<LectureList/>}/>
