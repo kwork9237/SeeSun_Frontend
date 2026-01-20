@@ -6,7 +6,7 @@ import axiosInstance from "../../api/axiosInstance";
 
 
 const Login = () => {
-      const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
