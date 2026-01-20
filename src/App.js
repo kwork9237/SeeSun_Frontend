@@ -11,9 +11,12 @@ import LectureDetail from './pages/lecture/LectureDetail';
 
 // 회원가입
 import Join from './pages/member/Join';
-import Mento from './pages/member/JoinDetail/mento';
-import Mentee from './pages/member/JoinDetail/mentee';
+import Mento from './pages/member/JoinDetail/Mento';
+import Mentee from './pages/member/JoinDetail/Mentee';
 import Create from './pages/lecture/mento/Create';
+
+import PaymentButton from "./pages/PaymentButton";
+import SuccessPage from "./pages/SuccessPage";
 
 function App() {
   return (
@@ -25,6 +28,9 @@ function App() {
 
           {/* 메인 페이지 */}
           <Route path='/' element={<MainPage/>}/>
+
+          <Route path="/payment/test" element={<PaymentButton memberId={3} lectureId={2} price={10000} />} />
+          <Route path="/success" element={<SuccessPage />} />
 
           {/* 회원가입 */}
           <Route path='/join' element={<Join/>}/>
