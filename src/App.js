@@ -9,7 +9,7 @@ import MyPage from './pages/mypage/MyPage';
 import LectureList from './pages/lecture/LectureList';
 import LectureDetail from './pages/lecture/LectureDetail';
 import LectureRealtime from './pages/lecture/LectureRealtime';
-import WebRTCTest from './pages/lecture/WebRTCTest'
+import WebRTCTest from './pages/lecture/MentorRoom'
 
 // 회원가입
 import Join from './pages/member/Join';
