@@ -34,7 +34,7 @@ const LectureDetail = () => {
     const fetchDetail = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:8080/api/lectures/${id}`);
+        const response = await axios.get(`/api/lectures/${id}`);
         setLecture(response.data);
       } catch (err) {
         console.error("❌ 데이터 로드 실패:", err);
@@ -104,7 +104,7 @@ const LectureDetail = () => {
             <div className="flex items-center gap-5 mb-12 p-6 bg-gray-50 rounded-[24px] w-fit border border-gray-100">
               <div className="w-16 h-16 bg-gray-200 rounded-full overflow-hidden border-2 border-white shadow-sm">
                 <img 
-                  src={lecture.profileIcon ? `http://localhost:8080/uploads/${lecture.profileIcon}` : '/default-profile.png'} 
+                  src={lecture.profileIcon ? `/uploads/${lecture.profileIcon}` : '/default-profile.png'} 
                   alt="instructor" 
                   className="w-full h-full object-cover"
                   onError={(e) => e.target.src = 'https://via.placeholder.com/150'}

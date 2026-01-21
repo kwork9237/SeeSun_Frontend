@@ -15,7 +15,7 @@ import Mento from './pages/member/JoinDetail/Mento';
 import Mentee from './pages/member/JoinDetail/Mentee';
 import Create from './pages/lecture/mento/Create';
 
-import PaymentButton from "./pages/PaymentButton";
+import PaymentButton from "./pages/lecture/detail/PaymentButton";
 import SuccessPage from "./pages/SuccessPage";
 
 import MenteeLayout from './pages/mypage/Mentee';
@@ -38,7 +38,7 @@ function App() {
           <Route path='/' element={<MainPage/>}/>
 
           <Route path="/payment/test" element={<PaymentButton memberId={3} lectureId={2} price={10000} />} />
-          <Route path="/success" element={<SuccessPage />} />
+          <Route path="/payment/success" element={<SuccessPage />} />
 
           {/* 회원가입 */}
           <Route path='/join' element={<Join/>}/>

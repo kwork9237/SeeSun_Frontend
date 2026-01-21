@@ -35,7 +35,7 @@ const LectureList = () => {
       if (selectedTime.length > 0) params.timeSlot = selectedTime.join(',');
       params.sortBy = sortBy;
       
-      const response = await axios.get('http://localhost:8080/api/lectures', { params });
+      const response = await axios.get('/api/lectures', { params });
       setLectures(response.data);
     } catch (err) {
       console.error('API 호출 실패:', err);
