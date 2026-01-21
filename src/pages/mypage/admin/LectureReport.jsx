@@ -3,7 +3,7 @@
 const LectureReport = () => {
     return (
         <div>
-
+            LectureReport
         </div>
     );
 }

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // axios 임포트 필요
+import axios from 'axios';
+import {Link} from 'react-router-dom';
 
 const Admin = () => {
   // --- 상태 관리 (State) ---
   const [dashboardStats, setDashboardStats] = useState({
-    newMentorCount: 0,    // 신규 멘토 신청
-    reportedLectureCount: 0, // 신고된 강의
-    inquiryCount: 0       // 처리 가능한 건의 사항
+    newMentorCount: 0,
+    reportedLectureCount: 0,
+    inquiryCount: 0
   });
 
   // --- 데이터 가져오기 (API 호출) ---
@@ -14,11 +15,8 @@ const Admin = () => {
     const fetchAdminStats = async () => {
       try {
         // [TODO] 실제 백엔드 API 주소로 변경해주세요.
-        // 예: http://localhost:8080/api/admin/dashboard/stats
         const response = await axios.get('/api/admin/dashboard-stats');
         
-        // 백엔드 응답 구조에 맞춰 데이터 설정 (예시)
-        // response.data가 { newMentor: 5, reported: 2, inquiry: 10 } 형태라고 가정
         setDashboardStats({
           newMentorCount: response.data.newMentorCount || 0,
           reportedLectureCount: response.data.reportedLectureCount || 0,
@@ -27,18 +25,29 @@ const Admin = () => {
 
       } catch (error) {
         console.error("관리자 대시보드 데이터를 불러오는데 실패했습니다.", error);
-        
-        // [테스트용] API가 없을 때 화면 확인을 위한 임시 데이터 (실제 배포 시 삭제)
-        setDashboardStats({
-          newMentorCount: 12,
-          reportedLectureCount: 3,
-          inquiryCount: 8
-        });
       }
     };
 
     fetchAdminStats();
   }, []);
+
+  // --- 이벤트 핸들러 (클릭 기능) ---
+  const handleNavClick = (menuName) => {
+    alert(`'${menuName}' 페이지로 이동합니다.`);
+  };
+
+  const handleAuthClick = (type) => {
+    if (type === 'signin') {
+      alert("로그인 화면으로 이동합니다.");
+    } else if (type === 'start') {
+      alert("회원가입 프로세스를 시작합니다.");
+    }
+  };
+
+  const handleLogoClick = () => {
+    alert("메인 홈페이지로 이동합니다.");
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // --- 스타일 정의 (Inline CSS Objects) ---
   const styles = {
@@ -56,12 +65,18 @@ const Admin = () => {
       padding: '15px 40px',
       borderBottom: '1px solid #e0e0e0',
       backgroundColor: '#fff',
+      position: 'sticky',
+      top: 0,
+      zIndex: 1000,
+      width: '100%',
+      boxSizing: 'border-box',
     },
     logoContainer: {
       display: 'flex',
       alignItems: 'center',
       fontWeight: 'bold',
       fontSize: '20px',
+      cursor: 'pointer',
     },
     logoIcon: {
       color: '#FF6B4A',
@@ -74,6 +89,10 @@ const Admin = () => {
       fontSize: '14px',
       color: '#666',
       alignItems: 'center',
+    },
+    navItem: {
+      cursor: 'pointer',
+      transition: 'color 0.2s',
     },
     authButtons: {
       display: 'flex',
@@ -224,19 +243,21 @@ const Admin = () => {
     <div style={styles.container}>
       {/* --- Header --- */}
       <header style={styles.header}>
-        <div style={styles.logoContainer}>
+        <div style={styles.logoContainer} onClick={handleLogoClick}>
           <span style={styles.logoIcon}>☁️</span>
           LinguaConnect
         </div>
+        
         <nav style={styles.navLinks}>
-          <span>How it Works</span>
-          <span>Languages</span>
-          <span>Mentors</span>
-          <span>Pricing</span>
+          <span style={styles.navItem} onClick={() => handleNavClick('How it Works')}>How it Works</span>
+          <span style={styles.navItem} onClick={() => handleNavClick('Languages')}>Languages</span>
+          <span style={styles.navItem} onClick={() => handleNavClick('Mentors')}>Mentors</span>
+          <span style={styles.navItem} onClick={() => handleNavClick('Pricing')}>Pricing</span>
         </nav>
+        
         <div style={styles.authButtons}>
-          <button style={styles.btnSignIn}>Sign In</button>
-          <button style={styles.btnGetStarted}>Get Started</button>
+          <button style={styles.btnSignIn} onClick={() => handleAuthClick('signin')}>Sign In</button>
+          <button style={styles.btnGetStarted} onClick={() => handleAuthClick('start')}>Get Started</button>
         </div>
       </header>
 
@@ -264,18 +285,19 @@ const Admin = () => {
 
           <div style={styles.menuGroup}>
             <div style={styles.menuLabel}>회원 관리</div>
-            <div style={styles.menuItem}>멘토 승인 관리 (요청 기능 N)</div>
+            <div style={styles.menuItem}><Link to="/mypage/mentorequests">멘토 승인 관리 (요청 기능 N)</Link></div>
+            {/* <div style={styles.menuItem} Link="/mypage/mentorequests">멘토 승인 관리 (요청 기능 N)</div> */}
             <div style={styles.menuItem}>전체 회원 조회 (선택 사항)</div>
           </div>
 
           <div style={styles.menuGroup}>
             <div style={styles.menuLabel}>콘텐츠 관리</div>
-            <div style={styles.menuItem}>강의 신고 관리 (요청 기능 N)</div>
+            <div style={styles.menuItem}><Link to="/mypage/leturereport">강의 신고 관리 (요청 기능 N)</Link></div> 
           </div>
 
           <div style={styles.menuGroup}>
             <div style={styles.menuLabel}>고객센터 관리</div>
-            <div style={styles.menuItem}>건의 사항 관리 (요청 기능 N)</div>
+            <div style={styles.menuItem}><Link to="/mypage/suggestonsmanage">건의 사항 관리 (요청 기능 N)</Link></div>
             <div style={styles.menuItem}>공지 사항 작성</div>
           </div>
         </aside>

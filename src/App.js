@@ -15,6 +15,12 @@ import Mento from './pages/member/JoinDetail/Mento';
 import Mentee from './pages/member/JoinDetail/Mentee';
 import Create from './pages/lecture/mento/Create';
 
+// 관리자
+import Admin from './pages/mypage/Admin';
+import MentoRequest from './pages/mypage/admin/MentoRequest';
+import LectureReport from './pages/mypage/admin/LectureReport';
+import SuggestionsManage from './pages/mypage/admin/SuggestionsManage';   
+
 function App() {
   return (
     <BrowserRouter>
@@ -43,6 +49,11 @@ function App() {
           
           {/* 강의 생성 (멘토) */}
           <Route path='/lecture/create' element={<Create/>}/>
+
+          {/* 관리자 페이지 */}
+          <Route path='/mypage/mentorequests' element={<MentoRequest/>}/>
+          <Route path='/mypage/leturereport' element={<LectureReport/>}/>
+          <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>
 
         </Route>
       </Routes>
