@@ -15,7 +15,7 @@ const Admin = () => {
     const fetchAdminStats = async () => {
       try {
         // [TODO] 실제 백엔드 API 주소로 변경해주세요.
-        const response = await axios.get('/api/admin/dashboard-stats');
+        const response = await axios.get('/api/mypage/dashboard-stats');
         
         setDashboardStats({
           newMentorCount: response.data.newMentorCount || 0,

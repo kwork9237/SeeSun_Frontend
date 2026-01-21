@@ -36,8 +36,8 @@ const MyPage = () => {
                 });
 
                 // 3. 성공 시 받아온 타입(0, 1, 2) 저장
-//              setMbType(response.data);
-                setMbType(0); // 임시로 관리자 모드로 설정
+//              setMbType(response.data);  // 나중에 주석 해제
+                setMbType(0);              // 임시로 관리자 모드로 설정(나중에 삭제)
 
             } catch (error) {
                 console.error("인증 실패 또는 데이터 로드 오류:", error);
