@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, GripVertical, Calendar, Clock, Users } from "lucide-react";
+import axios from 'axios';
 
 const Create = () => {
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     language: 'en',
     level: '1',
     description: '',
     sections: [{ id: crypto.randomUUID(), title: 'Section 1', lessons: [{ id: crypto.randomUUID(), title: 'Lesson 1', duration: '50' }] }],
-    // 3단계 데이터
     startDate: '',
     endDate: '',
-    selectedDays: [], // ['Mon', 'Wed']
+    selectedDays: [],
     startTime: '09:00',
     endTime: '10:00',
     maxStudents: '1',
@@ -23,6 +24,39 @@ const Create = () => {
   const updateData = (updates) => setFormData((prev) => ({ ...prev, ...updates }));
   const nextStep = () => setStep(prev => prev + 1);
   const prevStep = () => setStep(prev => prev - 1);
+
+  // 강의 생성 API 호출 (axios 버전)
+  const handleCreateLecture = async () => {
+    setLoading(true);
+    try {
+      const payload = {
+        title: formData.title,
+        language: formData.language,
+        level: parseInt(formData.level),
+        description: formData.description,
+        sections: formData.sections,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        selectedDays: formData.selectedDays,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        maxStudents: parseInt(formData.maxStudents),
+        generatedSlots: formData.generatedSlots,
+        price: parseInt(formData.price)
+      };
+
+      const response = await axios.post('http://localhost:8080/api/lectures', payload);
+      alert(`강의가 생성되었습니다! (ID: ${response.data})`);
+      
+      // 성공 후 초기화
+      window.location.reload();
+    } catch (error) {
+      console.error('강의 생성 실패:', error);
+      alert('강의 생성에 실패했습니다: ' + (error.response?.data || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4">
@@ -53,7 +87,13 @@ const Create = () => {
         {step < 4 ? (
           <button onClick={nextStep} className="px-8 py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 shadow-lg shadow-orange-200 transition-all">Next</button>
         ) : (
-          <button className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold hover:shadow-xl transition-all">Create Lecture</button>
+          <button 
+            onClick={handleCreateLecture} 
+            disabled={loading}
+            className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? '생성 중...' : 'Create Lecture'}
+          </button>
         )}
       </div>
     </div>
@@ -139,7 +179,7 @@ const Schedule = ({ data, updateData }) => {
     const start = new Date(data.startDate);
     const end = new Date(data.endDate);
     const slots = [];
-    const dayIndices = data.selectedDays.map(d => (days.indexOf(d) + 1) % 7); // JS Date는 일요일이 0
+    const dayIndices = data.selectedDays.map(d => (days.indexOf(d) + 1) % 7);
 
     let current = new Date(start);
     while(current <= end) {
@@ -208,7 +248,6 @@ const Schedule = ({ data, updateData }) => {
 
 // --- Step 4: Review ---
 const Review = ({ data }) => {
-  // 간단한 요약 데이터 계산
   const totalWeeks = data.sections.length;
   const totalLessons = data.sections.reduce((acc, s) => acc + s.lessons.length, 0);
 
@@ -267,7 +306,7 @@ const Review = ({ data }) => {
         </div>
         <div className="flex items-center gap-2 text-gray-600 bg-gray-50 p-4 rounded-2xl">
           <Users size={16} className="text-gray-400" />
-          <span className="text-sm font-medium">멘티 {data.maxStudents}명</span>
+          <span className="text-sm font-medium">멘티 {data.maxStudents}명 · {data.generatedSlots.length}개 슬롯</span>
         </div>
       </div>
 
@@ -282,4 +321,5 @@ const Review = ({ data }) => {
     </div>
   );
 };
+
 export default Create;
