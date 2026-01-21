@@ -49,11 +49,11 @@ function App() {
           <Route path='/Login' element={<Login/>}/>
 
           {/* 마이페이지 */}
-          <Route path='/mypage' element={<MyPage/>}/>
+          <Route path='/MyPage' element={<MyPage/>}/>
 
           {/* 강의 목록 */}
           <Route path='/lecture' element={<LectureList/>}/>
-          <Route path='/lectre/detail/:id' element={<LectureDetail/>}/>
+          <Route path='/lecture/detail/:id' element={<LectureDetail/>}/>
           
           {/* 강의 생성 (멘토) */}
           <Route path='/lecture/create' element={<Create/>}/>
