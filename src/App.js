@@ -46,7 +46,7 @@ function App() {
 
           {/* 강의 목록 */}
           <Route path='/lecture' element={<LectureList/>}/>
-          <Route path='/lectre/detail/:id' element={<LectureDetail/>}/>
+          <Route path='/lecture/detail/:id' element={<LectureDetail/>}/>
           
           {/* 강의 생성 (멘토) */}
           <Route path='/lecture/create' element={<Create/>}/>
