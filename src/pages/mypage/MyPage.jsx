@@ -8,7 +8,8 @@ import Mentee from './Mentee';
 import Mento from './Mento';
 
 const MyPage = () => {
-    const [mbType, setMbType] = useState(null);
+    //const [mbType, setMbType] = useState(null);
+    const [mbType, setMbType] = useState(1);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
@@ -18,15 +19,15 @@ const MyPage = () => {
             const token = localStorage.getItem('accessToken');
 
             // 토큰이 없으면 로그인 페이지로 튕겨내기
-            if (!token) {
-                alert("로그인이 필요합니다.");
-                navigate('/login');
-                return;
-            }
+            //if (!token) {
+            //    alert("로그인이 필요합니다.");
+            //    navigate('/login');
+            //    return;
+            // }
 
             try {
                 // 2. API 호출 시 헤더에 토큰 포함
-                const response = await axios.get('/getMbType', {
+                const response = await axios.get('/api/mypage/member-type', {
                     headers: {
                         'Authorization': `Bearer ${token}`, // 중요: Bearer 공백 토큰
                         'Content-Type': 'application/json'
@@ -34,19 +35,20 @@ const MyPage = () => {
                 });
 
                 // 3. 성공 시 받아온 타입(0, 1, 2) 저장
-                setMbType(response.data);
+               // setMbType(response.data);
+                setMbType(1);
 
             } catch (error) {
                 console.error("인증 실패 또는 데이터 로드 오류:", error);
                 
                 // 4. 토큰 만료 또는 위조된 경우 (401, 403 에러) 처리
-                if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-                    alert("인증이 만료되었습니다. 다시 로그인해주세요.");
-                    localStorage.removeItem('accessToken'); // 만료된 토큰 삭제
-                    navigate('/login');
-                } else {
-                    alert("정보를 불러오는데 실패했습니다.");
-                }
+                // if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                //     alert("인증이 만료되었습니다. 다시 로그인해주세요.");
+                //     localStorage.removeItem('accessToken'); // 만료된 토큰 삭제
+                //     navigate('/login');
+                // } else {
+                //     alert("정보를 불러오는데 실패했습니다.");
+                // }
             } finally {
                 setLoading(false);
             }
