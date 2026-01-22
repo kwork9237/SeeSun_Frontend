@@ -18,7 +18,6 @@ import Create from './pages/lecture/mento/Create';
 import PaymentButton from "./pages/PaymentButton";
 import SuccessPage from "./pages/SuccessPage";
 
-
 function App() {
   return (
     <BrowserRouter>

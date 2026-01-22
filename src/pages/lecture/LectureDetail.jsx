@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Star } from 'lucide-react';
+import { ChevronLeft, Star, Share2, Heart } from 'lucide-react'; 
 
-// ✅ 상세 탭 컴포넌트 임포트 (파일 트리 기준 경로)
+// ✅ 공통 헤더 임포트
+import MainHeader from '../../components/layout/MainHeader';
+
+// ✅ 상세 탭 및 예약 카드 컴포넌트
 import Overview from './detail/Overview';
 import Curriculum from './detail/Curriculum';
 import Reviews from './detail/Reviews';
@@ -17,7 +20,6 @@ const LectureDetail = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
-  // ✅ 시안의 영문 요일과 맞추기 위해 Su~Sa로 설정
   const weekDays = [
     { label: '일', value: 0 }, { label: '월', value: 1 }, 
     { label: '화', value: 2 }, { label: '수', value: 3 }, 
@@ -30,15 +32,28 @@ const LectureDetail = () => {
     return dateString.replace(/-/g, '.');
   };
 
+  /**
+   * [이미지 처리 함수]
+   * 1. 이미지가 없으면(null) -> UI Avatars로 이니셜 이미지 생성
+   * 2. 'http'로 시작하면 -> 외부 링크이므로 그대로 사용
+   * 3. 파일명만 있으면 -> 백엔드 업로드 경로(/uploads/) 붙여서 사용
+   */
+  const getProfileImage = (img) => {
+    if (!img) return `https://ui-avatars.com/api/?name=${lecture?.instructorName || 'Unknown'}&background=random`;
+    if (img.startsWith('http')) return img;
+    return `http://localhost:16500/uploads/${img}`; 
+  };
+
   useEffect(() => {
     const fetchDetail = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:8080/api/lectures/${id}`);
+        const response = await axios.get(`http://localhost:16500/api/lectures/${id}`);
         setLecture(response.data);
       } catch (err) {
         console.error("❌ 데이터 로드 실패:", err);
-        navigate('/lecture');
+        alert("강의 정보를 불러올 수 없습니다.");
+        navigate('/LectureList');
       } finally {
         setLoading(false);
       }
@@ -46,9 +61,17 @@ const LectureDetail = () => {
     if (id) fetchDetail();
   }, [id, navigate]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-black text-gray-400">LOADING...</div>;
-  if (!lecture) return <div className="min-h-screen flex items-center justify-center">강의를 찾을 수 없습니다.</div>;
+  if (loading) return (
+    // 로딩 시에도 헤더와 배경색 유지
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <MainHeader />
+      <div className="flex-1 flex items-center justify-center font-bold text-gray-400">LOADING...</div>
+    </div>
+  );
 
+  if (!lecture) return null;
+
+  // DB 데이터 파싱 (요일, 시간)
   const activeDays = lecture.availableDays ? lecture.availableDays.split(',').map(Number) : [];
   const activeTimes = lecture.availableTime ? lecture.availableTime.split(',') : [];
 
@@ -63,85 +86,127 @@ const LectureDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      {/* 상단 네비게이션 */}
-      <nav className="border-b sticky top-0 bg-white z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <button onClick={() => navigate(-1)} className="flex items-center text-gray-400 hover:text-black transition-colors">
-            <ChevronLeft size={20} /> <span className="ml-1 font-bold">Back to List</span>
-          </button>
-          <div className="font-black text-orange-500 text-2xl tracking-tighter cursor-pointer" onClick={() => navigate('/')}>
-            LinguaConnect
+    // font-sans 제거됨
+    <div className="min-h-screen bg-gray-50">
+      
+      {/* 1. 공통 헤더 적용 */}
+      <MainHeader />
+
+      {/* 2. 본문 컨텐츠 (헤더 높이만큼 pt-32 적용하여 가림 방지) */}
+      <div className="max-w-7xl mx-auto px-6 pt-32 pb-24">
+        
+        {/* 뒤로가기 버튼 */}
+        <button 
+          onClick={() => navigate(-1)} 
+          className="group flex items-center text-gray-400 hover:text-gray-900 transition-colors mb-6 font-medium"
+        >
+          <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center mr-2 group-hover:border-gray-900 transition-colors">
+            <ChevronLeft size={16} /> 
           </div>
-          <div className="w-20"></div>
-        </div>
-      </nav>
+          Back to List
+        </button>
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="flex flex-col lg:flex-row gap-16">
+        <div className="flex flex-col lg:flex-row gap-12 items-start">
           
-          <div className="flex-1">
-            {/* 1. 카테고리 & 강의 제목 섹션 */}
-            <div className="mb-8">
-              <span className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest">
-                {lecture.categoryName || 'Language'}
-              </span>
-              <h1 className="text-4xl font-black text-gray-900 mt-6 mb-4 leading-tight">
-                {lecture.title}
-              </h1>
-              <div className="flex items-center gap-2">
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={18} className={i < Math.floor(lecture.avgScore || 0) ? "fill-yellow-400 text-yellow-400" : "fill-gray-200 text-gray-200"} />
-                  ))}
+          {/* ================= 좌측 메인 컨텐츠 ================= */}
+          <div className="flex-1 w-full min-w-0">
+            
+            {/* 3. 강의 헤더 섹션 */}
+            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 mb-8">
+              <div className="flex items-start justify-between">
+                <div>
+                   {/* 뱃지 색상 통일 (Orange Theme) */}
+                  <span className="inline-block bg-orange-50 text-orange-600 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider mb-4 border border-orange-100">
+                    {lecture.categoryName || 'Language'}
+                  </span>
+                  <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 leading-tight">
+                    {lecture.title}
+                  </h1>
+                  
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1">
+                      <div className="flex text-yellow-400">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} size={16} className={i < Math.floor(lecture.avgScore || 0) ? "fill-yellow-400" : "fill-gray-200 text-gray-200"} />
+                        ))}
+                      </div>
+                      <span className="font-bold text-gray-900 ml-1">{Number(lecture.avgScore || 0).toFixed(1)}</span>
+                      <span className="text-gray-400 underline decoration-gray-300 decoration-1 underline-offset-2 cursor-pointer">
+                        ({lecture.reviewCount || 0} reviews)
+                      </span>
+                    </div>
+                    <span className="text-gray-300">|</span>
+                    <span className="text-gray-500 font-medium">Native Speaker</span>
+                  </div>
                 </div>
-                <span className="font-bold text-gray-900 ml-1">{lecture.avgScore?.toFixed(1) || '0.0'}</span>
-                <span className="text-gray-400 text-sm">({lecture.reviewCount || 0} reviews)</span>
-              </div>
-            </div>
 
-            {/* 2. 멘토 프로필 섹션 */}
-            <div className="flex items-center gap-5 mb-12 p-6 bg-gray-50 rounded-[24px] w-fit border border-gray-100">
-              <div className="w-16 h-16 bg-gray-200 rounded-full overflow-hidden border-2 border-white shadow-sm">
-                <img 
-                  src={lecture.profileIcon ? `http://localhost:8080/uploads/${lecture.profileIcon}` : '/default-profile.png'} 
-                  alt="instructor" 
-                  className="w-full h-full object-cover"
-                  onError={(e) => e.target.src = 'https://via.placeholder.com/150'}
-                />
+                {/* 우측 상단 아이콘 버튼 */}
+                <div className="flex gap-2">
+                  <button className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all">
+                    <Heart size={20} />
+                  </button>
+                  <button className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-all">
+                    <Share2 size={20} />
+                  </button>
+                </div>
               </div>
-              <div>
-                <p className="font-black text-xl text-gray-900 leading-none mb-1">{lecture.instructorName}</p>
-                <p className="text-sm text-gray-400 font-bold">Professional Mentor</p>
-                <button className="mt-2 text-xs font-black text-orange-500 border border-orange-200 px-3 py-1 rounded-lg hover:bg-orange-50 transition-colors">
-                  Follow
+
+              <hr className="my-6 border-gray-100" />
+
+              {/* 4. 멘토 프로필 섹션 */}
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <img 
+                    src={getProfileImage(lecture.profileIcon)}
+                    alt={lecture.instructorName} 
+                    className="w-14 h-14 rounded-full object-cover border border-gray-100 shadow-sm"
+                    // 이미지 로드 에러 시 2차 방어 (무한루프 방지 포함)
+                    onError={(e) => {
+                      e.target.onerror = null; 
+                      e.target.src = `https://ui-avatars.com/api/?name=${lecture.instructorName}&background=random`;
+                    }}
+                  />
+                  <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                    {lecture.instructorName}
+                    <span className="bg-gray-100 text-gray-500 text-[10px] px-1.5 py-0.5 rounded font-medium uppercase">Mentor</span>
+                  </p>
+                  <p className="text-sm text-gray-500">Professional Language Instructor</p>
+                </div>
+                <button className="ml-auto text-xs font-bold text-orange-500 border border-orange-200 px-4 py-2 rounded-xl hover:bg-orange-500 hover:text-white transition-all">
+                  + Follow
                 </button>
               </div>
             </div>
 
-            {/* 3. 탭 메뉴 */}
-            <div className="flex border-b mb-10 sticky top-[73px] bg-white z-40">
+            {/* 5. 탭 메뉴 (Sticky: 스크롤 시 상단 고정) */}
+            <div className="flex border-b border-gray-200 mb-8 sticky top-[80px] bg-gray-50 z-30 pt-4">
               {['overview', 'curriculum', 'reviews', 'Q&A'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-8 py-5 text-sm font-black uppercase tracking-widest transition-all ${
-                    activeTab === tab ? 'text-orange-500 border-b-4 border-orange-500' : 'text-gray-400 hover:text-gray-600'
-                  }`}
+                  className={`px-6 py-4 text-sm font-bold uppercase tracking-wider transition-all relative
+                    ${activeTab === tab ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}
+                  `}
                 >
                   {tab}
+                  {activeTab === tab && (
+                    <span className="absolute bottom-0 left-0 w-full h-[3px] bg-orange-500 rounded-t-full"></span>
+                  )}
                 </button>
               ))}
             </div>
 
-            {/* 4. 동적 탭 컨텐츠 구역 */}
-            <div className="min-h-[400px]">
+            {/* 6. 탭 컨텐츠 구역 */}
+            <div className="min-h-[400px] bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
               {renderTabContent()}
             </div>
           </div>
 
-          {/* 5. 우측 예약 카드 (팀원이 작업할 부분) */}
-          <div className="w-full lg:w-[400px]">
+          {/* ================= 우측 예약 카드 (Sticky) ================= */}
+          <div className="w-full lg:w-[380px] flex-shrink-0 sticky top-32">
             <EnrollCard 
               lecture={lecture} 
               activeDays={activeDays} 
@@ -150,6 +215,7 @@ const LectureDetail = () => {
               formatDate={formatDate}
             />
           </div>
+
         </div>
       </div>
     </div>

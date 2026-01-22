@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import Card from "../common/Card";
+import { fetchLectureCounts } from "../../api/lectureMainApi";
 
 /**
  * [컴포넌트] LanguageSection
@@ -20,8 +20,8 @@ const LanguageSection = ({ selectedLang, setSelectedLang }) => {
    * - API를 호출하여 실시간 강의 개수를 가져옵니다.
    */
   useEffect(() => {
-    axios
-      .get("/api/lectures/count")
+    // API 호출 함수 사용
+    fetchLectureCounts()
       .then((response) => setCounts(response.data))
       .catch((error) => console.error("강의 개수 조회 실패:", error));
   }, []);

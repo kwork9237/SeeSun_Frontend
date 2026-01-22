@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios"; 
 import Button from "../common/Button";
 import LectureCard from "../common/LectureCard"; 
+import { fetchPopularLectures } from "../../api/lectureMainApi";
 
 /**
  * [상수] 언어 이름(English)을 DB의 ID(1)로 변환하는 매핑 객체
- * - useEffect의 의존성 경고를 피하기 위해 컴포넌트 외부에 선언함
  */
 const LANG_ID_MAP = {
   english: 1,
@@ -17,71 +16,77 @@ const LANG_ID_MAP = {
 /**
  * [컴포넌트] MentorList
  * - 메인 페이지 하단에 위치하며, 선택된 언어(selectedLang)에 맞는 인기 강의 TOP 3를 보여줍니다.
- * @param {string} selectedLang - 사용자가 상단에서 선택한 언어 (예: 'english')
  */
 const MentorList = ({ selectedLang }) => {
   
   // [State] 강의 목록 데이터 저장
   const [lectures, setLectures] = useState([]);
   
-  // [State] 데이터 로딩 상태 (true일 때 Loading... 표시)
+  // [State] 데이터 로딩 상태
   const [loading, setLoading] = useState(false);
 
-  /**
-   * [Effect] 언어 선택이 변경될 때마다 실행
-   * - 백엔드 API를 호출하여 인기 강의 목록을 가져옵니다.
-   */
   useEffect(() => {
-    const fetchPopularLectures = async () => {
-      // 선택된 언어가 없으면 아무것도 하지 않음 (방어 코드)
+    const loadPopularLectures = async () => {
       if (!selectedLang) return; 
 
-      setLoading(true); // 로딩 시작
+      setLoading(true);
       try {
-        // 1. 프론트엔드 언어 이름 -> 백엔드 ID로 변환
         const langId = LANG_ID_MAP[selectedLang];
         
-        // 2. API 호출 (GET /api/lectures/popular)
-        const response = await axios.get(`/api/lectures/popular`, {
-            params: { lgType: langId }
-        });
+        // API 호출
+        const response = await fetchPopularLectures(langId);
         
-        // 3. [데이터 매핑] 백엔드 DTO -> 프론트엔드 컴포넌트(LectureCard) 포맷으로 변환
-        // - 백엔드에서 null로 올 수 있는 값(이미지 등)을 여기서 기본값으로 처리함
+        // [데이터 매핑] 백엔드 DTO -> 프론트엔드 LectureCard 포맷 변환
         const mappedData = response.data.map(item => ({
              id: item.le_id,
-             title: item.le_title,       // LectureCard에서 사용하는 props 이름으로 매칭
+             
+             // LectureCard props: title -> lectureTitle로 변경됨
+             lectureTitle: item.le_title,       
+             
              name: item.mb_nickname, 
-             rate: item.mentor_rate,     // 평점
-             price: item.le_price.toLocaleString(), // 가격에 3자리 콤마 추가
+             rate: item.mentor_rate,
+             price: item.le_price.toLocaleString(),
              
-             // 이미지 처리: http로 시작하면 원본 사용, 없으면 랜덤 아바타 생성
-             image: item.le_thumb && item.le_thumb.startsWith('http') 
-                  ? item.le_thumb 
-                  : `https://ui-avatars.com/api/?name=${item.mb_nickname}&background=random`, 
+             /* 시간 관련 데이터 매핑
+                - 백엔드에서 totalHours(DTO) 또는 total_hours(Map)로 올 수 있어 둘 다 대응
+                - 값이 없으면(null) 기본값(0 또는 '협의') 처리
+             */
+             // 기존: 데이터가 없어서 하드코딩했던 부분
+             // totalHours: 0,
+             // mainTime: '협의',
+
+             // 수정: 실제 데이터 연결
+             totalHours: item.totalHours || item.total_hours || 0,
+             mainTime: item.availableTime || item.available_time || '협의',
+
+             /* [수정] 이미지 키 값 변경 (image -> img)
+                - LectureCard 컴포넌트 내부에서 'data.img'를 사용하므로 키 이름을 맞춰야 함
+             */
+             img: item.le_thumb && item.le_thumb.startsWith('http') 
+                 ? item.le_thumb 
+                 : `https://ui-avatars.com/api/?name=${item.mb_nickname}&background=random`, 
              
-             // 태그 및 설명 (DB에 없으면 하드코딩된 기본값 사용)
              tags: ["#인기강의", "#검증된멘토"], 
              desc: "수강생들이 증명하는 최고의 강의입니다." 
         }));
 
-        setLectures(mappedData); // State 업데이트
+        setLectures(mappedData);
       } catch (error) {
         console.error("인기 강의 조회 실패:", error);
-        setLectures([]); // 에러 발생 시 빈 배열로 초기화
+        setLectures([]); 
       } finally {
-        setLoading(false); // 로딩 종료
+        setLoading(false);
       }
     };
 
-    fetchPopularLectures();
-  }, [selectedLang]); // selectedLang이 바뀔 때만 재실행
+    loadPopularLectures();
+  }, [selectedLang]); 
 
   return (
     <section className="py-24 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* [섹션 헤더] 제목 및 전체보기 버튼 */}
+        {/* [섹션 헤더] */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
           <div>
             <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-2 capitalize flex items-center gap-2">
@@ -89,14 +94,14 @@ const MentorList = ({ selectedLang }) => {
             </h2>
             <p className="text-gray-600">수강생 평점이 가장 높은 인기 강의를 확인해보세요.</p>
           </div>
-          <Link to="/LectureList">
+          {/* 강의 목록 페이지로 이동 */}
+          <Link to="/lecture">
             <Button variant="ghost" size="medium">전체 보기 <i className="fa-solid fa-arrow-right ml-2"></i></Button>
           </Link>
         </div>
 
         {/* [강의 목록 그리드] */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* 조건부 렌더링: 로딩 중 -> 데이터 있음 -> 데이터 없음 순서 */}
           {loading ? (
              <div className="col-span-full py-20 text-center text-gray-400">Loading...</div>
           ) : lectures.length > 0 ? (
