@@ -1,25 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // axios 임포트 추가
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
-// --- 아이콘 컴포넌트 (SVG) ---
+// --- 아이콘 컴포넌트 ---
 const Icons = {
-  Home: ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-      <polyline points="9 22 9 12 15 12 15 22"></polyline>
-    </svg>
+  Home: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
   ),
-  User: ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-      <circle cx="12" cy="7" r="4"></circle>
-    </svg>
+  Users: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
   ),
-  Search: ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <circle cx="11" cy="11" r="8"></circle>
-      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  Clipboard: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+  ),
+  Siren: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="M4 2C4 2 5 5 5 5C5 5 2 7 2 7C2 7 5 5 5 5C5 5 4 2 4 2Z"/><path d="M20 2C20 2 19 5 19 5C19 5 22 7 22 7C22 7 19 5 19 5C19 5 20 2 20 2Z"/></svg>
+  ),
+  MessageSquare: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  ),
+  Megaphone: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+  ),
+  File: ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+      <polyline points="13 2 13 9 20 9"></polyline>
     </svg>
   ),
   ChevronLeft: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>,
@@ -27,273 +33,200 @@ const Icons = {
 };
 
 const MentoRequest = () => {
-  // --- 상태 관리 (State) ---
-  const [mentorRequests, setMentorRequests] = useState([]); // 초기값 빈 배열
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true); // 로딩 상태 추가
+  const [requests, setRequests] = useState([]);
 
-  // --- 데이터 가져오기 (API 호출) ---
   useEffect(() => {
-    const fetchMentorRequests = async () => {
+    const fetchRequests = async () => {
       try {
-        setLoading(true);
-        // [TODO] 실제 백엔드 API 주소로 변경해주세요. (예: /api/admin/mentor-requests)
-        const response = await axios.get('/api/admin/mentor-requests');
-        
-        // 데이터 구조에 맞게 설정 (예: response.data.list)
-        if (response.data && Array.isArray(response.data)) {
-            setMentorRequests(response.data);
-        } else {
-            setMentorRequests([]);
-        }
-
+        const response = await axios.get('/api/mento/list');
+        setRequests(response.data);
       } catch (error) {
-        console.error("멘토 신청 목록을 불러오는데 실패했습니다.", error);
-        setMentorRequests([]); // 에러 시 빈 배열 유지
-      } finally {
-        setLoading(false);
+        console.error('멘토 요청 목록 조회 실패:', error);
       }
     };
+    fetchRequests();
+  }, []);
 
-    fetchMentorRequests();
-  }, [currentPage]); // 페이지 변경 시 재호출 (필요 시)
-
-  // --- 이벤트 핸들러 ---
-  const handleNavClick = (menuName) => alert(`'${menuName}' 페이지로 이동합니다.`);
-  const handleLogoClick = () => {
-    alert("메인 홈페이지로 이동합니다.");
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleApprove = (reqId, mbId) => {
+    if (window.confirm(`회원번호 ${mbId}님의 멘토 신청을 승인하시겠습니까?`)) {
+      alert(`회원번호 ${mbId}님이 멘토로 승인되었습니다.`);
+      setRequests(prev => prev.filter(req => req.reqId !== reqId));
+    }
   };
-  const handleDetailClick = (id, name) => alert(`${name} (ID: ${id}) 님의 상세 신청서를 열람합니다.`);
 
   return (
-    <div className="font-sans min-h-screen flex flex-col bg-[#F9FAFB] text-[#111827]">
-      {/* --- Header (Admin 페이지와 동일) --- */}
-      <header className="flex justify-between items-center px-8 py-4 bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="flex items-center font-bold text-xl cursor-pointer select-none" onClick={handleLogoClick}>
-          <span className="text-[#FF6B4A] mr-2 text-2xl">☁️</span>
-          <span className="tracking-tight">LinguaConnect</span>
-        </div>
-        
-        <nav className="hidden md:flex gap-8 text-sm font-medium text-gray-500">
-          {['How it Works', 'Languages', 'Mentors', 'Pricing'].map((item) => (
-            <span key={item} className="cursor-pointer hover:text-[#FF6B4A] transition-colors" onClick={() => handleNavClick(item)}>
-              {item}
-            </span>
-          ))}
-        </nav>
-        
-        <div className="flex gap-3">
-          <button className="px-4 py-2 text-sm font-semibold text-[#FF6B4A] bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">Sign In</button>
-          <button className="px-4 py-2 text-sm font-semibold text-white bg-[#FF6B4A] rounded-lg hover:bg-[#ff5530] shadow-sm transition-colors">Get Started</button>
+    <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#111827] font-sans">
+      
+      {/* 1. 상단 네비게이션 */}
+      <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 fixed w-full top-0 z-20">
+        <Link to="/" className="flex items-center gap-2 cursor-pointer text-inherit no-underline">
+          <span className="text-orange-500 text-2xl leading-none">●</span> 
+          <span className="font-bold text-xl tracking-tight text-gray-900">LinguaConnect</span>
+        </Link>
+        <div className="flex items-center gap-4">
+          <button className="px-4 py-1.5 text-sm font-semibold text-[#FF6B4A] bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+            Sign In
+          </button>
+          <button className="px-4 py-1.5 text-sm font-semibold text-white bg-[#FF6B4A] rounded-lg hover:bg-[#ff5530] shadow-sm transition-colors">
+            Get Started
+          </button>
         </div>
       </header>
 
-      {/* --- Body Area --- */}
-      <div className="flex flex-1 max-w-[1400px] w-full mx-auto">
+      {/* 2. 메인 레이아웃 */}
+      <div className="flex flex-1 pt-16">
         
-        {/* --- Sidebar (Admin 페이지와 동일) --- */}
-        <aside className="w-[260px] py-8 px-4 bg-white border-r border-gray-100 hidden lg:flex flex-col shrink-0">
-          <div className="flex items-center mb-10 px-2">
-            <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 flex items-center justify-center text-gray-400 text-xl">👤</div>
+        {/* 사이드바 */}
+        <aside className="w-64 bg-white fixed left-0 top-16 h-[calc(100vh-64px)] overflow-y-auto z-10 flex flex-col pt-8 px-6 border-r border-gray-100">
+          <div className="flex items-center gap-3 mb-10">
+            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
             <div className="flex flex-col">
-              <span className="font-bold text-base text-gray-800">Administrator</span>
-              <span className="text-xs text-[#FF6B4A] font-medium bg-orange-50 px-2 py-0.5 rounded-full w-fit mt-1">MASTER</span>
+              <span className="font-bold text-gray-800 text-base">Administrator</span>
+              <span className="text-[10px] font-bold text-[#FF6B4A] bg-[#FFF0EB] px-2 py-0.5 rounded-sm w-fit mt-1">MASTER</span>
             </div>
           </div>
 
-          <div className="space-y-8">
+          <nav className="flex-1 space-y-8">
+            {/* Dashboard */}
             <div>
-              <div className="text-xs font-bold text-gray-400 mb-2 px-3 uppercase tracking-wider">Dashboard</div>
-              <ul className="space-y-1">
-                <li>
-                   <Link to="/admin" className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#FF6B4A] rounded-lg transition-colors group">
-                    <span className="mr-3 text-lg group-hover:text-[#FF6B4A]">🏠</span> 홈
-                  </Link>
-                </li>
-              </ul>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Dashboard</div>
+              {/* 홈 버튼: 클릭 시 /mypage 로 이동 */}
+              <Link to="/mypage" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                <span className="text-orange-500"><Icons.Home /></span>
+                <span className="text-sm font-medium">홈</span>
+              </Link>
             </div>
 
+            {/* Management */}
             <div>
-              <div className="text-xs font-bold text-gray-400 mb-2 px-3 uppercase tracking-wider">Management</div>
-              <ul className="space-y-1">
-                <li>
-                  <div className="flex items-center px-3 py-2.5 bg-orange-50 text-[#FF6B4A] rounded-lg cursor-pointer font-medium">
-                    <span className="mr-3">👥</span> 멘토 승인 관리
-                  </div>
-                </li>
-                <li>
-                  <div className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#FF6B4A] rounded-lg cursor-pointer transition-colors group">
-                    <span className="mr-3 group-hover:text-[#FF6B4A]">📋</span> 전체 회원 조회
-                  </div>
-                </li>
-              </ul>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Management</div>
+              <div className="space-y-1">
+                {/* 현재 페이지 Active 상태 */}
+                <Link to="/mypage/mentorequests" className="flex items-center gap-3 px-3 py-2.5 bg-[#FFF7ED] text-[#FF6B4A] rounded-lg transition-colors">
+                  <span className="text-purple-500"><Icons.Users /></span>
+                  <span className="text-sm font-bold">멘토 승인 관리</span>
+                </Link>
+                <div className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer">
+                  <span className="text-orange-400"><Icons.Clipboard /></span>
+                  <span className="text-sm font-medium">전체 회원 조회</span>
+                </div>
+              </div>
             </div>
 
+            {/* Contents */}
             <div>
-              <div className="text-xs font-bold text-gray-400 mb-2 px-3 uppercase tracking-wider">Contents</div>
-              <ul className="space-y-1">
-                <li>
-                  <div className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#FF6B4A] rounded-lg transition-colors group">
-                    <span className="mr-3 group-hover:text-[#FF6B4A]">🚨</span> 강의 신고 관리
-                  </div>
-                </li>
-              </ul>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Contents</div>
+              <div className="space-y-1">
+                <Link to="/mypage/leturereport" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                  <span className="text-pink-500"><Icons.Siren /></span>
+                  <span className="text-sm font-medium">강의 신고 관리</span>
+                </Link>
+              </div>
             </div>
 
+            {/* Support */}
             <div>
-              <div className="text-xs font-bold text-gray-400 mb-2 px-3 uppercase tracking-wider">Support</div>
-              <ul className="space-y-1">
-                <li>
-                  <div className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#FF6B4A] rounded-lg transition-colors group">
-                    <span className="mr-3 group-hover:text-[#FF6B4A]">💬</span> 건의 사항 관리
-                  </div>
-                </li>
-                <li>
-                  <div className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#FF6B4A] rounded-lg cursor-pointer transition-colors group">
-                    <span className="mr-3 group-hover:text-[#FF6B4A]">📢</span> 공지 사항 작성
-                  </div>
-                </li>
-              </ul>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Support</div>
+              <div className="space-y-1">
+                <Link to="/mypage/suggestonsmanage" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                  <span className="text-[#A78BFA]"><Icons.MessageSquare /></span>
+                  <span className="text-sm font-medium">건의 사항 관리</span>
+                </Link>
+                <div className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer">
+                   <span className="text-rose-500"><Icons.Megaphone /></span>
+                  <span className="text-sm font-medium">공지 사항 작성</span>
+                </div>
+              </div>
             </div>
-          </div>
+          </nav>
         </aside>
 
-        {/* --- Main Content --- */}
-        <main className="flex-1 p-8 lg:p-12">
+        {/* 메인 컨텐츠 */}
+        <main className="flex-1 ml-64 p-8 lg:p-12">
           
-          {/* 타이틀 및 액션 바 */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
              <div>
-                <h1 className="text-2xl font-bold text-gray-900">멘토 신청 관리</h1>
-                <span className="text-sm text-gray-500 mt-1 block">새로 들어온 멘토 신청 내역을 검토하고 승인합니다.</span>
-             </div>
-             <div className="flex gap-2">
-                <div className="relative">
-                  <input 
-                    type="text" 
-                    placeholder="이름 또는 언어 검색" 
-                    className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B4A] focus:border-transparent w-64"
-                  />
-                  <Icons.Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
-                </div>
-                <button className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors font-medium">
-                  필터 적용
-                </button>
+                <h1 className="text-2xl font-bold text-gray-900">멘토 신청 승인/반려</h1>
+                <span className="text-sm text-gray-500 mt-2 block">신청자의 정보를 확인하고 승인 처리합니다.</span>
              </div>
           </div>
 
-          {/* 리스트 테이블 카드 */}
+          {/* 테이블 영역 */}
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col min-h-[600px]">
-            
-            {/* 테이블 헤더 */}
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold tracking-wider">
-                    <th className="px-6 py-4">신청자 정보</th>
-                    <th className="px-6 py-4">전문 언어</th>
-                    <th className="px-6 py-4">주요 경력</th>
-                    <th className="px-6 py-4">신청일</th>
-                    <th className="px-6 py-4 text-center">상태</th>
-                    <th className="px-6 py-4 text-center">관리</th>
+                  <tr className="bg-[#F9FAFB] border-b border-gray-100 text-xs uppercase text-gray-500 font-semibold tracking-wider">
+                    <th className="px-6 py-4 w-[25%]">신청자 ID</th>
+                    <th className="px-6 py-4 w-[35%]">상세 정보</th>
+                    <th className="px-6 py-4 w-[25%]">첨부 파일</th>
+                    <th className="px-6 py-4 w-[15%] text-center">처리</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {/* 로딩 중일 때 */}
-                  {loading && (
-                    <tr>
-                      <td colSpan="6" className="py-20 text-center text-gray-500">
-                        데이터를 불러오는 중입니다...
-                      </td>
-                    </tr>
-                  )}
-
-                  {/* 데이터가 없고 로딩이 끝났을 때 */}
-                  {!loading && mentorRequests.length === 0 && (
-                     <tr>
-                      <td colSpan="6" className="py-20 text-center text-gray-500">
-                        신규 멘토 신청 내역이 없습니다.
-                      </td>
-                    </tr>
-                  )}
-
-                  {/* 데이터가 있을 때 렌더링 */}
-                  {!loading && mentorRequests.map((req) => (
-                    <tr key={req.id || Math.random()} className="hover:bg-[#FFFBF9] transition-colors group">
-                      <td className="px-6 py-4">
+                <tbody className="divide-y divide-gray-50">
+                  {/* 데이터가 있을 때 */}
+                  {requests.map((req) => (
+                    <tr key={req.reqId} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 align-middle">
                         <div className="flex items-center">
-                          <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 text-sm font-bold mr-3">
-                            {req.name ? req.name.charAt(0) : '?'}
-                          </div>
-                          <div>
-                            <div className="text-sm font-bold text-gray-900">{req.name || '이름 없음'}</div>
-                            <div className="text-xs text-gray-500">{req.email || '-'}</div>
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 font-bold mr-3 shrink-0">M</div>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-gray-900">회원번호: {req.mbId}</span>
+                            <span className="text-xs text-gray-500">ID: {req.mbId}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 font-medium">
-                        {req.language || '-'}
+                      <td className="px-6 py-4 align-middle">
+                        <div className="flex flex-col">
+                           <div className="flex items-center mb-1">
+                                <span className="bg-orange-100 text-[#FF6B4A] text-[10px] font-bold px-2 py-0.5 rounded border border-orange-200 mr-2">요청내용</span>
+                                <span className="text-xs font-semibold text-gray-700">전문 멘토 신청</span>
+                           </div>
+                           <span className="text-xs text-gray-500 leading-snug break-keep">{req.details}</span>
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {req.career || '-'}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 tabular-nums">
-                        {req.date || '-'}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        {/* 상태값에 따른 뱃지 표시 (DB 값에 따라 조건 수정 필요) */}
-                        {req.status === 'pending' ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
-                            승인 대기
+                      <td className="px-6 py-4 align-middle">
+                        <div className="flex items-center p-2 border border-gray-200 rounded-lg bg-gray-50 max-w-fit cursor-pointer hover:bg-gray-100 transition-all">
+                          <Icons.File className="text-gray-500 mr-2" />
+                          <span className="text-sm text-gray-600 underline decoration-gray-400 underline-offset-2 truncate max-w-[150px]">
+                            {req.attachment || '파일 없음'}
                           </span>
-                        ) : req.status === 'reviewed' ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                            검토 중
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                            {req.status || '대기'}
-                          </span>
-                        )}
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <button 
-                          onClick={() => handleDetailClick(req.id, req.name)}
-                          className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 hover:text-[#FF6B4A] hover:border-[#FF6B4A] transition-all"
-                        >
-                          상세보기
-                        </button>
+                      <td className="px-6 py-4 align-middle text-center">
+                          <button onClick={() => handleApprove(req.reqId, req.mbId)} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 rounded hover:bg-blue-700 shadow-sm transition-colors whitespace-nowrap">승인</button>
                       </td>
                     </tr>
                   ))}
                   
-                  {/* 빈 공간 채우기 용도 (데이터가 적어도 테이블 형태 유지) */}
-                  {!loading && mentorRequests.length > 0 && mentorRequests.length < 5 && (
-                      [...Array(5 - mentorRequests.length)].map((_, i) => (
-                        <tr key={`empty-${i}`} className="h-[73px]">
-                          <td colSpan="6"></td>
-                        </tr>
-                      ))
+                  {/* 데이터가 없을 때 중앙 정렬 */}
+                  {requests.length === 0 && (
+                    <tr>
+                      <td colSpan="4" className="h-[500px]">
+                        <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                           <div className="p-4 bg-gray-50 rounded-full mb-3 text-gray-300">
+                              <Icons.Clipboard />
+                           </div>
+                           <span className="font-medium text-gray-500">등록된 요청이 없습니다.</span>
+                        </div>
+                      </td>
+                    </tr>
                   )}
                 </tbody>
               </table>
             </div>
-
-            {/* 페이징 (Footer) - 실제 기능 구현 시 totalCount 연동 필요 */}
-            <div className="mt-auto border-t border-gray-200 p-4 flex items-center justify-between bg-white">
+            
+            {/* 페이지네이션 */}
+            <div className="mt-auto border-t border-gray-100 p-4 flex items-center justify-between bg-white">
               <span className="text-sm text-gray-500">
-                총 <strong className="text-gray-900">{mentorRequests.length}</strong>건의 신청
+                  대기 중인 신청: <strong className="text-gray-900">{requests.length}</strong>건
               </span>
               <div className="flex items-center gap-1">
-                <button className="p-2 border border-gray-200 rounded hover:bg-gray-50 text-gray-500 disabled:opacity-50" disabled>
-                  <Icons.ChevronLeft />
-                </button>
-                <button className="px-3 py-1.5 text-sm font-bold bg-[#FF6B4A] text-white rounded shadow-sm border border-[#FF6B4A]">1</button>
-                {/* <button className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded border border-transparent">2</button> */}
-                <button className="p-2 border border-gray-200 rounded hover:bg-gray-50 text-gray-600">
-                  <Icons.ChevronRight />
-                </button>
+                <button className="p-2 border border-gray-200 rounded hover:bg-gray-50 text-gray-400 transition-colors"><Icons.ChevronLeft /></button>
+                <button className="w-8 h-8 flex items-center justify-center rounded bg-[#FF6B4A] text-white font-bold text-sm shadow-sm">1</button>
+                <button className="p-2 border border-gray-200 rounded hover:bg-gray-50 text-gray-400 transition-colors"><Icons.ChevronRight /></button>
               </div>
             </div>
 

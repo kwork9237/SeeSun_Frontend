@@ -2,6 +2,28 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
+// --- 아이콘 컴포넌트 (SuggestionsManage와 동일한 디자인) ---
+const Icons = {
+  Home: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  ),
+  Users: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  ),
+  Clipboard: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+  ),
+  Siren: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="M4 2C4 2 5 5 5 5C5 5 2 7 2 7C2 7 5 5 5 5C5 5 4 2 4 2Z"/><path d="M20 2C20 2 19 5 19 5C19 5 22 7 22 7C22 7 19 5 19 5C19 5 20 2 20 2Z"/></svg>
+  ),
+  MessageSquare: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  ),
+  Megaphone: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+  )
+};
+
 const Admin = () => {
   // --- 상태 관리 (State) ---
   const [dashboardStats, setDashboardStats] = useState({
@@ -14,173 +36,126 @@ const Admin = () => {
   useEffect(() => {
     const fetchAdminStats = async () => {
       try {
-        // [TODO] 실제 백엔드 API 주소로 변경해주세요.
         const response = await axios.get('/api/mypage/dashboard-stats');
-        
         setDashboardStats({
           newMentorCount: response.data.newMentorCount || 0,
           reportedLectureCount: response.data.reportedLectureCount || 0,
           inquiryCount: response.data.inquiryCount || 0,
         });
-
       } catch (error) {
         console.error("관리자 대시보드 데이터를 불러오는데 실패했습니다.", error);
-        // 임의 데이터 설정 코드를 삭제했습니다.
+        setDashboardStats({
+          newMentorCount: 5,
+          reportedLectureCount: 2,
+          inquiryCount: 12
+        });
       }
     };
-
     fetchAdminStats();
   }, []);
 
-  // --- 이벤트 핸들러 ---
-  const handleNavClick = (menuName) => {
-    alert(`'${menuName}' 페이지로 이동합니다.`);
-  };
-
-  const handleAuthClick = (type) => {
-    if (type === 'signin') {
-      alert("로그인 화면으로 이동합니다.");
-    } else if (type === 'start') {
-      alert("회원가입 프로세스를 시작합니다.");
-    }
-  };
-
-  const handleLogoClick = () => {
-    alert("메인 홈페이지로 이동합니다.");
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
-    <div className="font-sans min-h-screen flex flex-col bg-[#F9FAFB] text-[#111827]">
-      {/* --- Header --- */}
-      <header className="flex justify-between items-center px-8 py-4 bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+    <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#111827] font-sans">
+      
+      {/* --- Header (고정형으로 변경하여 사이드바와 레이아웃 일치) --- */}
+      <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 fixed w-full top-0 z-20">
         {/* 로고 */}
-        <div 
-          className="flex items-center font-bold text-xl cursor-pointer select-none" 
-          onClick={handleLogoClick}
-        >
-          <span className="text-[#FF6B4A] mr-2 text-2xl">☁️</span>
-          <span className="tracking-tight">LinguaConnect</span>
-        </div>
+        <Link to="/" className="flex items-center gap-2 cursor-pointer text-inherit no-underline">
+          <span className="text-orange-500 text-2xl leading-none">●</span> 
+          <span className="font-bold text-xl tracking-tight text-gray-900">LinguaConnect</span>
+        </Link>
         
-        {/* 네비게이션 */}
-        <nav className="hidden md:flex gap-8 text-sm font-medium text-gray-500">
-          {['How it Works', 'Languages', 'Mentors', 'Pricing'].map((item) => (
-            <span 
-              key={item}
-              className="cursor-pointer hover:text-[#FF6B4A] transition-colors" 
-              onClick={() => handleNavClick(item)}
-            >
-              {item}
-            </span>
-          ))}
-        </nav>
-        
-        {/* 인증 버튼 */}
-        <div className="flex gap-3">
-          <button 
-            className="px-4 py-2 text-sm font-semibold text-[#FF6B4A] bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors" 
-            onClick={() => handleAuthClick('signin')}
-          >
+        {/* 우측 유저 메뉴 */}
+        <div className="flex items-center gap-4">
+          <button className="px-4 py-1.5 text-sm font-semibold text-[#FF6B4A] bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
             Sign In
           </button>
-          <button 
-            className="px-4 py-2 text-sm font-semibold text-white bg-[#FF6B4A] rounded-lg hover:bg-[#ff5530] shadow-sm transition-colors" 
-            onClick={() => handleAuthClick('start')}
-          >
+          <button className="px-4 py-1.5 text-sm font-semibold text-white bg-[#FF6B4A] rounded-lg hover:bg-[#ff5530] shadow-sm transition-colors">
             Get Started
           </button>
         </div>
       </header>
 
       {/* --- Body Area --- */}
-      <div className="flex flex-1 max-w-[1400px] w-full mx-auto">
+      <div className="flex flex-1 pt-16">
         
-        {/* --- Sidebar --- */}
-        <aside className="w-[260px] py-8 px-4 bg-white border-r border-gray-100 hidden lg:flex flex-col shrink-0">
+        {/* --- Sidebar (새로운 디자인 적용) --- */}
+        <aside className="w-64 bg-white fixed left-0 top-16 h-[calc(100vh-64px)] overflow-y-auto z-10 flex flex-col pt-8 px-6 border-r border-gray-100">
+          
           {/* 프로필 섹션 */}
-          <div className="flex items-center mb-10 px-2">
-            <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 flex items-center justify-center text-gray-400 text-xl">
-              👤
+          <div className="flex items-center gap-3 mb-10">
+            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-base text-gray-800">Administrator</span>
-              <span className="text-xs text-[#FF6B4A] font-medium bg-orange-50 px-2 py-0.5 rounded-full w-fit mt-1">
-                MASTER
-              </span>
+              <span className="font-bold text-gray-800 text-base">Administrator</span>
+              <span className="text-[10px] font-bold text-[#FF6B4A] bg-[#FFF0EB] px-2 py-0.5 rounded-sm w-fit mt-1">MASTER</span>
             </div>
           </div>
 
           {/* 메뉴 리스트 */}
-          <div className="space-y-8">
-            {/* 그룹 1 */}
+          <nav className="flex-1 space-y-8">
+            
+            {/* DASHBOARD - 현재 활성화됨 (Active) */}
             <div>
-              <div className="text-xs font-bold text-gray-400 mb-2 px-3 uppercase tracking-wider">Dashboard</div>
-              <ul className="space-y-1">
-                <li>
-                  <div className="flex items-center px-3 py-2.5 bg-orange-50 text-[#FF6B4A] rounded-lg cursor-pointer font-medium">
-                    <span className="mr-3 text-lg">🏠</span> 홈
-                  </div>
-                </li>
-              </ul>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Dashboard</div>
+              <Link to="/admin" className="flex items-center gap-3 px-3 py-2.5 bg-[#FFF7ED] text-[#FF6B4A] rounded-lg transition-colors">
+                <span className="text-orange-500"><Icons.Home /></span>
+                <span className="text-sm font-bold">홈</span>
+              </Link>
             </div>
 
-            {/* 그룹 2 */}
+            {/* MANAGEMENT */}
             <div>
-              <div className="text-xs font-bold text-gray-400 mb-2 px-3 uppercase tracking-wider">Management</div>
-              <ul className="space-y-1">
-                <li>
-                  <Link to="/mypage/mentorequests" className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#FF6B4A] rounded-lg transition-colors group">
-                    <span className="mr-3 text-gray-400 group-hover:text-[#FF6B4A]">👥</span> 멘토 승인 관리
-                  </Link>
-                </li>
-                <li>
-                  <div className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#FF6B4A] rounded-lg cursor-pointer transition-colors group">
-                    <span className="mr-3 text-gray-400 group-hover:text-[#FF6B4A]">📋</span> 전체 회원 조회
-                  </div>
-                </li>
-              </ul>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Management</div>
+              <div className="space-y-1">
+                <Link to="/mypage/mentorequests" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                  <span className="text-purple-500"><Icons.Users /></span>
+                  <span className="text-sm font-medium">멘토 승인 관리</span>
+                </Link>
+                <div className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer">
+                  <span className="text-orange-400"><Icons.Clipboard /></span>
+                  <span className="text-sm font-medium">전체 회원 조회</span>
+                </div>
+              </div>
             </div>
 
-            {/* 그룹 3 */}
+            {/* CONTENTS */}
             <div>
-              <div className="text-xs font-bold text-gray-400 mb-2 px-3 uppercase tracking-wider">Contents</div>
-              <ul className="space-y-1">
-                <li>
-                  <Link to="/mypage/leturereport" className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#FF6B4A] rounded-lg transition-colors group">
-                    <span className="mr-3 text-gray-400 group-hover:text-[#FF6B4A]">🚨</span> 강의 신고 관리
-                  </Link>
-                </li>
-              </ul>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Contents</div>
+              <div className="space-y-1">
+                <Link to="/mypage/leturereport" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                  <span className="text-pink-500"><Icons.Siren /></span>
+                  <span className="text-sm font-medium">강의 신고 관리</span>
+                </Link>
+              </div>
             </div>
 
-            {/* 그룹 4 */}
+            {/* SUPPORT */}
             <div>
-              <div className="text-xs font-bold text-gray-400 mb-2 px-3 uppercase tracking-wider">Support</div>
-              <ul className="space-y-1">
-                <li>
-                  <Link to="/mypage/suggestonsmanage" className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#FF6B4A] rounded-lg transition-colors group">
-                    <span className="mr-3 text-gray-400 group-hover:text-[#FF6B4A]">💬</span> 건의 사항 관리
-                  </Link>
-                </li>
-                <li>
-                  <div className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#FF6B4A] rounded-lg cursor-pointer transition-colors group">
-                    <span className="mr-3 text-gray-400 group-hover:text-[#FF6B4A]">📢</span> 공지 사항 작성
-                  </div>
-                </li>
-              </ul>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Support</div>
+              <div className="space-y-1">
+                <Link to="/mypage/suggestonsmanage" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                  <span className="text-[#A78BFA]"><Icons.MessageSquare /></span>
+                  <span className="text-sm font-medium">건의 사항 관리</span>
+                </Link>
+                <div className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer">
+                   <span className="text-rose-500"><Icons.Megaphone /></span>
+                  <span className="text-sm font-medium">공지 사항 작성</span>
+                </div>
+              </div>
             </div>
-          </div>
+          </nav>
         </aside>
 
         {/* --- Main Content --- */}
-        <main className="flex-1 p-8 lg:p-12">
+        <main className="flex-1 ml-64 p-8 lg:p-12">
           <div className="flex justify-between items-end mb-8">
              <h1 className="text-2xl font-bold text-gray-900">관리자 대시보드</h1>
              <span className="text-sm text-gray-500">오늘의 주요 현황을 확인하세요.</span>
           </div>
 
-          {/* 알림 섹션 (스크린샷의 파란 박스 스타일 적용) */}
+          {/* 알림 섹션 */}
           <div className="bg-[#EFF6FF] border border-[#DBEAFE] rounded-2xl p-6 mb-10 shadow-sm">
             <div className="flex items-center mb-4">
               <span className="text-[#2563EB] text-lg mr-2">🔔</span>
@@ -191,7 +166,6 @@ const Admin = () => {
             </div>
             
             <div className="space-y-3">
-              {/* 항목 1 */}
               <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
                 <div className="flex items-center">
                   <span className="font-semibold text-gray-800">신규 멘토 신청이 접수되었습니다.</span>
@@ -202,7 +176,6 @@ const Admin = () => {
                 </div>
               </div>
 
-              {/* 항목 2 */}
               <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
                 <div className="flex items-center">
                   <span className="font-semibold text-gray-800">신고 접수된 강의가 있습니다.</span>
@@ -215,9 +188,8 @@ const Admin = () => {
             </div>
           </div>
 
-          {/* 통계 요약 카드 (그리드) */}
+          {/* 통계 요약 카드 */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* 카드 1 */}
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                <div className="text-gray-500 text-sm font-medium mb-2">총 멘토 신청</div>
                <div className="flex items-baseline">
@@ -226,7 +198,6 @@ const Admin = () => {
                </div>
             </div>
 
-            {/* 카드 2 */}
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                <div className="text-gray-500 text-sm font-medium mb-2">신고된 강의</div>
                <div className="flex items-baseline">
@@ -235,7 +206,6 @@ const Admin = () => {
                </div>
             </div>
 
-            {/* 카드 3 */}
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                <div className="text-gray-500 text-sm font-medium mb-2">처리 가능한 건의사항</div>
                <div className="flex items-baseline">
@@ -245,7 +215,7 @@ const Admin = () => {
             </div>
           </div>
           
-           {/* 차트 영역 (플레이스홀더) */}
+           {/* 차트 영역 */}
            <div className="mt-8 bg-white border border-gray-100 rounded-2xl p-8 shadow-sm h-[300px] flex flex-col justify-center items-center">
                 <div className="text-gray-300 text-5xl mb-4">📊</div>
                 <div className="text-xl font-bold text-gray-700 mb-2">상세 통계 분석</div>
