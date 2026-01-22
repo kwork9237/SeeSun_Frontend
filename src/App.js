@@ -16,6 +16,8 @@ import Join from './pages/member/Join';
 import Mento from './pages/member/JoinDetail/Mento';
 import Mentee from './pages/member/JoinDetail/Mentee';
 import Create from './pages/lecture/mento/Create';
+import LectureRealtimeMentee from "./pages/lecture/LectureRealtimeMentee";
+import LectureRealtimeMentor from "./pages/lecture/LectureRealtimeMentor";
 
 function App() {
   return (
@@ -48,6 +50,8 @@ function App() {
 
           {/* 강의 실시간(WebRTC 테스트) */}
           <Route path='/lecture/realtime' element={<LectureRealtime/>}/>
+          <Route path="/mentor/lecture/:lectureId" element={<LectureRealtimeMentor />} />
+          <Route path="/mentee/lecture/:lectureId" element={<LectureRealtimeMentee />} />
           <Route path='/webrtctest' element={<WebRTCTest/>}/>
 
         </Route>
