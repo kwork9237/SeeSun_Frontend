@@ -15,6 +15,23 @@ export default function PaymentButton({ memberId, lectureId, className, buttonTe
         le_id: lectureId,
       });
 
+      /* // ==========================================
+      // [보안 버전] 나중에 토큰 적용할 때 위 코드를 지우고 이걸 쓰세요!
+      // ==========================================
+      const token = localStorage.getItem("accessToken"); // 저장된 토큰 가져오기
+
+      const res = await axios.post("/api/orders/request", 
+        { 
+          le_id: lectureId // mb_id는 뺍니다 (백엔드가 알아서 찾음)
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}` // 헤더에 토큰 탑승!
+          }
+        }
+      );
+      */
+
       const { orderId, amount, orderName, customerName } = res.data;
 
       const tossPayments = await loadTossPayments(clientKey);

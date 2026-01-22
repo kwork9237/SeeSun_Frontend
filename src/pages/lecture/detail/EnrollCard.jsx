@@ -94,6 +94,20 @@ const EnrollCard = ({ lecture, activeDays, activeTimes, weekDays, formatDate }) 
              className="w-full bg-[#FF6B4E] text-white py-5 rounded-[20px] font-black text-xl hover:bg-[#FF5A36] transition-all shadow-xl shadow-orange-100"
           />
 
+          {/* // =========================================================
+            // [미래 토큰 버전] memberId Props 삭제
+            // =========================================================
+            // 나중에 PaymentButton을 토큰 방식으로 바꾸면, 
+            // 여기선 memberId를 아예 안 넘겨줘도 됩니다. 
+            
+            <PaymentButton 
+               // memberId={...}  <-- 이거 삭제됨
+               lectureId={lecture.leId}
+               buttonText="Enroll Now"
+               className="..."
+            />
+          */}
+
           <button className="w-full bg-white text-gray-500 py-4 rounded-[20px] font-bold text-sm border border-gray-100 hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
             <Heart size={16} /> Add to Wishlist
           </button>
