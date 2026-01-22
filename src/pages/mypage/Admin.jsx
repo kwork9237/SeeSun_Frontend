@@ -36,7 +36,7 @@ const Admin = () => {
   useEffect(() => {
     const fetchAdminStats = async () => {
       try {
-        const response = await axios.get('/api/mypage/dashboard-stats');
+        const response = await axios.get('/api/admin/dashboard-stats');
         setDashboardStats({
           newMentorCount: response.data.newMentorCount || 0,
           reportedLectureCount: response.data.reportedLectureCount || 0,
@@ -99,7 +99,7 @@ const Admin = () => {
             {/* DASHBOARD - 현재 활성화됨 (Active) */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Dashboard</div>
-              <Link to="/admin" className="flex items-center gap-3 px-3 py-2.5 bg-[#FFF7ED] text-[#FF6B4A] rounded-lg transition-colors">
+              <Link to="/mypage" className="flex items-center gap-3 px-3 py-2.5 bg-[#FFF7ED] text-[#FF6B4A] rounded-lg transition-colors">
                 <span className="text-orange-500"><Icons.Home /></span>
                 <span className="text-sm font-bold">홈</span>
               </Link>
@@ -166,23 +166,31 @@ const Admin = () => {
             </div>
             
             <div className="space-y-3">
+              {/* 1. 신규 멘토 신청 알림 */}
               <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
                 <div className="flex items-center">
                   <span className="font-semibold text-gray-800">신규 멘토 신청이 접수되었습니다.</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-500 font-medium">대기 건수: <strong className="text-[#FF6B4A]">{dashboardStats.newMentorCount}</strong>건</span>
-                  <button className="px-4 py-1.5 text-sm bg-[#2563EB] text-white rounded-lg hover:bg-blue-700 transition-colors">바로가기</button>
+                  {/* 바로가기 버튼 -> 멘토 승인 페이지로 링크 연결 */}
+                  <Link to="/mypage/mentorequests" className="px-4 py-1.5 text-sm bg-[#2563EB] text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    바로가기
+                  </Link>
                 </div>
               </div>
 
+              {/* 2. 신고된 강의 알림 */}
               <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
                 <div className="flex items-center">
                   <span className="font-semibold text-gray-800">신고 접수된 강의가 있습니다.</span>
                 </div>
                 <div className="flex items-center gap-3">
                    <span className="text-sm text-gray-500 font-medium">미처리 건수: <strong className="text-[#EF4444]">{dashboardStats.reportedLectureCount}</strong>건</span>
-                  <button className="px-4 py-1.5 text-sm border border-gray-300 bg-white text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">확인하기</button>
+                  {/* 확인하기 버튼 -> 강의 신고 페이지로 링크 연결 */}
+                  <Link to="/mypage/leturereport" className="px-4 py-1.5 text-sm border border-gray-300 bg-white text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+                    확인하기
+                  </Link>
                 </div>
               </div>
             </div>

@@ -2,32 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-// --- 아이콘 컴포넌트 ---
+// --- 아이콘 컴포넌트 (생략 없이 기존과 동일) ---
 const Icons = {
-  Home: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-  ),
-  Users: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-  ),
-  Clipboard: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
-  ),
-  Siren: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="M4 2C4 2 5 5 5 5C5 5 2 7 2 7C2 7 5 5 5 5C5 5 4 2 4 2Z"/><path d="M20 2C20 2 19 5 19 5C19 5 22 7 22 7C22 7 19 5 19 5C19 5 20 2 20 2Z"/></svg>
-  ),
-  MessageSquare: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-  ),
-  Megaphone: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
-  ),
-  File: ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-      <polyline points="13 2 13 9 20 9"></polyline>
-    </svg>
-  ),
+  Home: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  Users: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  Clipboard: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>,
+  Siren: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="M4 2C4 2 5 5 5 5C5 5 2 7 2 7C2 7 5 5 5 5C5 5 4 2 4 2Z"/><path d="M20 2C20 2 19 5 19 5C19 5 22 7 22 7C22 7 19 5 19 5C19 5 20 2 20 2Z"/></svg>,
+  MessageSquare: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+  Megaphone: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>,
+  File: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>,
   ChevronLeft: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>,
   ChevronRight: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
 };
@@ -35,10 +18,11 @@ const Icons = {
 const MentoRequest = () => {
   const [requests, setRequests] = useState([]);
 
+  // --- 1. 백엔드에서 데이터 조회 (미승인 건) ---
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const response = await axios.get('/api/mento/list');
+        const response = await axios.get('/api/admin/pending'); // 미승인 목록 조회
         setRequests(response.data);
       } catch (error) {
         console.error('멘토 요청 목록 조회 실패:', error);
@@ -47,40 +31,50 @@ const MentoRequest = () => {
     fetchRequests();
   }, []);
 
-  const handleApprove = (reqId, mbId) => {
+  // --- 2. 승인 버튼 핸들러 (reqId 전달 핵심 로직) ---
+  const handleApprove = async (reqId, mbId) => {
     if (window.confirm(`회원번호 ${mbId}님의 멘토 신청을 승인하시겠습니까?`)) {
-      alert(`회원번호 ${mbId}님이 멘토로 승인되었습니다.`);
-      setRequests(prev => prev.filter(req => req.reqId !== reqId));
+      try {
+        // [중요] reqId를 JSON 객체 { reqId: 1 } 형태로 백엔드에 전달
+        const response = await axios.post('/api/admin/approve', { reqId: reqId });
+        
+        if (response.data === "SUCCESS") {
+            alert(`회원번호 ${mbId}님이 멘토로 승인되었습니다.`);
+            // UI 업데이트: 승인된 항목 제거
+            setRequests(prev => prev.filter(req => req.reqId !== reqId));
+        } else {
+            alert("승인 처리에 실패했습니다.");
+        }
+      } catch (error) {
+        console.error("승인 요청 중 에러 발생:", error);
+        alert("서버 오류로 승인하지 못했습니다.");
+      }
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#111827] font-sans">
       
-      {/* 1. 상단 네비게이션 */}
+      {/* 헤더 */}
       <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 fixed w-full top-0 z-20">
         <Link to="/" className="flex items-center gap-2 cursor-pointer text-inherit no-underline">
           <span className="text-orange-500 text-2xl leading-none">●</span> 
           <span className="font-bold text-xl tracking-tight text-gray-900">LinguaConnect</span>
         </Link>
         <div className="flex items-center gap-4">
-          <button className="px-4 py-1.5 text-sm font-semibold text-[#FF6B4A] bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
-            Sign In
-          </button>
-          <button className="px-4 py-1.5 text-sm font-semibold text-white bg-[#FF6B4A] rounded-lg hover:bg-[#ff5530] shadow-sm transition-colors">
-            Get Started
-          </button>
+          <button className="px-4 py-1.5 text-sm font-semibold text-[#FF6B4A] bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">Sign In</button>
+          <button className="px-4 py-1.5 text-sm font-semibold text-white bg-[#FF6B4A] rounded-lg hover:bg-[#ff5530] shadow-sm transition-colors">Get Started</button>
         </div>
       </header>
 
-      {/* 2. 메인 레이아웃 */}
+      {/* 바디 */}
       <div className="flex flex-1 pt-16">
         
         {/* 사이드바 */}
         <aside className="w-64 bg-white fixed left-0 top-16 h-[calc(100vh-64px)] overflow-y-auto z-10 flex flex-col pt-8 px-6 border-r border-gray-100">
           <div className="flex items-center gap-3 mb-10">
             <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              <Icons.Users /> {/* 아이콘 단순화 */}
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-gray-800 text-base">Administrator</span>
@@ -89,21 +83,16 @@ const MentoRequest = () => {
           </div>
 
           <nav className="flex-1 space-y-8">
-            {/* Dashboard */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Dashboard</div>
-              {/* 홈 버튼: 클릭 시 /mypage 로 이동 */}
               <Link to="/mypage" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
                 <span className="text-orange-500"><Icons.Home /></span>
                 <span className="text-sm font-medium">홈</span>
               </Link>
             </div>
-
-            {/* Management */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Management</div>
               <div className="space-y-1">
-                {/* 현재 페이지 Active 상태 */}
                 <Link to="/mypage/mentorequests" className="flex items-center gap-3 px-3 py-2.5 bg-[#FFF7ED] text-[#FF6B4A] rounded-lg transition-colors">
                   <span className="text-purple-500"><Icons.Users /></span>
                   <span className="text-sm font-bold">멘토 승인 관리</span>
@@ -114,8 +103,6 @@ const MentoRequest = () => {
                 </div>
               </div>
             </div>
-
-            {/* Contents */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Contents</div>
               <div className="space-y-1">
@@ -125,8 +112,6 @@ const MentoRequest = () => {
                 </Link>
               </div>
             </div>
-
-            {/* Support */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Support</div>
               <div className="space-y-1">
@@ -145,7 +130,6 @@ const MentoRequest = () => {
 
         {/* 메인 컨텐츠 */}
         <main className="flex-1 ml-64 p-8 lg:p-12">
-          
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
              <div>
                 <h1 className="text-2xl font-bold text-gray-900">멘토 신청 승인/반려</h1>
@@ -153,7 +137,6 @@ const MentoRequest = () => {
              </div>
           </div>
 
-          {/* 테이블 영역 */}
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col min-h-[600px]">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -166,7 +149,6 @@ const MentoRequest = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {/* 데이터가 있을 때 */}
                   {requests.map((req) => (
                     <tr key={req.reqId} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 align-middle">
@@ -196,19 +178,22 @@ const MentoRequest = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 align-middle text-center">
-                          <button onClick={() => handleApprove(req.reqId, req.mbId)} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 rounded hover:bg-blue-700 shadow-sm transition-colors whitespace-nowrap">승인</button>
+                          {/* [핵심] req.reqId를 전달 */}
+                          <button 
+                            onClick={() => handleApprove(req.reqId, req.mbId)} 
+                            className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 rounded hover:bg-blue-700 shadow-sm transition-colors whitespace-nowrap"
+                          >
+                            승인
+                          </button>
                       </td>
                     </tr>
                   ))}
                   
-                  {/* 데이터가 없을 때 중앙 정렬 */}
                   {requests.length === 0 && (
                     <tr>
                       <td colSpan="4" className="h-[500px]">
                         <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                           <div className="p-4 bg-gray-50 rounded-full mb-3 text-gray-300">
-                              <Icons.Clipboard />
-                           </div>
+                           <div className="p-4 bg-gray-50 rounded-full mb-3 text-gray-300"><Icons.Clipboard /></div>
                            <span className="font-medium text-gray-500">등록된 요청이 없습니다.</span>
                         </div>
                       </td>
@@ -218,18 +203,14 @@ const MentoRequest = () => {
               </table>
             </div>
             
-            {/* 페이지네이션 */}
             <div className="mt-auto border-t border-gray-100 p-4 flex items-center justify-between bg-white">
-              <span className="text-sm text-gray-500">
-                  대기 중인 신청: <strong className="text-gray-900">{requests.length}</strong>건
-              </span>
+              <span className="text-sm text-gray-500">대기 중인 신청: <strong className="text-gray-900">{requests.length}</strong>건</span>
               <div className="flex items-center gap-1">
                 <button className="p-2 border border-gray-200 rounded hover:bg-gray-50 text-gray-400 transition-colors"><Icons.ChevronLeft /></button>
                 <button className="w-8 h-8 flex items-center justify-center rounded bg-[#FF6B4A] text-white font-bold text-sm shadow-sm">1</button>
                 <button className="p-2 border border-gray-200 rounded hover:bg-gray-50 text-gray-400 transition-colors"><Icons.ChevronRight /></button>
               </div>
             </div>
-
           </div>
         </main>
       </div>

@@ -37,9 +37,8 @@ const LectureReport = () => {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        // [TODO] 실제 백엔드 API 주소로 변경
-        // const response = await axios.get('/api/admin/reports');
-        // setReports(response.data);
+        const response = await axios.get('/api/admin/reports');
+         setReports(response.data);
         setReports([]); // 임시로 빈 배열
       } catch (error) {
         console.error('강의 신고 목록 조회 실패:', error);
