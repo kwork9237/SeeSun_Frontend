@@ -10,9 +10,9 @@ import LectureList from './pages/lecture/LectureList';
 import LectureDetail from './pages/lecture/LectureDetail';
 
 // 회원가입
-import Join from './pages/member/Join';
-import Mento from './pages/member/JoinDetail/Mento';
-import Mentee from './pages/member/JoinDetail/Mentee';
+import Join from './pages/member/join/JoinMain';
+// import Mento from './pages/member/JoinDetail/Mento';
+// import Mentee from './pages/member/JoinDetail/Mentee';
 import Create from './pages/lecture/mento/Create';
 
 
@@ -29,8 +29,8 @@ function App() {
 
           {/* 회원가입 */}
           <Route path='/join' element={<Join/>}/>
-          <Route path='/join/Mento' element={<Mento/>}/>
-          <Route path='/join/Mentee' element={<Mentee/>}/>
+          {/* <Route path='/join/Mento' element={<Mento/>}/>
+          <Route path='/join/Mentee' element={<Mentee/>}/> */}
 
           {/* 로그인 */}
           <Route path='/Login' element={<Login/>}/>
