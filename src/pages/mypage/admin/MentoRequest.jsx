@@ -1,404 +1,302 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios'; // axios 임포트 추가
+import { Link } from 'react-router-dom';
 
-/* -------------------------------------------------------------------------- */
-/* 아이콘 컴포넌트 (SVG)                           */
-/* -------------------------------------------------------------------------- */
+// --- 아이콘 컴포넌트 (SVG) ---
 const Icons = {
-  Home: ({ style }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style}>
+  Home: ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
       <polyline points="9 22 9 12 15 12 15 22"></polyline>
     </svg>
   ),
-  User: ({ style }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style}>
+  User: ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
       <circle cx="12" cy="7" r="4"></circle>
     </svg>
   ),
-  Search: ({ style }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style}>
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  Search: ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
     </svg>
-  )
+  ),
+  ChevronLeft: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>,
+  ChevronRight: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
 };
-
-/* -------------------------------------------------------------------------- */
-/* 스타일 정의 객체                                */
-/* -------------------------------------------------------------------------- */
-const styles = {
-  wrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: '100vh',
-    backgroundColor: '#ffffff',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-  },
-  // 헤더 스타일
-  header: {
-    height: '64px',
-    borderBottom: '1px solid #e5e7eb',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0 24px',
-    backgroundColor: '#ffffff',
-    position: 'sticky',
-    top: 0,
-    zIndex: 10,
-  },
-  logoGroup: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  logoIcon: {
-    width: '32px',
-    height: '32px',
-    backgroundColor: '#f97316', // orange-500
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoDot: {
-    width: '16px',
-    height: '16px',
-    backgroundColor: '#ffffff',
-    borderRadius: '50%',
-    opacity: 0.5,
-  },
-  logoText: {
-    fontSize: '20px',
-    fontWeight: 'bold',
-    color: '#1f2937', // gray-800
-  },
-  nav: {
-    display: 'flex',
-    gap: '32px',
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#4b5563', // gray-600
-  },
-  navItem: {
-    textDecoration: 'none',
-    color: 'inherit',
-    cursor: 'pointer',
-  },
-  headerBtnGroup: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-  },
-  
-  // 버튼 스타일
-  btnBase: {
-    padding: '8px 16px',
-    borderRadius: '6px',
-    fontSize: '14px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    border: 'none',
-    transition: 'background-color 0.2s',
-  },
-  btnPrimary: {
-    backgroundColor: '#f97316',
-    color: 'white',
-  },
-  btnOutline: {
-    backgroundColor: 'transparent',
-    border: '1px solid #f97316',
-    color: '#f97316',
-  },
-  btnWhite: {
-    backgroundColor: '#ffffff',
-    border: '1px solid #d1d5db',
-    color: '#374151',
-  },
-
-  // 메인 레이아웃
-  container: {
-    display: 'flex',
-    flex: 1,
-  },
-  
-  // 사이드바
-  sidebar: {
-    width: '256px',
-    borderRight: '1px solid #e5e7eb',
-    padding: '24px',
-    backgroundColor: '#ffffff',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '32px',
-  },
-  profileSection: {
-    marginBottom: '16px',
-  },
-  profileTitle: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-    marginBottom: '16px',
-    margin: 0,
-  },
-  profileCard: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    marginTop: '16px',
-  },
-  profileIcon: {
-    width: '48px',
-    height: '48px',
-    backgroundColor: '#e5e7eb',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#9ca3af',
-  },
-  badge: {
-    fontSize: '12px',
-    backgroundColor: '#f3f4f6',
-    color: '#4b5563',
-    padding: '2px 8px',
-    borderRadius: '9999px',
-    border: '1px solid #e5e7eb',
-    marginLeft: '4px',
-  },
-  
-  // 메뉴 리스트
-  menuGroup: {
-    marginBottom: '16px',
-  },
-  menuTitle: {
-    fontSize: '12px',
-    fontWeight: 'bold',
-    color: '#6b7280',
-    marginBottom: '8px',
-    textTransform: 'uppercase',
-  },
-  menuList: {
-    listStyle: 'none',
-    padding: 0,
-    margin: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  menuItem: {
-    padding: '8px 12px',
-    borderRadius: '8px',
-    border: '1px solid #e5e7eb',
-    fontSize: '14px',
-    color: '#374151',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    backgroundColor: '#ffffff',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  menuItemActive: { // 홈 버튼용 스타일
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 12px',
-    borderRadius: '8px',
-    border: '1px solid #e5e7eb',
-    backgroundColor: '#ffffff',
-    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-    fontWeight: 'bold',
-    fontSize: '14px',
-    cursor: 'pointer',
-  },
-  disabledText: {
-    fontSize: '12px',
-    color: '#9ca3af',
-    fontWeight: 'normal',
-    marginLeft: '4px',
-  },
-
-  // 메인 콘텐츠
-  mainContent: {
-    flex: 1,
-    padding: '40px',
-    backgroundColor: '#ffffff',
-  },
-  pageTitle: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: '24px',
-  },
-  contentCard: {
-    border: '1px solid #e5e7eb',
-    borderRadius: '8px',
-    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-    backgroundColor: '#ffffff',
-    minHeight: '500px',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  cardHeader: {
-    padding: '16px',
-    borderBottom: '1px solid #e5e7eb',
-  },
-  cardTitle: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    margin: 0,
-  },
-  listItem: {
-    padding: '16px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottom: '1px solid #f3f4f6',
-  },
-  listItemText: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-    color: '#374151',
-  },
-  pagination: {
-    marginTop: '32px',
-    textAlign: 'center',
-    fontWeight: 'bold',
-    color: '#374151',
-  }
-};
-
-/* -------------------------------------------------------------------------- */
-/* 메인 컴포넌트                                  */
-/* -------------------------------------------------------------------------- */
 
 const MentoRequest = () => {
+  // --- 상태 관리 (State) ---
+  const [mentorRequests, setMentorRequests] = useState([]); // 초기값 빈 배열
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true); // 로딩 상태 추가
+
+  // --- 데이터 가져오기 (API 호출) ---
+  useEffect(() => {
+    const fetchMentorRequests = async () => {
+      try {
+        setLoading(true);
+        // [TODO] 실제 백엔드 API 주소로 변경해주세요. (예: /api/admin/mentor-requests)
+        const response = await axios.get('/api/admin/mentor-requests');
+        
+        // 데이터 구조에 맞게 설정 (예: response.data.list)
+        if (response.data && Array.isArray(response.data)) {
+            setMentorRequests(response.data);
+        } else {
+            setMentorRequests([]);
+        }
+
+      } catch (error) {
+        console.error("멘토 신청 목록을 불러오는데 실패했습니다.", error);
+        setMentorRequests([]); // 에러 시 빈 배열 유지
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMentorRequests();
+  }, [currentPage]); // 페이지 변경 시 재호출 (필요 시)
+
+  // --- 이벤트 핸들러 ---
+  const handleNavClick = (menuName) => alert(`'${menuName}' 페이지로 이동합니다.`);
+  const handleLogoClick = () => {
+    alert("메인 홈페이지로 이동합니다.");
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  const handleDetailClick = (id, name) => alert(`${name} (ID: ${id}) 님의 상세 신청서를 열람합니다.`);
+
   return (
-    <div style={styles.wrapper}>
-      {/* 헤더 */}
-      <header style={styles.header}>
-        <div style={styles.logoGroup}>
-          <div style={styles.logoGroup}>
-              <div style={styles.logoIcon}>
-                  <div style={styles.logoDot}></div>
-              </div>
-              <span style={styles.logoText}>LinguaConnect</span>
-          </div>
+    <div className="font-sans min-h-screen flex flex-col bg-[#F9FAFB] text-[#111827]">
+      {/* --- Header (Admin 페이지와 동일) --- */}
+      <header className="flex justify-between items-center px-8 py-4 bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div className="flex items-center font-bold text-xl cursor-pointer select-none" onClick={handleLogoClick}>
+          <span className="text-[#FF6B4A] mr-2 text-2xl">☁️</span>
+          <span className="tracking-tight">LinguaConnect</span>
         </div>
-
-        {/* 데스크탑 네비게이션 (모바일 숨김 처리는 미디어쿼리 필요하나 인라인 한계로 생략, 기본 flex로 표시) */}
-        <nav style={styles.nav}>
-          <a href="#" style={styles.navItem}>How it Works</a>
-          <a href="#" style={styles.navItem}>Languages</a>
-          <a href="#" style={styles.navItem}>Mentors</a>
-          <a href="#" style={styles.navItem}>Pricing</a>
+        
+        <nav className="hidden md:flex gap-8 text-sm font-medium text-gray-500">
+          {['How it Works', 'Languages', 'Mentors', 'Pricing'].map((item) => (
+            <span key={item} className="cursor-pointer hover:text-[#FF6B4A] transition-colors" onClick={() => handleNavClick(item)}>
+              {item}
+            </span>
+          ))}
         </nav>
-
-        <div style={styles.headerBtnGroup}>
-          <button style={{...styles.btnBase, ...styles.btnOutline}}>Sign In</button>
-          <button style={{...styles.btnBase, ...styles.btnPrimary}}>Get Started</button>
+        
+        <div className="flex gap-3">
+          <button className="px-4 py-2 text-sm font-semibold text-[#FF6B4A] bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">Sign In</button>
+          <button className="px-4 py-2 text-sm font-semibold text-white bg-[#FF6B4A] rounded-lg hover:bg-[#ff5530] shadow-sm transition-colors">Get Started</button>
         </div>
       </header>
 
-      <div style={styles.container}>
-        {/* 사이드바 */}
-        <aside style={styles.sidebar}>
-          {/* 관리자 프로필 영역 */}
-          <div style={styles.profileSection}>
-            <h2 style={styles.profileTitle}>관리자 페이지</h2>
-            <div style={styles.profileCard}>
-              <div style={styles.profileIcon}>
-                <Icons.User style={{width: 24, height: 24}} />
-              </div>
-              <div>
-                <div style={{fontWeight: 'bold', color: '#1f2937'}}>admin</div>
-                <span style={styles.badge}>관리자</span>
-              </div>
+      {/* --- Body Area --- */}
+      <div className="flex flex-1 max-w-[1400px] w-full mx-auto">
+        
+        {/* --- Sidebar (Admin 페이지와 동일) --- */}
+        <aside className="w-[260px] py-8 px-4 bg-white border-r border-gray-100 hidden lg:flex flex-col shrink-0">
+          <div className="flex items-center mb-10 px-2">
+            <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 flex items-center justify-center text-gray-400 text-xl">👤</div>
+            <div className="flex flex-col">
+              <span className="font-bold text-base text-gray-800">Administrator</span>
+              <span className="text-xs text-[#FF6B4A] font-medium bg-orange-50 px-2 py-0.5 rounded-full w-fit mt-1">MASTER</span>
             </div>
           </div>
 
-          {/* 메뉴 리스트 */}
-          <nav style={{display: 'flex', flexDirection: 'column', gap: '24px'}}>
-            {/* 대시보드 */}
-            <div style={styles.menuGroup}>
-              <h3 style={styles.menuTitle}>대시보드</h3>
-              <ul style={styles.menuList}>
-                <li style={styles.menuItemActive}>
-                  <Icons.Home style={{color: '#374151'}} />
-                  <span>홈</span>
+          <div className="space-y-8">
+            <div>
+              <div className="text-xs font-bold text-gray-400 mb-2 px-3 uppercase tracking-wider">Dashboard</div>
+              <ul className="space-y-1">
+                <li>
+                   <Link to="/admin" className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#FF6B4A] rounded-lg transition-colors group">
+                    <span className="mr-3 text-lg group-hover:text-[#FF6B4A]">🏠</span> 홈
+                  </Link>
                 </li>
               </ul>
             </div>
 
-            {/* 회원 관리 */}
-            <div style={styles.menuGroup}>
-              <h3 style={styles.menuTitle}>회원 관리</h3>
-              <ul style={styles.menuList}>
-                <li style={styles.menuItem}>
-                  멘토 승인 관리 <span style={styles.disabledText}>(요청 기능 N)</span>
+            <div>
+              <div className="text-xs font-bold text-gray-400 mb-2 px-3 uppercase tracking-wider">Management</div>
+              <ul className="space-y-1">
+                <li>
+                  <div className="flex items-center px-3 py-2.5 bg-orange-50 text-[#FF6B4A] rounded-lg cursor-pointer font-medium">
+                    <span className="mr-3">👥</span> 멘토 승인 관리
+                  </div>
                 </li>
-                <li style={styles.menuItem}>
-                  전체 회원 조회 <span style={styles.disabledText}>(선택 사항)</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* 콘텐츠 관리 */}
-            <div style={styles.menuGroup}>
-              <h3 style={styles.menuTitle}>콘텐츠 관리</h3>
-              <ul style={styles.menuList}>
-                <li style={styles.menuItem}>
-                  강의 신고 관리 <span style={styles.disabledText}>(요청 기능 N)</span>
+                <li>
+                  <div className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#FF6B4A] rounded-lg cursor-pointer transition-colors group">
+                    <span className="mr-3 group-hover:text-[#FF6B4A]">📋</span> 전체 회원 조회
+                  </div>
                 </li>
               </ul>
             </div>
 
-            {/* 고객센터 관리 */}
-            <div style={styles.menuGroup}>
-              <h3 style={styles.menuTitle}>고객센터 관리</h3>
-              <ul style={styles.menuList}>
-                <li style={styles.menuItem}>
-                  건의 사항 관리 <span style={styles.disabledText}>(요청 기능 N)</span>
-                </li>
-                <li style={styles.menuItem}>
-                  공지 사항 작성
+            <div>
+              <div className="text-xs font-bold text-gray-400 mb-2 px-3 uppercase tracking-wider">Contents</div>
+              <ul className="space-y-1">
+                <li>
+                  <div className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#FF6B4A] rounded-lg transition-colors group">
+                    <span className="mr-3 group-hover:text-[#FF6B4A]">🚨</span> 강의 신고 관리
+                  </div>
                 </li>
               </ul>
             </div>
-          </nav>
+
+            <div>
+              <div className="text-xs font-bold text-gray-400 mb-2 px-3 uppercase tracking-wider">Support</div>
+              <ul className="space-y-1">
+                <li>
+                  <div className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#FF6B4A] rounded-lg transition-colors group">
+                    <span className="mr-3 group-hover:text-[#FF6B4A]">💬</span> 건의 사항 관리
+                  </div>
+                </li>
+                <li>
+                  <div className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#FF6B4A] rounded-lg cursor-pointer transition-colors group">
+                    <span className="mr-3 group-hover:text-[#FF6B4A]">📢</span> 공지 사항 작성
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
         </aside>
 
-        {/* 메인 콘텐츠 영역 */}
-        <main style={styles.mainContent}>
-          <h1 style={styles.pageTitle}>신규 멘토 신청자 (게시판 형식)</h1>
-
-          {/* 리스트 카드 */}
-          <div style={styles.contentCard}>
-            
-            {/* 리스트 헤더 */}
-            <div style={styles.cardHeader}>
-              <h2 style={styles.cardTitle}>신규 멘토 신청자 정보 컬럼들</h2>
-            </div>
-
-            {/* 리스트 아이템 (예시) */}
-            <div style={styles.listItem}>
-              <span style={styles.listItemText}>신규 멘토 신청자의 멘티 정보들</span>
-              <button style={{...styles.btnBase, ...styles.btnWhite, fontWeight: 'bold'}}>
-                정보 상세보기
-              </button>
-            </div>
-            
-             {/* 빈 공간 채우기 */}
-             <div style={{flex: 1}}></div>
-
+        {/* --- Main Content --- */}
+        <main className="flex-1 p-8 lg:p-12">
+          
+          {/* 타이틀 및 액션 바 */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
+             <div>
+                <h1 className="text-2xl font-bold text-gray-900">멘토 신청 관리</h1>
+                <span className="text-sm text-gray-500 mt-1 block">새로 들어온 멘토 신청 내역을 검토하고 승인합니다.</span>
+             </div>
+             <div className="flex gap-2">
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    placeholder="이름 또는 언어 검색" 
+                    className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B4A] focus:border-transparent w-64"
+                  />
+                  <Icons.Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
+                </div>
+                <button className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors font-medium">
+                  필터 적용
+                </button>
+             </div>
           </div>
 
-          {/* 페이징 처리 */}
-          <div style={styles.pagination}>
-            <span>페이징 처리</span>
+          {/* 리스트 테이블 카드 */}
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col min-h-[600px]">
+            
+            {/* 테이블 헤더 */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold tracking-wider">
+                    <th className="px-6 py-4">신청자 정보</th>
+                    <th className="px-6 py-4">전문 언어</th>
+                    <th className="px-6 py-4">주요 경력</th>
+                    <th className="px-6 py-4">신청일</th>
+                    <th className="px-6 py-4 text-center">상태</th>
+                    <th className="px-6 py-4 text-center">관리</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {/* 로딩 중일 때 */}
+                  {loading && (
+                    <tr>
+                      <td colSpan="6" className="py-20 text-center text-gray-500">
+                        데이터를 불러오는 중입니다...
+                      </td>
+                    </tr>
+                  )}
+
+                  {/* 데이터가 없고 로딩이 끝났을 때 */}
+                  {!loading && mentorRequests.length === 0 && (
+                     <tr>
+                      <td colSpan="6" className="py-20 text-center text-gray-500">
+                        신규 멘토 신청 내역이 없습니다.
+                      </td>
+                    </tr>
+                  )}
+
+                  {/* 데이터가 있을 때 렌더링 */}
+                  {!loading && mentorRequests.map((req) => (
+                    <tr key={req.id || Math.random()} className="hover:bg-[#FFFBF9] transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center">
+                          <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 text-sm font-bold mr-3">
+                            {req.name ? req.name.charAt(0) : '?'}
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-gray-900">{req.name || '이름 없음'}</div>
+                            <div className="text-xs text-gray-500">{req.email || '-'}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700 font-medium">
+                        {req.language || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {req.career || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 tabular-nums">
+                        {req.date || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {/* 상태값에 따른 뱃지 표시 (DB 값에 따라 조건 수정 필요) */}
+                        {req.status === 'pending' ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+                            승인 대기
+                          </span>
+                        ) : req.status === 'reviewed' ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                            검토 중
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                            {req.status || '대기'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button 
+                          onClick={() => handleDetailClick(req.id, req.name)}
+                          className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 hover:text-[#FF6B4A] hover:border-[#FF6B4A] transition-all"
+                        >
+                          상세보기
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  
+                  {/* 빈 공간 채우기 용도 (데이터가 적어도 테이블 형태 유지) */}
+                  {!loading && mentorRequests.length > 0 && mentorRequests.length < 5 && (
+                      [...Array(5 - mentorRequests.length)].map((_, i) => (
+                        <tr key={`empty-${i}`} className="h-[73px]">
+                          <td colSpan="6"></td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 페이징 (Footer) - 실제 기능 구현 시 totalCount 연동 필요 */}
+            <div className="mt-auto border-t border-gray-200 p-4 flex items-center justify-between bg-white">
+              <span className="text-sm text-gray-500">
+                총 <strong className="text-gray-900">{mentorRequests.length}</strong>건의 신청
+              </span>
+              <div className="flex items-center gap-1">
+                <button className="p-2 border border-gray-200 rounded hover:bg-gray-50 text-gray-500 disabled:opacity-50" disabled>
+                  <Icons.ChevronLeft />
+                </button>
+                <button className="px-3 py-1.5 text-sm font-bold bg-[#FF6B4A] text-white rounded shadow-sm border border-[#FF6B4A]">1</button>
+                {/* <button className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded border border-transparent">2</button> */}
+                <button className="p-2 border border-gray-200 rounded hover:bg-gray-50 text-gray-600">
+                  <Icons.ChevronRight />
+                </button>
+              </div>
+            </div>
+
           </div>
         </main>
       </div>
