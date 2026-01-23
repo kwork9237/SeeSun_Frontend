@@ -139,10 +139,12 @@ const Admin = () => {
                   <span className="text-[#A78BFA]"><Icons.MessageSquare /></span>
                   <span className="text-sm font-medium">건의 사항 관리</span>
                 </Link>
+                <Link to="/mypage/notification" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
                 <div className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer">
                    <span className="text-rose-500"><Icons.Megaphone /></span>
                   <span className="text-sm font-medium">공지 사항 작성</span>
                 </div>
+                </Link>
               </div>
             </div>
           </nav>

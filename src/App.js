@@ -19,7 +19,8 @@ import Create from './pages/lecture/mento/Create';
 import Admin from './pages/mypage/Admin';
 import MentoRequest from './pages/mypage/admin/MentoRequest';
 import LectureReport from './pages/mypage/admin/LectureReport';
-import SuggestionsManage from './pages/mypage/admin/SuggestionsManage';   
+import SuggestionsManage from './pages/mypage/admin/SuggestionsManage'; 
+import Notification from './pages/mypage/admin/Notification';  
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
           <Route path='/mypage/mentorequests' element={<MentoRequest/>}/>
           <Route path='/mypage/leturereport' element={<LectureReport/>}/>
           <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>
+          <Route path='/mypage/notification' element={<Notification/>}/>
 
         </Route>
       </Routes>
