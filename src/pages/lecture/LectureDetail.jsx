@@ -49,9 +49,11 @@ const LectureDetail = () => {
   if (loading) return <div className="min-h-screen flex items-center justify-center font-black text-gray-400">LOADING...</div>;
   if (!lecture) return <div className="min-h-screen flex items-center justify-center">강의를 찾을 수 없습니다.</div>;
 
+  // ✅ 데이터 가공 (DTO 기반)
   const activeDays = lecture.availableDays ? lecture.availableDays.split(',').map(Number) : [];
   const activeTimes = lecture.availableTime ? lecture.availableTime.split(',') : [];
 
+  // ✅ 탭 클릭 시 렌더링될 컴포넌트 결정 로직
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview': return <Overview lecture={lecture} />;
@@ -61,6 +63,14 @@ const LectureDetail = () => {
       default: return <Overview lecture={lecture} />;
     }
   };
+
+  // ✅ 탭 메뉴 구성 데이터
+  const tabMenus = [
+    { label: '강의 개요', value: 'overview' },
+    { label: '커리큘럼', value: 'curriculum' },
+    { label: '리뷰', value: 'reviews' },
+    { label: 'Q&A', value: 'Q&A' }
+  ];
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -102,12 +112,15 @@ const LectureDetail = () => {
 
             {/* 2. 멘토 프로필 섹션 */}
             <div className="flex items-center gap-5 mb-12 p-6 bg-gray-50 rounded-[24px] w-fit border border-gray-100">
-              <div className="w-16 h-16 bg-gray-200 rounded-full overflow-hidden border-2 border-white shadow-sm">
+              <div className="w-16 h-16 bg-gray-200 rounded-full overflow-hidden border-2 border-white shadow-sm flex items-center justify-center">
                 <img 
                   src={lecture.profileIcon ? `http://localhost:8080/uploads/${lecture.profileIcon}` : '/default-profile.png'} 
                   alt="instructor" 
                   className="w-full h-full object-cover"
-                  onError={(e) => e.target.src = 'https://via.placeholder.com/150'}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://via.placeholder.com/150';
+                  }}
                 />
               </div>
               <div>
@@ -119,17 +132,17 @@ const LectureDetail = () => {
               </div>
             </div>
 
-            {/* 3. 탭 메뉴 */}
+            {/* 3. 탭 메뉴 (한글 라벨 - 영어 value 매칭 수정) */}
             <div className="flex border-b mb-10 sticky top-[73px] bg-white z-40">
-              {['overview', 'curriculum', 'reviews', 'Q&A'].map((tab) => (
+              {tabMenus.map((tab) => (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  key={tab.value}
+                  onClick={() => setActiveTab(tab.value)}
                   className={`px-8 py-5 text-sm font-black uppercase tracking-widest transition-all ${
-                    activeTab === tab ? 'text-orange-500 border-b-4 border-orange-500' : 'text-gray-400 hover:text-gray-600'
+                    activeTab === tab.value ? 'text-orange-500 border-b-4 border-orange-500' : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
-                  {tab}
+                  {tab.label}
                 </button>
               ))}
             </div>
@@ -140,7 +153,7 @@ const LectureDetail = () => {
             </div>
           </div>
 
-          {/* 5. 우측 예약 카드 (팀원이 작업할 부분) */}
+          {/* 5. 우측 예약 카드 */}
           <div className="w-full lg:w-[400px]">
             <EnrollCard 
               lecture={lecture} 
