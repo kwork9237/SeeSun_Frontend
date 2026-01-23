@@ -73,22 +73,6 @@ const LectureList = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/')}>
-            <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center text-white text-xl font-bold">L</div>
-            <span className="text-xl font-bold text-gray-900 tracking-tight">LinguaConnect</span>
-          </div>
-          <nav className="flex items-center space-x-8 font-semibold text-sm text-gray-500">
-            <a href="#" className="hover:text-gray-900">How it Works</a>
-            <a href="#" className="hover:text-gray-900">Languages</a>
-            <a href="#" className="hover:text-gray-900">Mentors</a>
-            <button className="px-4 py-2 text-orange-500 border border-orange-500 rounded-lg">Sign In</button>
-            <button className="px-6 py-2 bg-orange-500 text-white rounded-lg">Get Started</button>
-          </nav>
-        </div>
-      </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex gap-8 items-start">
@@ -175,12 +159,12 @@ const LectureList = () => {
           {/* Main Content */}
           <main className="flex-1">
             <div className="mb-8 flex items-end justify-between">
-              <h1 className="text-3xl font-black text-gray-900 tracking-tight">Available Mentors</h1>
+              
               <div className="flex items-center gap-4">
                 <span className="text-sm font-bold text-gray-300">{lectures.length} mentors found</span>
                 <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="text-sm font-bold text-gray-700 border-none bg-transparent cursor-pointer focus:ring-0">
-                  <option value="rating">Sort by Rating</option>
-                  <option value="price">Sort by Price</option>
+                  <option value="rating">평가순</option>
+                  <option value="price">가격순</option>
                 </select>
               </div>
             </div>
