@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const MenteePayment = () => {
+const MentoPayment = () => {
   const [history, setHistory] = useState([]);
   
   // 테스트용 ID (나중에 토큰이나 props로 대체하세요)
-  const memberId = 201; 
+  const memberId = 3; 
 
   useEffect(() => {
     // 백엔드 API 호출 (주소는 그대로 유지)
@@ -77,4 +77,4 @@ const MenteePayment = () => {
   );
 };
 
-export default MenteePayment;
+export default MentoPayment;

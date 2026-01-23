@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const MenteeHome = () => {
+const MentoClasses= () => {
   const navigate = useNavigate();
   
   // 데이터 초기값 설정
@@ -16,7 +16,7 @@ const MenteeHome = () => {
     leId: null
   });
 
-  const memberId = 201; // 테스트용 ID (나중에 토큰으로 교체)
+  const memberId = 3; // 테스트용 ID (나중에 토큰으로 교체)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -111,4 +111,4 @@ const MenteeHome = () => {
   );
 };
 
-export default MenteeHome;
+export default MentoClasses;

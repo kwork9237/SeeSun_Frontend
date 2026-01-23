@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { User, Edit, Lock, X } from 'lucide-react';
 
-const MenteeProfile = () => {
+const MentoProfile = () => {
   const [userInfo, setUserInfo] = useState(null);
-  const memberId = 201; // 개발용 ID
+  const memberId = 3; // 개발용 ID
 
   // --- 모달 상태 ---
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -71,10 +71,6 @@ const MenteeProfile = () => {
     }
   };
   
-  // [기능 3] 멘토 신청
-  const handleMentorApply = () => {
-    alert("멘토 신청 기능 준비 중입니다.");
-  };
 
   // [헬퍼 함수]
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('ko-KR', {year: 'numeric', month: '2-digit', day: '2-digit'}) : '-';
@@ -101,11 +97,7 @@ const MenteeProfile = () => {
             <div className="space-y-2">
                 <div className="flex items-center gap-3">
                   <h3 className="text-3xl font-extrabold text-gray-900 leading-none">{userInfo.name}</h3>
-                  {userInfo.mb_type_id === 1 && (
-                    <button onClick={handleMentorApply} className="px-3 py-1 rounded-full border border-gray-300 text-xs font-bold text-gray-600 hover:bg-gray-100 bg-white transition">
-                       멘토 신청
-                    </button>
-                  )}
+            
                 </div>
                 
                 <div className="flex items-center gap-2">
@@ -186,4 +178,4 @@ const InfoItem = ({label, value}) => (
   </div>
 );
 
-export default MenteeProfile;
+export default MentoProfile;

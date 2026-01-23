@@ -1,5 +1,5 @@
 import './App.css';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route} from 'react-router-dom';
 import MainLayout from './components/layout/MainLayout';
 import MainPage from './pages/MainPage';
 import Login from './pages/member/Login';
@@ -15,7 +15,6 @@ import Mento from './pages/member/JoinDetail/Mento';
 import Mentee from './pages/member/JoinDetail/Mentee';
 import Create from './pages/lecture/mento/Create';
 
-import PaymentButton from "./pages/lecture/detail/PaymentButton";
 import SuccessPage from "./pages/lecture/detail/SuccessPage";
 import FailPage from "./pages/lecture/detail/FailPage";
 
@@ -26,6 +25,14 @@ import MenteeHome from './pages/mypage/mentee/MenteeHome';
 import MenteeClasses from './pages/mypage/mentee/MenteeClasses';
 import MenteeProfile from './pages/mypage/mentee/MenteeProfile';
 import MenteePayments from './pages/mypage/mentee/MenteePayments';
+
+import MentoLayout from './pages/mypage/Mento';
+
+// 멘토 페이지들
+import MentoHome from './pages/mypage/mento/MentoHome';
+import MentoClasses from './pages/mypage/mento/MentoClasses';
+import MentoProfile from './pages/mypage/mento/MentoProfile';
+import MentoPayments from './pages/mypage/mento/MentoPayments';
 
 function App() {
   return (
@@ -38,7 +45,6 @@ function App() {
           {/* 메인 페이지 */}
           <Route path='/' element={<MainPage/>}/>
 
-          <Route path="/payment/test" element={<PaymentButton memberId={3} lectureId={2} price={10000} />} />
           <Route path="/payment/success" element={<SuccessPage />} />
           <Route path="/payment/fail" element={<FailPage />} />
 
@@ -63,7 +69,7 @@ function App() {
           <Route path="/mentee" element={<MenteeLayout />}>
           
           {/* 1. /mentee 로 그냥 들어오면 -> /mentee/home 으로 납치(리다이렉트) */}
-          <Route index element={<Navigate to="home" replace />} />
+          <Route index element={<MenteeHome />} />
           
           {/* 2. 각 메뉴별 페이지 갈아 끼우기 */}
           <Route path="home" element={<MenteeHome />} />      
@@ -72,6 +78,19 @@ function App() {
           <Route path="payments" element={<MenteePayments />} /> 
 
           </Route>
+
+          <Route path="/mento" element={<MentoLayout />}>
+
+          {/* 1. /mento 로 그냥 들어오면 -> /mento/home 으로 납치(리다이렉트) */}
+          <Route index element={<MentoHome />} />
+          
+          {/* 2. 각 메뉴별 페이지 갈아 끼우기 */}
+          <Route path="Mthome" element={<MentoHome />} />      
+          <Route path="Mtclasses" element={<MentoClasses />} /> 
+          <Route path="Mtprofile" element={<MentoProfile />} /> 
+          <Route path="Mtpayments" element={<MentoPayments />} /> 
+
+        </Route>
 
         </Route>
       </Routes>

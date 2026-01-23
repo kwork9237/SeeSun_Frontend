@@ -29,7 +29,7 @@ const EnrollCard = ({ lecture, activeDays, activeTimes, weekDays, formatDate }) 
   // [2] 현재 개발 단계에서 사용할 하드코딩 (Test Mode)
   // ============================================================
   // ★ 중요: DB에 실제로 존재하는 회원 ID (예: 1, 3, 8 등)를 적어주세요.
-  const memberId = 2; 
+  const memberId = 201; 
 
 
   return (
