@@ -42,9 +42,10 @@ export const joinMember = async (payload) => {
 export const joinMentorMultipart = async (payload, portfolioFile) => {
   const formData = new FormData();
   formData.append("data", new Blob([JSON.stringify(payload)], { type: "application/json" }));
-  formData.append("portfolio", portfolioFile);
 
-  return axiosInstance.post("/member/join-mentor", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  if (portfolioFile) {
+    formData.append("file", portfolioFile);
+  }
+
+  return axiosInstance.post("/members/join-mentor", formData);
 };

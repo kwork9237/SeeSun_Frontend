@@ -51,13 +51,14 @@ const JoinMain = () => {
 
   const emailV = useEmailVerify();
 
-  const [form, setForm] = useState({
+  const [data, setForm] = useState({
     password: "",
     password2: "",
     name: "",
     nickname: "",
     phone: "",
   });
+  const form = data;
 
   const [mentorForm, setMentorForm] = useState({
     intro: "",

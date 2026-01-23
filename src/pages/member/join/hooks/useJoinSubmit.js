@@ -1,7 +1,15 @@
 // src/pages/member/join/hooks/useJoinSubmit.js
-import { joinMember } from "../api/joinApi";
+import { joinMember, joinMentorMultipart } from "../api/joinApi";
 
-export const useJoinSubmit = ({ navigate, role, emailV, form, terms, isMentor, mentorForm }) => {
+export const useJoinSubmit = ({
+  navigate,
+  role,
+  emailV,
+  form,
+  terms,
+  isMentor,
+  mentorForm,
+}) => {
   const submitJoin = async () => {
     const payload = {
       role, // "MENTEE" | "MENTOR"
@@ -26,7 +34,13 @@ export const useJoinSubmit = ({ navigate, role, emailV, form, terms, isMentor, m
         : null,
     };
 
-    await joinMember(payload);
+    if (isMentor) {
+      // ✅ 파일은 payload에 넣지 말고 2번째 인자로 전달
+      await joinMentorMultipart(payload, mentorForm?.portfolioFile ?? null);
+    } else {
+      await joinMember(payload);
+    }
+
     navigate("/Login");
   };
 
