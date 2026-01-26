@@ -89,7 +89,6 @@ const LectureReport = () => {
             {/* Dashboard */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Dashboard</div>
-              {/* 홈 버튼: 클릭 시 /mypage 로 이동 */}
               <Link to="/mypage" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
                 <span className="text-orange-500"><Icons.Home /></span>
                 <span className="text-sm font-medium">홈</span>
@@ -115,7 +114,6 @@ const LectureReport = () => {
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Contents</div>
               <div className="space-y-1">
-                {/* Active 상태 스타일 적용 */}
                 <Link to="/mypage/leturereport" className="flex items-center gap-3 px-3 py-2.5 bg-[#FFF7ED] text-[#FF6B4A] rounded-lg transition-colors">
                   <span className="text-pink-500"><Icons.Siren /></span>
                   <span className="text-sm font-bold">강의 신고 관리</span>
@@ -131,10 +129,11 @@ const LectureReport = () => {
                   <span className="text-[#A78BFA]"><Icons.MessageSquare /></span>
                   <span className="text-sm font-medium">건의 사항 관리</span>
                 </Link>
-                <div className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer">
-                   <span className="text-rose-500"><Icons.Megaphone /></span>
-                  <span className="text-sm font-medium">공지 사항 작성</span>
-                </div>
+                {/* --- 공지 사항 작성 (Notification) 링크 적용 --- */}
+                <Link to="/mypage/notification" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                    <span className="text-rose-500"><Icons.Megaphone /></span>
+                    <span className="text-sm font-medium">공지 사항 작성</span>
+                </Link>
               </div>
             </div>
           </nav>
@@ -175,7 +174,7 @@ const LectureReport = () => {
                   {reports.length === 0 && (
                     <tr>
                       <td colSpan="5" className="h-[500px]">
-                         <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                          <div className="flex flex-col items-center justify-center h-full text-gray-400">
                            <div className="p-4 bg-gray-50 rounded-full mb-3 text-gray-300">
                               <Icons.AlertTriangle />
                            </div>

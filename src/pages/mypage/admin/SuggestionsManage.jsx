@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-// --- 아이콘 컴포넌트 (스크린샷의 느낌을 살린 아이콘 구성) ---
+// --- 아이콘 컴포넌트 ---
 const Icons = {
   Home: () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -60,13 +60,12 @@ const SuggestionsManage = () => {
       {/* 2. 메인 레이아웃 */}
       <div className="flex flex-1 pt-16">
         
-        {/* 왼쪽 사이드바 (스크린샷 디자인 반영) */}
+        {/* 왼쪽 사이드바 */}
         <aside className="w-64 bg-white fixed left-0 top-16 h-[calc(100vh-64px)] overflow-y-auto z-10 flex flex-col pt-8 px-6">
           
           {/* 프로필 섹션 */}
           <div className="flex items-center gap-3 mb-10">
             <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
-              {/* 스크린샷의 사람 아이콘 형상화 */}
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-gray-500"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </div>
             <div className="flex flex-col">
@@ -81,7 +80,6 @@ const SuggestionsManage = () => {
             {/* DASHBOARD */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Dashboard</div>
-              {/* 홈 버튼: 클릭 시 /mypage 로 이동 */}
               <Link to="/mypage" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
                 <span className="text-orange-500"><Icons.Home /></span>
                 <span className="text-sm font-medium">홈</span>
@@ -118,15 +116,15 @@ const SuggestionsManage = () => {
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Support</div>
               <div className="space-y-1">
-                {/* Active State: 스크린샷과 동일한 연한 주황 배경 + 진한 텍스트 */}
                 <Link to="/mypage/suggestonsmanage" className="flex items-center gap-3 px-3 py-2.5 bg-[#FFF7ED] text-[#FF6B4A] rounded-lg transition-colors">
                   <span className="text-[#A78BFA]"><Icons.MessageSquare /></span>
                   <span className="text-sm font-bold">건의 사항 관리</span>
                 </Link>
-                <div className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer">
+                {/* --- 공지 사항 작성 (Notification) 링크 적용 --- */}
+                <Link to="/mypage/notification" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
                    <span className="text-rose-500"><Icons.Megaphone /></span>
                   <span className="text-sm font-medium">공지 사항 작성</span>
-                </div>
+                </Link>
               </div>
             </div>
           </nav>
