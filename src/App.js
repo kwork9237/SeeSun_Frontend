@@ -40,6 +40,13 @@ import MentoProfile from './pages/mypage/mento/MentoProfile';
 import MentoPayments from './pages/mypage/mento/MentoPayments';
 import MentoManagement from  './pages/mypage/mento/MentoManagement';
 
+// 관리자
+import Admin from './pages/mypage/Admin';
+import MentoRequest from './pages/mypage/admin/MentoRequest';
+import LectureReport from './pages/mypage/admin/LectureReport';
+import SuggestionsManage from './pages/mypage/admin/SuggestionsManage'; 
+import Notification from './pages/mypage/admin/Notification';  
+
 function App() {
   return (
     <BrowserRouter>
@@ -60,10 +67,10 @@ function App() {
           <Route path='/join/Mentee' element={<Mentee/>}/> */}
 
           {/* 로그인 */}
-          <Route path='/Login' element={<Login/>}/>
+          <Route path='/login' element={<Login/>}/>
 
           {/* 마이페이지 */}
-          <Route path='/MyPage' element={<MyPage/>}/>
+          <Route path='/mypage' element={<MyPage/>}/>
 
           {/* 강의 목록 */}
           <Route path='/lecture' element={<LectureList/>}/>
@@ -100,6 +107,12 @@ function App() {
         <Route path="/mentor/lecture/:lectureId" element={<LectureRealtimeMentor />} />
         <Route path="/mentee/lecture/:lectureId" element={<LectureRealtimeMentee />} />
         <Route path='/webrtctest' element={<WebRTCTest/>}/>
+
+        {/* 관리자 페이지 */}
+        <Route path='/mypage/mentorequests' element={<MentoRequest/>}/>
+        <Route path='/mypage/leturereport' element={<LectureReport/>}/>
+        <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>
+        <Route path='/mypage/notification' element={<Notification/>}/>
 
         </Route>
       </Routes>
