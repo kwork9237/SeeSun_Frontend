@@ -33,6 +33,7 @@ import MentoHome from './pages/mypage/mento/MentoHome';
 import MentoClasses from './pages/mypage/mento/MentoClasses';
 import MentoProfile from './pages/mypage/mento/MentoProfile';
 import MentoPayments from './pages/mypage/mento/MentoPayments';
+import MentoManagement from  './pages/mypage/mento/MentoManagement';
 
 function App() {
   return (
@@ -87,6 +88,7 @@ function App() {
           {/* 2. 각 메뉴별 페이지 갈아 끼우기 */}
           <Route path="Mthome" element={<MentoHome />} />      
           <Route path="Mtclasses" element={<MentoClasses />} /> 
+          <Route path="Mtmanagement" element={<MentoManagement />} />
           <Route path="Mtprofile" element={<MentoProfile />} /> 
           <Route path="Mtpayments" element={<MentoPayments />} /> 
 

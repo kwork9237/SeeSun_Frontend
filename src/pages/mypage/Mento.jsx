@@ -79,7 +79,7 @@ const Mento = () => {
 
           <MenuGroup label="강의">
             <SidebarItem to="/mento/Mtclasses" icon={<BookOpen size={18}/>} label="내 강의실" />
-            <SidebarItem to="/mento/MtMyclasses" icon={<BookOpen size={18}/>} label="내 강의 관리" />
+            <SidebarItem to="/mento/Mtmanagement" icon={<BookOpen size={18}/>} label="내 강의 관리" />
           </MenuGroup>
 
           <MenuGroup label="회원 설정">
