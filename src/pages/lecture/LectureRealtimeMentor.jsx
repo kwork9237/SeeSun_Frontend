@@ -1,21 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 /**
- * LectureRealtimeMentor.jsx
+ * LectureRealtimeMentor.jsx (녹화 기능 완전 적용 버전)
  * -----------------------------------------------------------
- * 멘토(MENTOR) 전용 실시간 강의 화면
- *
- * 방식 A: URL로 역할 강제
- * - /mentor/lecture/:id → MENTOR 강제
- *
- * 멘토 특징:
- *  - 세션 시작 버튼 클릭 시 → 카메라 자동 켜짐
- *  - 화면공유 가능
- *  - 마이크/카메라 토글 가능
- *  - 강의 종료 가능
- *  - 멘티 영상 X (멘티는 시청만 하고 송출 불가)
- *
- * 멘토에서 송출되는 스트림을 Janus Videoroom에 publish
+ * - 멘토는 publish 시 Janus videoroom record 기능 사용
+ * - 화면공유 전환 시에도 record 유지
+ * - 강의 종료 시 자동 종료 → SSE에서 파일 조회
  */
 
 const LectureRealtimeMentor = ({ lectureId }) => {
@@ -27,8 +17,8 @@ const LectureRealtimeMentor = ({ lectureId }) => {
     const [isStarted, setIsStarted] = useState(false);
     const [isJoined, setIsJoined] = useState(false);
     const [sessionInfo, setSessionInfo] = useState({
-        role: "MENTOR",            // ★ 강제 역할 설정
-        displayName: "MentorUser", // ★ 필요시 UI에서 변경 가능
+        role: "MENTOR",
+        displayName: "MentorUser",
     });
 
     const [micOn, setMicOn] = useState(true);
@@ -52,7 +42,6 @@ const LectureRealtimeMentor = ({ lectureId }) => {
     const myName = sessionInfo.displayName;
     const effectiveLectureId = useMemo(() => lectureId ?? 0, [lectureId]);
 
-
     // =========================================================================
     // UTILITY
     // =========================================================================
@@ -63,9 +52,9 @@ const LectureRealtimeMentor = ({ lectureId }) => {
         videoEl.play?.().catch(() => {});
     };
 
-    const stopStream = (s) => {
-        if (!s) return;
-        s.getTracks().forEach((t) => t.stop());
+    const stopStream = (stream) => {
+        if (!stream) return;
+        stream.getTracks().forEach((t) => t.stop());
     };
 
     const resetAll = () => {
@@ -78,10 +67,8 @@ const LectureRealtimeMentor = ({ lectureId }) => {
         setRecording({ status: null, url: null });
     };
 
-
     // =========================================================================
-    // API (멘토는 bootstrap 이 아니라 create 고정일 수도 있지만
-    //      지금은 기존 백엔드와 동일 구조 유지)
+    // API
     // =========================================================================
 
     const apiBootstrap = async () => {
@@ -116,9 +103,8 @@ const LectureRealtimeMentor = ({ lectureId }) => {
         return await r.json();
     };
 
-
     // =========================================================================
-    // STEP 1: 카메라 먼저 켜기 (강의 시작 버튼 누르면 즉시 실행)
+    // STEP 1: 카메라 준비
     // =========================================================================
 
     const prepareCamera = async () => {
@@ -131,10 +117,7 @@ const LectureRealtimeMentor = ({ lectureId }) => {
             camStreamRef.current = cam;
             currentStreamRef.current = cam;
 
-            // 멘토 용 미리보기
-            if (mentorVideoRef.current) {
-                attachStream(mentorVideoRef.current, cam);
-            }
+            attachStream(mentorVideoRef.current, cam);
 
             return true;
         } catch (e) {
@@ -144,9 +127,8 @@ const LectureRealtimeMentor = ({ lectureId }) => {
         }
     };
 
-
     // =========================================================================
-    // STEP 2: Janus 초기화
+    // JANUS INIT
     // =========================================================================
 
     const initJanus = (info) => {
@@ -180,96 +162,71 @@ const LectureRealtimeMentor = ({ lectureId }) => {
             success: (handle) => {
                 pubHandle.current = handle;
 
-                // 방 join 요청
                 handle.send({
                     message: {
                         request: "join",
                         room: parseInt(info.roomId),
                         ptype: "publisher",
-                        display: myName
+                        display: myName,
                     }
                 });
 
                 setIsStarted(true);
-
                 startPolling(info.roomId);
             },
 
-            error: (err) => {
-                console.error("Plugin Attach Error:", err);
-            },
+            error: (err) => console.error("Plugin Attach Error:", err),
 
-            onmessage: (msg, jsep) => handleJanusMessageMentor(msg, jsep, info),
+            onmessage: (msg, jsep) =>
+                handleJanusMessageMentor(msg, jsep, info),
 
-            onlocalstream: (stream) => {
-                attachStream(mentorVideoRef.current, stream);
-            }
+            onlocalstream: (stream) =>
+                attachStream(mentorVideoRef.current, stream),
         });
     };
+
     // =========================================================================
-    // STEP 3: Janus 메시지 핸들러 (MENTOR)
+    // HANDLE MESSAGE
     // =========================================================================
 
     const handleJanusMessageMentor = (msg, jsep, info) => {
         const event = msg?.videoroom;
 
-        // join 완료 → publish 시작
         if (event === "joined") {
             setIsJoined(true);
-            startPublish(); // 멘토 송출 시작
+            startPublish(); // 🔥 여기서 송출 & 녹화 시작
         }
 
-        // 신규 publisher (멘티는 들어와도 송출 안함)
         const publishers = msg?.publishers;
         if (Array.isArray(publishers)) {
-            publishers.forEach((p) => addParticipant(p.id, p.display));
+            publishers.forEach((p) =>
+                setParticipants((prev) => [...prev, p])
+            );
         }
 
-        // 누군가 나감
         if (event === "event") {
             const leavingId = msg?.leaving || msg?.unpublished;
             if (leavingId && leavingId !== "ok") {
-                removeParticipant(leavingId);
+                setParticipants((prev) =>
+                    prev.filter((p) => p.id !== leavingId)
+                );
             }
         }
 
-        // SDP 처리
         if (jsep) {
             pubHandle.current?.handleRemoteJsep({ jsep });
         }
     };
 
-
     // =========================================================================
-    // PARTICIPANTS 관리
-    // =========================================================================
-
-    const addParticipant = (id, display) => {
-        const sid = String(id);
-        setParticipants((prev) => {
-            if (prev.some((p) => p.id === sid)) return prev;
-            return [...prev, { id: sid, display }];
-        });
-    };
-
-    const removeParticipant = (id) => {
-        const sid = String(id);
-        setParticipants((prev) => prev.filter((p) => p.id !== sid));
-    };
-
-
-    // =========================================================================
-    // STEP 4: 멘토 송출 시작
+    // START PUBLISH (녹화 시작 포함)
     // =========================================================================
 
     const startPublish = () => {
         if (!pubHandle.current) return;
 
         const cam = camStreamRef.current;
-        if (!cam) {
-            alert("카메라 준비 실패");
-            return;
-        }
+        if (!cam) return alert("카메라 준비 실패");
 
         pubHandle.current.createOffer({
             stream: cam,
@@ -277,7 +234,7 @@ const LectureRealtimeMentor = ({ lectureId }) => {
                 audioRecv: false,
                 videoRecv: false,
                 audioSend: true,
-                videoSend: true
+                videoSend: true,
             },
 
             success: (jsep) => {
@@ -285,28 +242,23 @@ const LectureRealtimeMentor = ({ lectureId }) => {
                     message: {
                         request: "configure",
                         audio: micOn,
-                        video: camOn
+                        video: camOn,
+                        record: true,                                 // 🔥 녹화 ON
+                        filename: `lecture-${sessionInfo.sessionId}`, // 🔥 파일명 지정
                     },
-                    jsep
+                    jsep,
                 });
             },
-
-            error: (err) => {
-                console.error("createOffer 실패:", err);
-                alert("카메라 송출 실패");
-            }
         });
     };
 
-
     // =========================================================================
-    // MIC / CAM / SCREEN SHARE
+    // MIC / CAM TOGGLE
     // =========================================================================
 
     const toggleMic = () => {
         const s = currentStreamRef.current;
         if (!s) return;
-
         const track = s.getAudioTracks()[0];
         if (!track) return;
 
@@ -317,7 +269,9 @@ const LectureRealtimeMentor = ({ lectureId }) => {
             message: {
                 request: "configure",
                 audio: track.enabled,
-                video: camOn
+                video: camOn,
+                record: true,
+                filename: `lecture-${sessionInfo.sessionId}`
             }
         });
     };
@@ -325,7 +279,6 @@ const LectureRealtimeMentor = ({ lectureId }) => {
     const toggleCam = () => {
         const s = currentStreamRef.current;
         if (!s) return;
-
         const track = s.getVideoTracks()[0];
         if (!track) return;
 
@@ -336,15 +289,17 @@ const LectureRealtimeMentor = ({ lectureId }) => {
             message: {
                 request: "configure",
                 audio: micOn,
-                video: track.enabled
+                video: track.enabled,
+                record: true,
+                filename: `lecture-${sessionInfo.sessionId}`
             }
         });
     };
 
+    // =========================================================================
+    // SCREEN SHARE
+    // =========================================================================
 
-    /**
-     * 화면공유 시작: 카메라 OFF → 화면공유 ON
-     */
     const startScreenShare = async () => {
         if (sharing) return;
 
@@ -360,16 +315,16 @@ const LectureRealtimeMentor = ({ lectureId }) => {
             const screenTrack = scr.getVideoTracks()[0];
             screenTrack.onended = stopScreenShare;
 
-            // 기존 카메라 OFF 처리
             if (camStreamRef.current) {
                 const videoTrack = camStreamRef.current.getVideoTracks()[0];
                 if (videoTrack) videoTrack.enabled = false;
             }
             setCamOn(false);
 
-            // 화면공유 + 카메라 오디오 결합
             const audioTracks = camStreamRef.current?.getAudioTracks?.() || [];
             const mixed = new MediaStream([screenTrack, ...audioTracks]);
+
+            attachStream(mentorVideoRef.current, mixed);
 
             currentStreamRef.current = mixed;
 
@@ -379,7 +334,7 @@ const LectureRealtimeMentor = ({ lectureId }) => {
                     audioRecv: false,
                     videoRecv: false,
                     audioSend: true,
-                    videoSend: true
+                    videoSend: true,
                 },
 
                 success: (jsep) => {
@@ -387,9 +342,11 @@ const LectureRealtimeMentor = ({ lectureId }) => {
                         message: {
                             request: "configure",
                             audio: micOn,
-                            video: true
+                            video: true,
+                            record: true,
+                            filename: `lecture-${sessionInfo.sessionId}`,
                         },
-                        jsep
+                        jsep,
                     });
                 }
             });
@@ -400,29 +357,24 @@ const LectureRealtimeMentor = ({ lectureId }) => {
         }
     };
 
-
-    /**
-     * 화면공유 종료: 화면공유 OFF → 카메라 복귀
-     */
     const stopScreenShare = async () => {
         if (!sharing) return;
 
-        setSharing(false);
         stopStream(screenStreamRef.current);
         screenStreamRef.current = null;
 
+        setSharing(false);
+
         const cam = camStreamRef.current;
         if (!cam) {
-            alert("카메라 스트림 없음");
+            alert("카메라 없음");
             return;
         }
 
-        // 카메라 다시 켜기
         const videoTrack = cam.getVideoTracks()[0];
         if (videoTrack) videoTrack.enabled = true;
         setCamOn(true);
 
-        // UI 비디오 태그에 카메라 복구
         attachStream(mentorVideoRef.current, cam);
 
         currentStreamRef.current = cam;
@@ -433,7 +385,7 @@ const LectureRealtimeMentor = ({ lectureId }) => {
                 audioRecv: false,
                 videoRecv: false,
                 audioSend: true,
-                videoSend: true
+                videoSend: true,
             },
 
             success: (jsep) => {
@@ -441,17 +393,18 @@ const LectureRealtimeMentor = ({ lectureId }) => {
                     message: {
                         request: "configure",
                         audio: micOn,
-                        video: true
+                        video: true,
+                        record: true,  // 🔥 녹화 유지
+                        filename: `lecture-${sessionInfo.sessionId}`,
                     },
-                    jsep
+                    jsep,
                 });
             }
         });
     };
 
-
     // =========================================================================
-    // 참가자 목록 POLLING
+    // POLLING 참여자 목록
     // =========================================================================
 
     const startPolling = (roomId) => {
@@ -461,20 +414,19 @@ const LectureRealtimeMentor = ({ lectureId }) => {
             pubHandle.current?.send({
                 message: {
                     request: "listparticipants",
-                    room: parseInt(roomId),
+                    room: parseInt(roomId)
                 },
                 success: (res) => {
                     if (res?.participants) {
-                        res.participants.forEach((p) => addParticipant(p.id, p.display));
+                        setParticipants(res.participants);
                     }
                 }
             });
         }, 3000);
     };
 
-
     // =========================================================================
-    // SSE (강의 종료 감지)
+    // SSE
     // =========================================================================
 
     const startSSE = (sessionId) => {
@@ -494,7 +446,7 @@ const LectureRealtimeMentor = ({ lectureId }) => {
                         const rec = await apiRecording(sessionId);
                         setRecording({
                             status: rec.status,
-                            url: rec.url || null
+                            url: rec.url || null,
                         });
                     } catch {}
 
@@ -504,9 +456,8 @@ const LectureRealtimeMentor = ({ lectureId }) => {
         };
     };
 
-
     // =========================================================================
-    // LOCAL SESSION 종료
+    // STOP SESSION LOCAL
     // =========================================================================
 
     const stopSessionLocal = () => {
@@ -535,9 +486,8 @@ const LectureRealtimeMentor = ({ lectureId }) => {
         }
     };
 
-
     // =========================================================================
-    // 강의 시작 버튼
+    // START BUTTON
     // =========================================================================
 
     const handleStart = async () => {
@@ -551,13 +501,8 @@ const LectureRealtimeMentor = ({ lectureId }) => {
 
         try {
             const info = await apiBootstrap();
-            setSessionInfo({
-                ...sessionInfo,
-                roomId: info.roomId,
-                sessionId: info.sessionId,
-                janusUrl: info.janusUrl
-            });
 
+            setSessionInfo(info);
             if (info.sessionId) startSSE(info.sessionId);
 
             initJanus(info);
@@ -568,17 +513,16 @@ const LectureRealtimeMentor = ({ lectureId }) => {
         }
     };
 
+    // =========================================================================
+    // CLEANUP
+    // =========================================================================
 
-    // =========================================================================
-    // CLEANUP ON UNMOUNT
-    // =========================================================================
     useEffect(() => {
         return () => stopSessionLocal();
     }, []);
 
-
     // =========================================================================
-    // RENDER (UI)
+    // RENDER
     // =========================================================================
 
     const btn = {
@@ -662,10 +606,7 @@ const LectureRealtimeMentor = ({ lectureId }) => {
 
                 <ul style={{ listStyle: "none", padding: 0 }}>
                     {participants.map((p) => (
-                        <li
-                            key={p.id}
-                            style={{ padding: 8, borderBottom: "1px solid #eee" }}
-                        >
+                        <li key={p.id} style={{ padding: 8, borderBottom: "1px solid #eee" }}>
                             👤 {p.display}
                         </li>
                     ))}
