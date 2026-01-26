@@ -2,10 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom"; // 페이지 이동을 위해 사용
 
-// 컴포넌트 임포트 (경로에 맞게 수정해주세요)
-import Admin from "./Admin";
-import Mentee from "./Mentee";
-import Mento from "./Mento";
+// import Admin from "./Admin";
+// import Mentee from "./Mentee";
+// import Mento from "./Mento";
 
 const MyPage = () => {
   const [mbType, setMbType] = useState(null);
@@ -63,11 +62,14 @@ const MyPage = () => {
   const renderContent = () => {
     switch (mbType) {
       case 0:
-        return <Admin />;
+        navigate('/admin');
+        // return <Admin />;
       case 1:
-        return <Mentee />;
+        navigate('/mentee');
+        // return <Mentee />;
       case 2:
-        return <Mento />;
+        navigate('/mento');
+        // return <Mento />;
       default:
         // 예외 처리: DB에 0,1,2 이외의 값이 들어있거나 오류가 났을 때
         return <div>잘못된 접근이거나 알 수 없는 회원 타입입니다.</div>;
