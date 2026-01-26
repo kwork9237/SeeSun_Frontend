@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom"; // 페이지 이동을 위해 사용
 
-// import Admin from "./Admin";
+import Admin from "./Admin";
 // import Mentee from "./Mentee";
 // import Mento from "./Mento";
 
@@ -62,8 +62,8 @@ const MyPage = () => {
   const renderContent = () => {
     switch (mbType) {
       case 0:
-        navigate('/admin');
-        // return <Admin />;
+        // navigate('/admin');
+        return <Admin />;
       case 1:
         navigate('/mentee');
         // return <Mentee />;

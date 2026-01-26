@@ -41,11 +41,11 @@ import MentoPayments from './pages/mypage/mento/MentoPayments';
 import MentoManagement from  './pages/mypage/mento/MentoManagement';
 
 // 관리자
-import Admin from './pages/mypage/Admin';
+// import Admin from './pages/mypage/Admin';
 import MentoRequest from './pages/mypage/admin/MentoRequest';
 import LectureReport from './pages/mypage/admin/LectureReport';
 import SuggestionsManage from './pages/mypage/admin/SuggestionsManage'; 
-import Notification from './pages/mypage/admin/Notification';  
+import Notification from './pages/mypage/admin/Notification';
 
 function App() {
   return (

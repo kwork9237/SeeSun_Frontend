@@ -50,13 +50,13 @@ const MainHeader = () => {
         {/* 2. 중앙: 메뉴 */}
         <div className="hidden md:flex gap-8 justify-self-center">
           <Link
-            to="/LectureList"
+            to="/lecture"
             className="text-gray-600 hover:text-primary font-bold text-base transition py-2"
           >
             강의 찾기
           </Link>
           <Link
-            to="/Suggestions"
+            to="/suggestions"
             className="text-gray-600 hover:text-primary font-bold text-base transition py-2"
           >
             건의 사항

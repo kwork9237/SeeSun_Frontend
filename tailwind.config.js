@@ -12,12 +12,19 @@ module.exports = {
           DEFAULT: '#2563eb', // Royal Blue (로고, 메인 버튼)
           hover: '#1d4ed8',   // Hover 상태
           light: '#eff6ff',   // 연한 배경 (말풍선, 선택된 항목)
+          dark: '#1e40af',    // 아주 진한 블루
         },
-        
+
         // [포인트] 행동 유도 (수강신청, 강조, 알림)
         secondary: {
           DEFAULT: '#f97316', // Vivid Orange (CTA 버튼)
           hover: '#ea580c',   
+        },
+
+        // 3. 푸터 전용 컬러
+        footer: {
+          bg: '#1e293b',      // bg-footer-bg
+          text: '#94a3b8',    // text-footer-text
         },
 
         // [상태 표시] 교육/화상 수업에 필요한 시멘틱 컬러
