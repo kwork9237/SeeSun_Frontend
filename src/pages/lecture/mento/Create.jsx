@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, GripVertical, Calendar, Clock, Users } from "lucide-react";
+import { Plus, Trash2, GripVertical, Calendar, Clock, Users, AlertCircle } from "lucide-react";
 import axios from 'axios';
 
 const Create = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({}); // ✅ 에러 상태 추가
+
   const [formData, setFormData] = useState({
     title: '',
     language: 'en',
@@ -21,12 +23,53 @@ const Create = () => {
     price: ''
   });
 
-  const updateData = (updates) => setFormData((prev) => ({ ...prev, ...updates }));
-  const nextStep = () => setStep(prev => prev + 1);
-  const prevStep = () => setStep(prev => prev - 1);
+  const updateData = (updates) => {
+    setFormData((prev) => ({ ...prev, ...updates }));
+    setErrors({}); // 데이터 수정 시 에러 초기화
+  };
 
-  // 강의 생성 API 호출 (axios 버전)
+  // ✅ 유효성 검사 로직
+  const validateStep = () => {
+    const newErrors = {};
+
+    if (step === 1) {
+      if (!formData.title.trim()) newErrors.title = "강의 제목을 입력해주세요.";
+      if (!formData.description.trim() || formData.description.length < 10) 
+        newErrors.description = "상세 내용을 10자 이상 입력해주세요.";
+    }
+
+    if (step === 2) {
+      formData.sections.forEach((section) => {
+        if (!section.title.trim()) newErrors[`section_${section.id}`] = "섹션 제목을 입력해주세요.";
+        section.lessons.forEach((lesson) => {
+          if (!lesson.title.trim()) newErrors[`lesson_${lesson.id}`] = "레슨 제목을 입력해주세요.";
+        });
+      });
+    }
+
+    if (step === 3) {
+      if (!formData.startDate) newErrors.startDate = "시작 날짜를 선택해주세요.";
+      if (!formData.endDate) newErrors.endDate = "종료 날짜를 선택해주세요.";
+      if (formData.selectedDays.length === 0) newErrors.selectedDays = "최소 하나의 요일을 선택해주세요.";
+      if (formData.generatedSlots.length === 0) newErrors.generatedSlots = "날짜 생성 버튼을 눌러 슬롯을 생성해주세요.";
+      if (!formData.price || formData.price <= 0) newErrors.price = "올바른 가격을 입력해주세요.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const nextStep = () => {
+    if (validateStep()) setStep(prev => prev + 1);
+  };
+  
+  const prevStep = () => {
+    setErrors({});
+    setStep(prev => prev - 1);
+  };
+
   const handleCreateLecture = async () => {
+    if (!validateStep()) return;
     setLoading(true);
     try {
       const payload = {
@@ -46,13 +89,11 @@ const Create = () => {
       };
 
       const response = await axios.post('http://localhost:8080/api/lectures', payload);
-      alert(`강의가 생성되었습니다! (ID: ${response.data})`);
-      
-      // 성공 후 초기화
+      alert(`강의가 생성되었습니다!`);
       window.location.reload();
     } catch (error) {
       console.error('강의 생성 실패:', error);
-      alert('강의 생성에 실패했습니다: ' + (error.response?.data || error.message));
+      alert('강의 생성에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -75,22 +116,22 @@ const Create = () => {
 
       {/* 컨텐츠 박스 */}
       <div className="bg-white rounded-3xl shadow-xl p-10 min-h-[500px] border border-gray-100">
-        {step === 1 && <BasicInfo data={formData} setData={updateData} />}
-        {step === 2 && <Curriculum data={formData} updateData={updateData} />}
-        {step === 3 && <Schedule data={formData} updateData={updateData} />}
+        {step === 1 && <BasicInfo data={formData} setData={updateData} errors={errors} />}
+        {step === 2 && <Curriculum data={formData} updateData={updateData} errors={errors} />}
+        {step === 3 && <Schedule data={formData} updateData={updateData} errors={errors} />}
         {step === 4 && <Review data={formData} />}
       </div>
 
       {/* 버튼 컨트롤 */}
       <div className="flex justify-between mt-8">
-        <button onClick={prevStep} disabled={step === 1} className="px-8 py-3 rounded-xl font-bold border border-gray-300 hover:bg-gray-50 disabled:opacity-30 transition-all">Back</button>
+        <button onClick={prevStep} disabled={step === 1} className="px-8 py-3 rounded-xl font-bold border border-gray-300 hover:bg-gray-50 disabled:opacity-30 transition-all">뒤로가기</button>
         {step < 4 ? (
-          <button onClick={nextStep} className="px-8 py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 shadow-lg shadow-orange-200 transition-all">Next</button>
+          <button onClick={nextStep} className="px-8 py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 shadow-lg shadow-orange-200 transition-all">다음</button>
         ) : (
           <button 
             onClick={handleCreateLecture} 
             disabled={loading}
-            className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold hover:shadow-xl transition-all disabled:opacity-50"
           >
             {loading ? '생성 중...' : 'Create Lecture'}
           </button>
@@ -101,12 +142,19 @@ const Create = () => {
 };
 
 // --- Step 1: 강의 정보 ---
-const BasicInfo = ({ data, setData }) => (
+const BasicInfo = ({ data, setData, errors }) => (
   <div className="space-y-6">
     <h2 className="text-2xl font-black text-gray-900 mb-8">Step 1. 강의 정보입력</h2>
-    <div className="space-y-4">
+    <div className="space-y-2">
       <label className="block text-sm font-bold text-gray-700">강의제목</label>
-      <input type="text" placeholder="강의제목 입력" className="w-full p-4 bg-gray-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-orange-500" value={data.title} onChange={(e) => setData({title: e.target.value})} />
+      <input 
+        type="text" 
+        placeholder="강의제목 입력" 
+        className={`w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 ${errors.title ? 'ring-2 ring-red-500 bg-red-50' : 'focus:ring-orange-500'}`} 
+        value={data.title} 
+        onChange={(e) => setData({title: e.target.value})} 
+      />
+      {errors.title && <p className="text-red-500 text-xs font-bold flex items-center gap-1 mt-1 ml-2"><AlertCircle size={14}/> {errors.title}</p>}
     </div>
     <div className="grid grid-cols-2 gap-6">
       <div className="space-y-2">
@@ -128,13 +176,20 @@ const BasicInfo = ({ data, setData }) => (
     </div>
     <div className="space-y-2">
       <label className="block text-sm font-bold text-gray-700">강의 상세내용</label>
-      <textarea rows="5" placeholder="강의 상세내용 입력" className="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500" value={data.description} onChange={(e) => setData({description: e.target.value})} />
+      <textarea 
+        rows="5" 
+        placeholder="강의 상세내용 입력" 
+        className={`w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 ${errors.description ? 'ring-2 ring-red-500 bg-red-50' : 'focus:ring-orange-500'}`} 
+        value={data.description} 
+        onChange={(e) => setData({description: e.target.value})} 
+      />
+      {errors.description && <p className="text-red-500 text-xs font-bold flex items-center gap-1 mt-1 ml-2"><AlertCircle size={14}/> {errors.description}</p>}
     </div>
   </div>
 );
 
 // --- Step 2: 커리큘럼 ---
-const Curriculum = ({ data, updateData }) => {
+const Curriculum = ({ data, updateData, errors }) => {
   const addSection = () => updateData({ sections: [...data.sections, { id: crypto.randomUUID(), title: `Section ${data.sections.length + 1}`, lessons: [{ id: crypto.randomUUID(), title: '', duration: '50' }] }] });
   const removeSection = (id) => updateData({ sections: data.sections.filter(s => s.id !== id) });
   const addLesson = (sId) => updateData({ sections: data.sections.map(s => s.id === sId ? {...s, lessons: [...s.lessons, {id: crypto.randomUUID(), title: '', duration: '50'}]} : s)});
@@ -144,7 +199,7 @@ const Curriculum = ({ data, updateData }) => {
     <div className="space-y-6">
       <h2 className="text-2xl font-black text-gray-900 mb-8">Step 2. 강의 커리큘럼</h2>
       {data.sections.map((section) => (
-        <div key={section.id} className="border border-gray-100 rounded-3xl overflow-hidden mb-6 shadow-sm">
+        <div key={section.id} className={`border rounded-3xl overflow-hidden mb-6 shadow-sm ${errors[`section_${section.id}`] ? 'border-red-500' : 'border-gray-100'}`}>
           <div className="bg-gray-50/50 p-5 flex items-center gap-3 border-b border-gray-100">
             <GripVertical className="text-gray-300" size={20} />
             <input className="flex-1 bg-transparent font-bold text-lg outline-none" value={section.title} onChange={(e) => updateData({ sections: data.sections.map(s => s.id === section.id ? {...s, title: e.target.value} : s) })} />
@@ -152,13 +207,16 @@ const Curriculum = ({ data, updateData }) => {
           </div>
           <div className="p-5 space-y-3">
             {section.lessons.map((lesson) => (
-              <div key={lesson.id} className="flex items-center gap-3 p-4 bg-white border border-gray-100 rounded-2xl group transition-all hover:border-orange-200 shadow-sm">
-                <input className="flex-1 text-sm outline-none" placeholder="Lesson title" value={lesson.title} onChange={(e) => updateData({ sections: data.sections.map(s => s.id === section.id ? {...s, lessons: s.lessons.map(l => l.id === lesson.id ? {...l, title: e.target.value} : l)} : s) })} />
-                <div className="flex items-center bg-gray-100 px-3 py-1 rounded-xl">
-                  <input type="number" className="w-12 bg-transparent text-right text-xs font-bold outline-none" value={lesson.duration} onChange={(e) => updateData({ sections: data.sections.map(s => s.id === section.id ? {...s, lessons: s.lessons.map(l => l.id === lesson.id ? {...l, duration: e.target.value} : l)} : s) })} />
-                  <span className="text-[10px] ml-1 text-gray-500 font-bold">min</span>
+              <div key={lesson.id}>
+                <div className={`flex items-center gap-3 p-4 bg-white border rounded-2xl group transition-all shadow-sm ${errors[`lesson_${lesson.id}`] ? 'border-red-500 bg-red-50' : 'border-gray-100 hover:border-orange-200'}`}>
+                  <input className="flex-1 text-sm outline-none bg-transparent" placeholder="Lesson title" value={lesson.title} onChange={(e) => updateData({ sections: data.sections.map(s => s.id === section.id ? {...s, lessons: s.lessons.map(l => l.id === lesson.id ? {...l, title: e.target.value} : l)} : s) })} />
+                  <div className="flex items-center bg-gray-100 px-3 py-1 rounded-xl">
+                    <input type="number" className="w-12 bg-transparent text-right text-xs font-bold outline-none" value={lesson.duration} onChange={(e) => updateData({ sections: data.sections.map(s => s.id === section.id ? {...s, lessons: s.lessons.map(l => l.id === lesson.id ? {...l, duration: e.target.value} : l)} : s) })} />
+                    <span className="text-[10px] ml-1 text-gray-500 font-bold">min</span>
+                  </div>
+                  <button onClick={() => removeLesson(section.id, lesson.id)} className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={16}/></button>
                 </div>
-                <button onClick={() => removeLesson(section.id, lesson.id)} className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={16}/></button>
+                {errors[`lesson_${lesson.id}`] && <p className="text-red-500 text-[10px] font-bold mt-1 ml-2">{errors[`lesson_${lesson.id}`]}</p>}
               </div>
             ))}
             <button onClick={() => addLesson(section.id)} className="w-full py-4 border-2 border-dashed border-orange-100 text-orange-500 rounded-2xl text-sm font-bold hover:bg-orange-50 transition-all">+ Add Live Lesson</button>
@@ -171,7 +229,7 @@ const Curriculum = ({ data, updateData }) => {
 };
 
 // --- Step 3: 강의 스케쥴 & 가격 설정 ---
-const Schedule = ({ data, updateData }) => {
+const Schedule = ({ data, updateData, errors }) => {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   
   const generateSlots = () => {
@@ -197,13 +255,17 @@ const Schedule = ({ data, updateData }) => {
       <div className="grid grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">강의 시작날짜</label>
-          <div className="relative"><Calendar className="absolute left-4 top-4 text-gray-400" size={18} />
-          <input type="date" className="w-full p-4 pl-12 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500" value={data.startDate} onChange={(e) => updateData({startDate: e.target.value})} /></div>
+          <div className="relative">
+            <Calendar className={`absolute left-4 top-4 ${errors.startDate ? 'text-red-400' : 'text-gray-400'}`} size={18} />
+            <input type="date" className={`w-full p-4 pl-12 bg-gray-50 rounded-2xl outline-none focus:ring-2 ${errors.startDate ? 'ring-2 ring-red-500' : 'focus:ring-orange-500'}`} value={data.startDate} onChange={(e) => updateData({startDate: e.target.value})} />
+          </div>
         </div>
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">강의 종료날짜</label>
-          <div className="relative"><Calendar className="absolute left-4 top-4 text-gray-400" size={18} />
-          <input type="date" className="w-full p-4 pl-12 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500" value={data.endDate} onChange={(e) => updateData({endDate: e.target.value})} /></div>
+          <div className="relative">
+            <Calendar className={`absolute left-4 top-4 ${errors.endDate ? 'text-red-400' : 'text-gray-400'}`} size={18} />
+            <input type="date" className={`w-full p-4 pl-12 bg-gray-50 rounded-2xl outline-none focus:ring-2 ${errors.endDate ? 'ring-2 ring-red-500' : 'focus:ring-orange-500'}`} value={data.endDate} onChange={(e) => updateData({endDate: e.target.value})} />
+          </div>
         </div>
       </div>
 
@@ -215,10 +277,11 @@ const Schedule = ({ data, updateData }) => {
             className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all ${data.selectedDays.includes(d) ? 'bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-100' : 'bg-white border-gray-200 text-gray-400 hover:bg-gray-50'}`}>{d}</button>
           ))}
         </div>
+        {errors.selectedDays && <p className="text-red-500 text-xs font-bold mt-1 ml-2">{errors.selectedDays}</p>}
       </div>
 
       <div className="p-6 bg-orange-50/50 rounded-3xl border border-orange-100 space-y-4">
-        <div className="flex items-center justify-between"><h3 className="text-sm font-bold text-orange-600">강의 시간대 설정</h3><button onClick={generateSlots} className="bg-orange-500 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-sm">날짜 생성</button></div>
+        <div className="flex items-center justify-between"><h3 className="text-sm font-bold text-orange-600">강의 시간대 설정</h3><button onClick={generateSlots} className="bg-orange-500 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-orange-600">날짜 생성</button></div>
         <div className="flex items-center gap-4">
           <input type="time" className="flex-1 p-3 rounded-xl border-none outline-none" value={data.startTime} onChange={(e) => updateData({startTime: e.target.value})} />
           <span className="text-gray-300">—</span>
@@ -229,18 +292,27 @@ const Schedule = ({ data, updateData }) => {
 
       <div className="space-y-3">
         <label className="block text-sm font-bold text-gray-700">강의 시간 저장목록</label>
-        <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-2xl min-h-[60px] border border-gray-100">
-          {data.generatedSlots.map((s, i) => (
-            <div key={i} className="bg-white px-4 py-2 rounded-full text-xs font-bold border border-gray-200 flex items-center gap-2 shadow-sm transition-all hover:border-orange-300">
-              {s} <button onClick={() => updateData({generatedSlots: data.generatedSlots.filter((_, idx) => idx !== i)})} className="text-gray-300 hover:text-red-500">×</button>
-            </div>
-          ))}
+        <div className={`flex flex-wrap gap-2 p-4 bg-gray-50 rounded-2xl min-h-[60px] border ${errors.generatedSlots ? 'border-red-500 bg-red-50' : 'border-gray-100'}`}>
+          {data.generatedSlots.length === 0 ? (
+            <p className="text-xs text-gray-400 font-medium">위의 날짜 생성 버튼을 클릭하세요.</p>
+          ) : (
+            data.generatedSlots.map((s, i) => (
+              <div key={i} className="bg-white px-4 py-2 rounded-full text-xs font-bold border border-gray-200 flex items-center gap-2 shadow-sm transition-all hover:border-orange-300">
+                {s} <button onClick={() => updateData({generatedSlots: data.generatedSlots.filter((_, idx) => idx !== i)})} className="text-gray-300 hover:text-red-500">×</button>
+              </div>
+            ))
+          )}
         </div>
+        {errors.generatedSlots && <p className="text-red-500 text-xs font-bold mt-1 ml-2">{errors.generatedSlots}</p>}
       </div>
 
       <div className="space-y-2">
         <label className="block text-sm font-bold text-gray-700">강의 가격</label>
-        <div className="relative"><span className="absolute left-5 top-4 font-black text-gray-400 text-lg">$</span><input type="number" placeholder="N" className="w-full p-4 pl-10 bg-gray-50 rounded-2xl font-black text-xl outline-none focus:ring-2 focus:ring-orange-500" value={data.price} onChange={(e) => updateData({price: e.target.value})} /></div>
+        <div className="relative">
+          <span className={`absolute left-5 top-4 font-black text-lg ${errors.price ? 'text-red-400' : 'text-gray-400'}`}>$</span>
+          <input type="number" placeholder="0" className={`w-full p-4 pl-10 bg-gray-50 rounded-2xl font-black text-xl outline-none focus:ring-2 ${errors.price ? 'ring-2 ring-red-500 bg-red-50' : 'focus:ring-orange-500'}`} value={data.price} onChange={(e) => updateData({price: e.target.value})} />
+        </div>
+        {errors.price && <p className="text-red-500 text-xs font-bold mt-1 ml-2">{errors.price}</p>}
       </div>
     </div>
   );
@@ -264,7 +336,7 @@ const Review = ({ data }) => {
         </div>
         <div className="space-y-1">
           <h3 className="text-xl font-black text-gray-800">{data.title || "강의 제목이 없습니다"}</h3>
-          <p className="text-sm text-gray-500">{data.language} · 난이도 {data.level}</p>
+          <p className="text-sm text-gray-500">{data.language === 'en' ? '영어' : data.language} · 난이도 {data.level}</p>
         </div>
       </div>
 
@@ -275,7 +347,6 @@ const Review = ({ data }) => {
           <span className="font-bold text-sm">강의 커리큘럼</span>
         </div>
         
-        {/* 요약 카드 */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-gray-50 rounded-2xl p-4 text-center">
             <p className="text-2xl font-black text-orange-600">{totalWeeks}</p>
@@ -287,7 +358,6 @@ const Review = ({ data }) => {
           </div>
         </div>
 
-        {/* 주차별 리스트 */}
         <div className="space-y-3">
           {data.sections.map((section, idx) => (
             <div key={section.id} className="flex justify-between items-center py-3 border-b border-gray-50 last:border-none">
@@ -316,7 +386,7 @@ const Review = ({ data }) => {
           <span className="text-lg font-bold">$</span>
           <span className="font-bold text-sm">총 강의 가격</span>
         </div>
-        <span className="text-3xl font-black text-orange-600">${Number(data.price).toLocaleString()}</span>
+        <span className="text-3xl font-black text-orange-600">${Number(data.price || 0).toLocaleString()}</span>
       </div>
     </div>
   );
