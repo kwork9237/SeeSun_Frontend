@@ -20,7 +20,8 @@ import Admin from './pages/mypage/Admin';
 import MentoRequest from './pages/mypage/admin/MentoRequest';
 import LectureReport from './pages/mypage/admin/LectureReport';
 import SuggestionsManage from './pages/mypage/admin/SuggestionsManage'; 
-import Notification from './pages/mypage/admin/Notification';  
+import Notification from './pages/mypage/admin/Notification';
+import NotificationWrite from './pages/mypage/admin/NotificationWrite';  
 
 function App() {
   return (
@@ -56,6 +57,7 @@ function App() {
           <Route path='/mypage/leturereport' element={<LectureReport/>}/>
           <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>
           <Route path='/mypage/notification' element={<Notification/>}/>
+          <Route path="/mypage/notificationwrite" element={<NotificationWrite />}/>
 
         </Route>
       </Routes>

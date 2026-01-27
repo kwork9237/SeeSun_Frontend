@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-// --- 아이콘 컴포넌트 (변경 없음) ---
+// --- 아이콘 컴포넌트 ---
 const Icons = {
   Home: () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -37,25 +37,23 @@ const Icons = {
 };
 
 const Notification = () => {
-  // --- 상태 관리 ---
   const [notices, setNotices] = useState([]);
 
-  // --- 날짜 포맷팅 유틸리티 (YYYY-MM-DD) ---
+  // 날짜 포맷 (YYYY-MM-DD)
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
     return date.toISOString().split('T')[0];
   };
 
-  // --- 데이터 조회 (백엔드 API 연동) ---
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        // [변경] 백엔드 Controller 경로에 맞춰 수정
-        const response = await axios.get('http://localhost:8080/api/notifications');
+        const response = await axios.get('http://localhost:8080/api/admin/notices');
+        console.log('백엔드 응답 데이터:', response.data);
         setNotices(response.data);
       } catch (error) {
-        console.error('공지사항 목록 조회 실패:', error);
+        console.error('데이터 조회 에러:', error);
       }
     };
     fetchNotices();
@@ -64,7 +62,7 @@ const Notification = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-gray-800 font-sans">
       
-      {/* 1. 상단 네비게이션 (헤더) */}
+      {/* 헤더 */}
       <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 fixed w-full top-0 z-20">
         <Link to="/" className="flex items-center gap-2 cursor-pointer text-inherit no-underline">
           <span className="text-orange-500 text-2xl leading-none">●</span> 
@@ -80,7 +78,7 @@ const Notification = () => {
         </div>
       </header>
 
-      {/* 2. 메인 레이아웃 */}
+      {/* 메인 레이아웃 */}
       <div className="flex flex-1 pt-16">
         
         {/* 사이드바 */}
@@ -132,7 +130,6 @@ const Notification = () => {
                   <span className="text-[#A78BFA]"><Icons.MessageSquare /></span>
                   <span className="text-sm font-medium">건의 사항 관리</span>
                 </Link>
-                {/* Active State */}
                 <Link to="/mypage/notification" className="flex items-center gap-3 px-3 py-2.5 bg-[#FFF7ED] text-[#FF6B4A] rounded-lg transition-colors">
                    <span className="text-rose-500"><Icons.Megaphone /></span>
                   <span className="text-sm font-bold">공지 사항 작성</span>
@@ -142,26 +139,27 @@ const Notification = () => {
           </nav>
         </aside>
 
-        {/* 오른쪽 메인 컨텐츠 */}
+        {/* 컨텐츠 영역 */}
         <main className="flex-1 ml-64 p-10 bg-[#F8F9FA]">
           <div className="max-w-6xl mx-auto">
             
-            {/* 페이지 헤더 */}
             <div className="mb-8 flex justify-between items-end">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">공지 사항 관리</h1>
                 <p className="text-sm text-gray-500 mt-2">전체 회원에게 전달할 공지사항을 작성하고 관리합니다.</p>
               </div>
-              <button className="flex items-center gap-2 px-4 py-2 bg-[#FF6B4A] text-white rounded-lg hover:bg-[#ff5530] transition-colors shadow-sm text-sm font-bold">
-                <Icons.Edit3 />
-                새 공지 작성
-              </button>
+              
+              {/* [수정] 버튼을 Link로 감싸서 작성 페이지로 이동 */}
+              <Link to="/mypage/notificationwrite">
+                <button className="flex items-center gap-2 px-4 py-2 bg-[#FF6B4A] text-white rounded-lg hover:bg-[#ff5530] transition-colors shadow-sm text-sm font-bold">
+                  <Icons.Edit3 />
+                  새 공지 작성
+                </button>
+              </Link>
             </div>
 
-            {/* 테이블 영역 */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px] flex flex-col">
               
-              {/* 테이블 헤더 */}
               <div className="grid grid-cols-[80px_1fr_120px_120px_100px] bg-[#F9FAFB] border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider py-4 px-6 text-center">
                 <div>NO</div>
                 <div className="text-left px-2">제목</div>
@@ -170,33 +168,22 @@ const Notification = () => {
                 <div>조회수</div>
               </div>
 
-              {/* 테이블 바디 */}
               <div className="divide-y divide-gray-50 flex-1">
                 {notices.map((notice) => (
                   <div 
-                    key={notice.ntId} // [변경] DTO의 PK 사용 (ntId)
+                    key={notice.ntId} 
                     className="grid grid-cols-[80px_1fr_120px_120px_100px] py-4 px-6 items-center text-sm hover:bg-gray-50 transition-colors cursor-pointer text-center"
                   >
-                    {/* [변경] DB 컬럼 매핑 (nt_id -> ntId) */}
                     <div className="text-gray-400">{notice.ntId}</div>
-                    
-                    {/* [변경] DB 컬럼 매핑 (title -> title) */}
                     <div className="text-left px-2 font-medium text-gray-800 truncate">
                       {notice.title}
                     </div>
-                    
-                    {/* [변경] DB 컬럼 매핑 (mb_id -> mbId) */}
                     <div className="text-gray-600">{notice.mbId}</div>
-                    
-                    {/* [변경] DB 컬럼 매핑 (created_at -> createdAt) & 날짜 포맷 적용 */}
                     <div className="text-gray-500 text-xs">{formatDate(notice.createdAt)}</div>
-                    
-                    {/* [변경] DB 컬럼 매핑 (view_count -> viewCount) */}
                     <div className="text-gray-400 text-xs">{notice.viewCount}</div>
                   </div>
                 ))}
                 
-                {/* 데이터가 없을 경우 (빈 상태) */}
                 {notices.length === 0 && (
                    <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20">
                      <div className="p-4 bg-gray-50 rounded-full mb-3 text-gray-300">
@@ -208,7 +195,6 @@ const Notification = () => {
               </div>
             </div>
 
-            {/* 페이지네이션 (현재는 더미, 추후 백엔드 Pageable 구현 필요) */}
             <div className="mt-8 flex justify-center items-center gap-2">
               <button className="p-2 rounded border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 disabled:opacity-50 transition-colors" disabled>
                 <Icons.ChevronLeft />
