@@ -59,8 +59,7 @@ function App() {
           <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>
           <Route path='/mypage/notification' element={<Notification/>}/>
           <Route path="/mypage/notificationwrite" element={<NotificationWrite />}/>
-          <Route path="/mypage/notification/:ntId" element={<NotificationDetail />} />
-
+          <Route path="/mypage/notification/:ntId" element={<NotificationDetail />} /> 
         </Route>
       </Routes>
     </BrowserRouter>
