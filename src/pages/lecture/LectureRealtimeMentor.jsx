@@ -11,6 +11,17 @@ import React, { useRef, useState, useMemo, useEffect } from "react";
  * ============================================================
  */
 
+/**
+ * ============================================================
+ * LectureRealtimeMentor.jsx (STABLE VERSION with UI upgrade)
+ * ------------------------------------------------------------
+ * 🔥 변경 사항
+ *  - 멘티 화면과 동일한 참여자 목록 UI 적용
+ *  - "입장했습니다" justJoined 표시 기능 추가
+ *  - 기존 화면공유/카메라/마이크/Janus 구조는 그대로 유지
+ * ============================================================
+ */
+
 export default function LectureRealtimeMentor({ lectureId }) {
     // -------------------------------
     // UI 상태
@@ -19,7 +30,11 @@ export default function LectureRealtimeMentor({ lectureId }) {
     const [cameraOn, setCameraOn] = useState(true);
     const [micOn, setMicOn] = useState(true);
     const [screenSharing, setScreenSharing] = useState(false);
+
     const [participants, setParticipants] = useState([]);
+
+    // 🟣 새 입장자 표시용
+    const [justJoined, setJustJoined] = useState(null);
 
     // -------------------------------
     // WebRTC/JANUS refs
@@ -32,8 +47,17 @@ export default function LectureRealtimeMentor({ lectureId }) {
 
     const effectiveLectureId = useMemo(() => lectureId ?? 0, [lectureId]);
 
+    // -------------------------------
+    // 새 참가자 알림 자동 제거
+    // -------------------------------
+    useEffect(() => {
+        if (!justJoined) return;
+        const timer = setTimeout(() => setJustJoined(null), 2500);
+        return () => clearTimeout(timer);
+    }, [justJoined]);
+
     // ============================================================
-    // Backend bootstrap API → sessionId, roomId, janusUrl 받음
+    // Backend bootstrap API
     // ============================================================
     const apiBootstrap = async () => {
         const res = await fetch("/api/seesun/session/bootstrap", {
@@ -46,11 +70,10 @@ export default function LectureRealtimeMentor({ lectureId }) {
     };
 
     // ============================================================
-    // 영상 UI에 Stream 표시
+    // 영상 붙이기 (검은 화면 고정 방지 포함)
     // ============================================================
     const attachStream = (videoEl, stream) => {
-        if (!videoEl || !stream) return;
-        // video element이 이전 ended stream에 묶여 있으면 검은 화면이 고정될 수 있어 리셋
+        if (!videoEl) return;
         try {
             videoEl.pause?.();
             videoEl.srcObject = null;
@@ -60,10 +83,9 @@ export default function LectureRealtimeMentor({ lectureId }) {
     };
 
     // ============================================================
-    // Janus configure helper
+    // configure helper
     // ============================================================
     const sendConfigure = (jsep) => {
-        // videoroom plugin은 configure로 audio/video on/off를 반영
         pubHandle.current.send({
             message: {
                 request: "configure",
@@ -75,41 +97,28 @@ export default function LectureRealtimeMentor({ lectureId }) {
     };
 
     // ============================================================
-    // 초기 publish (카메라+마이크)
+    // 초기 카메라 Publish
     // ============================================================
     const publishCamera = () => {
-        if (!pubHandle.current) return;
-
         pubHandle.current.createOffer({
             media: {
                 audioSend: true,
                 videoSend: true,
-                // 카메라 기본
                 video: true,
             },
-            success: (jsep) => {
-                sendConfigure(jsep);
-            },
-            error: (err) => console.error("publishCamera createOffer error:", err),
+            success: (jsep) => sendConfigure(jsep),
+            error: (err) => console.error("publishCamera error:", err),
         });
     };
 
     // ============================================================
-    // 화면공유 시작: replaceVideo 기반 renegotiation
-    // - Janus가 screen capture를 처리 (video:"screen")
+    // 화면공유 시작
     // ============================================================
     const startScreenShare = () => {
-        if (!pubHandle.current) return;
-
         pubHandle.current.createOffer({
             media: {
-                // ⚠️ legacy 문서 기준: video:"screen"은 화면공유 사용
-                // 화면공유로 비디오를 바꾸면서 기존 비디오 m-line을 재사용
                 video: "screen",
                 replaceVideo: true,
-                // 오디오 유지 시도 (환경/브라우저마다 다를 수 있음)
-                // 어떤 janus.js는 screen일 때 audio를 꺼버리기도 해서,
-                // audio는 configure로 다시 켜지도록 해둠
                 audioSend: true,
                 videoSend: true,
             },
@@ -117,20 +126,18 @@ export default function LectureRealtimeMentor({ lectureId }) {
                 sendConfigure(jsep);
                 setScreenSharing(true);
             },
-            error: (err) => console.error("startScreenShare createOffer error:", err),
+            error: (err) => console.error("startScreenShare error:", err),
         });
     };
 
     // ============================================================
-    // 화면공유 종료 → 카메라 복귀: replaceVideo 기반 renegotiation
+    // 화면공유 종료 → 카메라 복귀
     // ============================================================
     const stopScreenShare = () => {
-        if (!pubHandle.current) return;
-
         pubHandle.current.createOffer({
             media: {
-                video: true,          // 다시 카메라
-                replaceVideo: true,   // 기존 video m-line 재사용
+                video: true,
+                replaceVideo: true,
                 audioSend: true,
                 videoSend: true,
             },
@@ -138,41 +145,43 @@ export default function LectureRealtimeMentor({ lectureId }) {
                 sendConfigure(jsep);
                 setScreenSharing(false);
             },
-            error: (err) => console.error("stopScreenShare createOffer error:", err),
+            error: (err) => console.error("stopScreenShare error:", err),
         });
     };
 
     // ============================================================
-    // 카메라 ON/OFF (configure + local track enabled)
+    // 카메라 ON/OFF
     // ============================================================
     const toggleCamera = () => {
         const state = !cameraOn;
         setCameraOn(state);
-
-        // 로컬 트랙이 있으면 enabled도 같이 반영
         localStream.current?.getVideoTracks?.().forEach((t) => (t.enabled = state));
-
-        pubHandle.current?.send({
-            message: { request: "configure", video: state },
-        });
+        pubHandle.current.send({ message: { request: "configure", video: state } });
     };
 
     // ============================================================
-    // 마이크 ON/OFF (configure + local track enabled)
+    // 마이크 ON/OFF
     // ============================================================
     const toggleMic = () => {
         const state = !micOn;
         setMicOn(state);
-
         localStream.current?.getAudioTracks?.().forEach((t) => (t.enabled = state));
+        pubHandle.current.send({ message: { request: "configure", audio: state } });
+    };
 
-        pubHandle.current?.send({
-            message: { request: "configure", audio: state },
+    // ============================================================
+    // 참가자 추가
+    // ============================================================
+    const addParticipant = (p) => {
+        setParticipants((prev) => {
+            if (prev.some((x) => x.id === p.id)) return prev;
+            setJustJoined(p.display);
+            return [...prev, p];
         });
     };
 
     // ============================================================
-    // Janus Publisher attach
+    // Janus Publisher Attach
     // ============================================================
     const attachPublisher = (info) => {
         janus.current.attach({
@@ -180,55 +189,47 @@ export default function LectureRealtimeMentor({ lectureId }) {
 
             success: (handle) => {
                 pubHandle.current = handle;
-
                 handle.send({
                     message: {
                         request: "join",
                         room: parseInt(info.roomId),
                         ptype: "publisher",
-                        display: info.displayName,
+                        display: info.displayName ?? "mentor-user",
                     },
                 });
-
                 setIsStarted(true);
             },
 
             onmessage: (msg, jsep) => {
-                // joined 후 publish
-                if (msg.videoroom === "joined") {
-                    publishCamera();
+                console.log("[MENTOR] publisher message:", msg);
+
+                const event = msg.videoroom;
+
+                if (event === "joined") publishCamera();
+                if (jsep) pubHandle.current.handleRemoteJsep({ jsep });
+
+                // 🔥 참가자 나가기 처리 추가
+                if (msg.leaving) {
+                    console.log("참여자 떠남:", msg.leaving);
+                    setParticipants(prev => prev.filter(p => p.id !== msg.leaving));
                 }
 
-                // Janus가 Answer 주면 적용
-                if (jsep) {
-                    pubHandle.current.handleRemoteJsep({ jsep });
+                // 🔥 unpublish 처리 (멘티가 화면 송출 중지하는 경우 포함)
+                if (msg.unpublished && msg.unpublished !== "ok") {
+                    console.log("참여자 unpublish:", msg.unpublished);
+                    setParticipants(prev => prev.filter(p => p.id !== msg.unpublished));
                 }
             },
 
-            // ✅ legacy janus.js 콜백: onlocalstream에서 로컬 스트림을 받아 UI에 붙임
             onlocalstream: (stream) => {
                 localStream.current = stream;
                 attachStream(mentorVideoRef.current, stream);
-            },
-
-            // (옵션) 상태 로그가 필요하면 켜두면 디버깅에 도움
-            webrtcState: (on) => {
-                // console.log("webrtcState:", on);
-            },
-            mediaState: (type, on) => {
-                // console.log("mediaState:", type, on);
-            },
-            iceState: (state) => {
-                // console.log("iceState:", state);
-            },
-            oncleanup: () => {
-                // console.log("oncleanup");
             },
         });
     };
 
     // ============================================================
-    // Janus 초기화
+    // Janus Init
     // ============================================================
     const initJanus = (info) => {
         window.Janus.init({
@@ -251,10 +252,12 @@ export default function LectureRealtimeMentor({ lectureId }) {
             pubHandle.current?.send({
                 message: { request: "listparticipants", room: parseInt(info.roomId) },
                 success: (res) => {
-                    if (res.participants) setParticipants(res.participants);
+                    if (!res.participants) return;
+
+                    res.participants.forEach((p) => addParticipant(p));
                 },
             });
-        }, 3000);
+        }, 2000);
     };
 
     // ============================================================
@@ -284,7 +287,7 @@ export default function LectureRealtimeMentor({ lectureId }) {
     }, []);
 
     // ============================================================
-    // 버튼 스타일 (SeeSun Blue UI)
+    // UI Styles
     // ============================================================
     const btnPrimary = {
         background: "#1565C0",
@@ -295,22 +298,10 @@ export default function LectureRealtimeMentor({ lectureId }) {
         fontSize: "15px",
         cursor: "pointer",
         marginRight: "8px",
-        boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
     };
 
     const btnToggle = {
         background: "#1E88E5",
-        color: "white",
-        padding: "8px 14px",
-        border: "none",
-        borderRadius: "6px",
-        fontSize: "14px",
-        cursor: "pointer",
-        marginRight: "8px",
-    };
-
-    const btnWarning = {
-        background: "#FB8C00",
         color: "white",
         padding: "8px 14px",
         border: "none",
@@ -357,6 +348,7 @@ export default function LectureRealtimeMentor({ lectureId }) {
                     background: "#000",
                     borderRadius: 10,
                     overflow: "hidden",
+                    marginTop: 10,
                 }}
             >
                 <video
@@ -383,22 +375,58 @@ export default function LectureRealtimeMentor({ lectureId }) {
                             화면 공유 시작
                         </button>
                     ) : (
-                        <button onClick={stopScreenShare} style={btnWarning}>
+                        <button
+                            onClick={stopScreenShare}
+                            style={{ ...btnPrimary, background: "#FB8C00" }}
+                        >
                             화면 공유 종료
                         </button>
                     )}
                 </div>
             )}
 
-            {/* 참여자 목록 */}
-            <div style={{ marginTop: 20 }}>
-                <h3>참여자 목록</h3>
-                <ul>
+            {/* 참여자 목록 — 멘티 UI와 동일하게 개편 */}
+            <div
+                style={{
+                    marginTop: 25,
+                    border: "1px solid #ddd",
+                    padding: 15,
+                    borderRadius: 10,
+                }}
+            >
+                <h3>참여자 목록 ({participants.length})</h3>
+
+                {justJoined && (
+                    <div
+                        style={{
+                            color: "#1976d2",
+                            marginBottom: 8,
+                            fontWeight: "bold",
+                        }}
+                    >
+                        ➕ {justJoined} 님이 입장했습니다.
+                    </div>
+                )}
+
+                <ul style={{ listStyle: "none", padding: 0 }}>
                     {participants.map((p) => (
-                        <li key={p.id}>{p.display}</li>
+                        <li
+                            key={p.id}
+                            style={{
+                                padding: 12,
+                                borderBottom: "1px solid #eee",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "10px",
+                            }}
+                        >
+                            <span style={{ color: "#6a1b9a" }}>👤</span>
+                            <span>{p.display}</span>
+                        </li>
                     ))}
                 </ul>
             </div>
         </div>
     );
 }
+
