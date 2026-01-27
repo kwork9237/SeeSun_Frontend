@@ -15,9 +15,9 @@ const StepMentorExtra = ({ mentorForm, setMentorForm, errors }) => {
             `}
           >
             <option value="">선택하세요</option>
-            <option value="ENGLISH">영어</option>
-            <option value="CODING">코딩</option>
-            <option value="DESIGN">디자인</option>
+            <option value="EN">영어</option>
+            <option value="JP">일본어</option>
+            <option value="CN">중국어</option>
             <option value="ETC">기타</option>
           </select>
           {errors.category && <p className="mt-1 text-xs text-red-500">{errors.category}</p>}

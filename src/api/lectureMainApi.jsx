@@ -4,5 +4,5 @@ import axios from "axios";
 export const fetchLectureCounts = () => axios.get("/api/lectures/count");
 
 // 인기 강의 조회
-export const fetchPopularLectures = (langId) => 
-    axios.get("/api/lectures/popular", { params: { lgType: langId } });
+export const fetchPopularLectures = (langId) =>
+  axios.get("/api/lectures/popular", { params: { lgType: langId } });

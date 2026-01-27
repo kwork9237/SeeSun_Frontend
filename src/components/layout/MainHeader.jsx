@@ -28,6 +28,8 @@ const MainHeader = () => {
   const handleLogout = () => {
     const confirmLogout = window.confirm("로그아웃 하시겠습니까?");
     if (confirmLogout) {
+      localStorage.removeItem('accessToken');     // 토큰 삭제
+      localStorage.removeItem('refreshToken');    // 리프레시 토큰 삭제
       setIsLoggedIn(false);
       navigate("/");
     }
@@ -107,7 +109,6 @@ const MainHeader = () => {
                   로그인
                 </Button>
               </Link>
-
             </>
           )}
         </div>
