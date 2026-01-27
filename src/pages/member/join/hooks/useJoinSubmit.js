@@ -1,44 +1,37 @@
 // src/pages/member/join/hooks/useJoinSubmit.js
 import { joinMember, joinMentorMultipart } from "../api/joinApi";
 
-export const useJoinSubmit = ({
-  navigate,
-  role,
-  emailV,
-  form,
-  terms,
-  isMentor,
-  mentorForm,
-}) => {
+export const useJoinSubmit = ({ navigate, role, emailV, form, terms, isMentor, mentorForm }) => {
   const submitJoin = async () => {
-    const payload = {
-      role, // "MENTEE" | "MENTOR"
+    const joinData = {
       email: emailV.email,
       password: form.password,
       name: form.name,
       nickname: form.nickname,
       phone: form.phone,
-      terms: {
-        t1: terms.t1,
-        t2: terms.t2,
-        t3: terms.t3,
-        sms: terms.sms,
-        email: terms.email,
-      },
-      mentorRequest: isMentor
-        ? {
-            intro: mentorForm.intro,
-            category: mentorForm.category,
-            portfolioUrl: mentorForm.portfolioUrl,
-          }
-        : null,
+      // terms: {
+      //   t1: terms.t1,
+      //   t2: terms.t2,
+      //   t3: terms.t3,
+      //   sms: terms.sms,
+      //   email: terms.email,
+      // },
     };
 
     if (isMentor) {
-      // ✅ 파일은 payload에 넣지 말고 2번째 인자로 전달
-      await joinMentorMultipart(payload, mentorForm?.portfolioFile ?? null);
+      const intro = mentorForm?.intro ?? "";
+      const file = mentorForm?.portfolioFile ?? null;
+
+      // required=true니까 file 없으면 프론트에서 막는 게 좋음
+      if (!file) {
+        // 너희 UI 방식대로 toast/alert 처리
+        alert("포트폴리오 파일은 필수입니다.");
+        return;
+      }
+
+      await joinMentorMultipart(joinData, intro, file);
     } else {
-      await joinMember(payload);
+      await joinMember(joinData);
     }
 
     navigate("/Login");

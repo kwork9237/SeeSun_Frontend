@@ -38,14 +38,17 @@ export const joinMember = async (payload) => {
 };
 
 // 멘토 회원가입 (파일 포함)
-// 백엔드가 multipart 받는다면 이렇게
-export const joinMentorMultipart = async (payload, portfolioFile) => {
+export const joinMentorMultipart = async (joinData, intro, portfolioFile) => {
   const formData = new FormData();
-  formData.append("data", new Blob([JSON.stringify(payload)], { type: "application/json" }));
 
-  if (portfolioFile) {
-    formData.append("file", portfolioFile);
-  }
+  // ✅ @RequestPart("data") MemberJoinDTO
+  formData.append("data", new Blob([JSON.stringify(joinData)], { type: "application/json" }));
+
+  // ✅ @RequestPart("intro") String
+  formData.append("intro", intro ?? "");
+
+  // ✅ @RequestPart("file") MultipartFile (required=true)
+  formData.append("file", portfolioFile);
 
   return axiosInstance.post("/members/join-mentor", formData);
 };
