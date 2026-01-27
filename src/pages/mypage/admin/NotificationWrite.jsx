@@ -39,7 +39,7 @@ const NotificationWrite = () => {
       return;
     }
     try {
-      await axios.post('http://localhost:8080/api/admin/notices', formData);
+      await axios.post('/api/admin/notices', formData);
       alert('공지사항이 등록되었습니다.');
       navigate('/mypage/notification');
     } catch (error) {

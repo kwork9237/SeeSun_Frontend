@@ -41,7 +41,7 @@ const LectureDetail = () => {
   const getProfileImage = (img) => {
     if (!img) return `https://ui-avatars.com/api/?name=${lecture?.instructorName || 'Unknown'}&background=random`;
     if (img.startsWith('http')) return img;
-    return `http://localhost:16500/uploads/${img}`; 
+    return `/uploads/${img}`; 
   };
 
   useEffect(() => {

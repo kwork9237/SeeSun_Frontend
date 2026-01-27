@@ -88,7 +88,7 @@ const Create = () => {
         price: parseInt(formData.price)
       };
 
-      const response = await axios.post('http://localhost:8080/api/lectures', payload);
+      const response = await axios.post('/api/lectures', payload);
       alert(`강의가 생성되었습니다!`);
       window.location.reload();
     } catch (error) {

@@ -39,7 +39,7 @@ const NotificationDetail = () => {
 
     const fetchDetail = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/admin/notices/${ntId}`);
+        const response = await axios.get(`/api/admin/notices/${ntId}`);
         setNotice(response.data);
       } catch (error) {
         console.error('공지사항 상세 조회 실패:', error);

@@ -13,7 +13,7 @@ const Reviews = ({ lectureId }) => {
   // 1. 데이터 가져오기 함수 (정렬 포함)
   const fetchReviewData = useCallback(async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/reviews`, {
+      const response = await axios.get(`/api/reviews`, {
         params: { lectureId: lectureId, sort: sortType }
       });
       setReviews(response.data.list); // 백엔드 Service에서 넘겨준 "list"
@@ -34,7 +34,7 @@ const Reviews = ({ lectureId }) => {
 
     try {
       const payload = { lectureId, rating, content: comment };
-      await axios.post('http://localhost:8080/api/reviews', payload, {
+      await axios.post('/api/reviews', payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert("리뷰가 등록되었습니다.");
