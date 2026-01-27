@@ -1,5 +1,5 @@
 import './App.css';
-import { BrowserRouter, Routes, Route} from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import MainLayout from './components/layout/MainLayout';
 import MainPage from './pages/MainPage';
 import Login from './pages/member/Login';
@@ -9,7 +9,7 @@ import MyPage from './pages/mypage/MyPage';
 import LectureList from './pages/lecture/LectureList';
 import LectureDetail from './pages/lecture/LectureDetail';
 import LectureRealtime from './pages/lecture/LectureRealtime';
-import WebRTCTest from './pages/lecture/MentorRoom'
+import WebRTCTest from './pages/lecture/MentorRoom';
 
 // 회원가입
 import Join from './pages/member/join/JoinMain';
@@ -19,35 +19,32 @@ import Create from './pages/lecture/mento/Create';
 import LectureRealtimeMentee from "./pages/lecture/LectureRealtimeMentee";
 import LectureRealtimeMentor from "./pages/lecture/LectureRealtimeMentor";
 
-// 강의 상세정보 (?)
+// 강의 상세정보
 import SuccessPage from "./pages/lecture/detail/SuccessPage";
 import FailPage from "./pages/lecture/detail/FailPage";
 
-import MenteeLayout from './pages/mypage/Mentee';
-
 // 멘티 페이지들
+import MenteeLayout from './pages/mypage/Mentee';
 import MenteeHome from './pages/mypage/mentee/MenteeHome';
 import MenteeClasses from './pages/mypage/mentee/MenteeClasses';
 import MenteeProfile from './pages/mypage/mentee/MenteeProfile';
 import MenteePayments from './pages/mypage/mentee/MenteePayments';
 
-import MentoLayout from './pages/mypage/Mento';
-
 // 멘토 페이지들
+import MentoLayout from './pages/mypage/Mento';
 import MentoHome from './pages/mypage/mento/MentoHome';
 import MentoClasses from './pages/mypage/mento/MentoClasses';
 import MentoProfile from './pages/mypage/mento/MentoProfile';
 import MentoPayments from './pages/mypage/mento/MentoPayments';
-import MentoManagement from  './pages/mypage/mento/MentoManagement';
+import MentoManagement from './pages/mypage/mento/MentoManagement'; 
 
 // 관리자
-// import Admin from './pages/mypage/Admin';
 import MentoRequest from './pages/mypage/admin/MentoRequest';
-import LectureReport from './pages/mypage/admin/LectureReport';
+import LectureReport from './pages/mypage/admin/LectureReport'; 
 import SuggestionsManage from './pages/mypage/admin/SuggestionsManage'; 
 import Notification from './pages/mypage/admin/Notification';
-import NotificationWrite from './pages/mypage/admin/NotificationWrite';  
-import NotificationDetail from './pages/mypage/admin/NotificationDetail'; // 파일 위치 확인 필요
+import NotificationWrite from './pages/mypage/admin/NotificationWrite'; 
+import NotificationDetail from './pages/mypage/admin/NotificationDetail'; 
 
 function App() {
   return (
@@ -65,8 +62,6 @@ function App() {
 
           {/* 회원가입 */}
           <Route path='/join' element={<Join/>}/>
-          {/* <Route path='/join/Mento' element={<Mento/>}/>
-          <Route path='/join/Mentee' element={<Mentee/>}/> */}
 
           {/* 로그인 */}
           <Route path='/login' element={<Login/>}/>
@@ -81,22 +76,18 @@ function App() {
           {/* 강의 생성 (멘토) */}
           <Route path='/lecture/create' element={<Create/>}/>
 
+          {/* 멘티 라우트 */}
           <Route path="/mentee" element={<MenteeLayout />}>
-            {/* 1. /mentee 로 그냥 들어오면 -> /mentee/home 으로 납치(리다이렉트) */}
             <Route index element={<MenteeHome />} />
-            
-            {/* 2. 각 메뉴별 페이지 갈아 끼우기 */}
             <Route path="home" element={<MenteeHome />} />      
             <Route path="classes" element={<MenteeClasses />} /> 
             <Route path="profile" element={<MenteeProfile />} /> 
             <Route path="payments" element={<MenteePayments />} /> 
           </Route>
 
+          {/* 멘토 라우트 */}
           <Route path="/mento" element={<MentoLayout />}>
-            {/* 1. /mento 로 그냥 들어오면 -> /mento/home 으로 납치(리다이렉트) */}
             <Route index element={<MentoHome />} />
-            
-            {/* 2. 각 메뉴별 페이지 갈아 끼우기 */}
             <Route path="Mthome" element={<MentoHome />} />      
             <Route path="Mtclasses" element={<MentoClasses />} /> 
             <Route path="Mtmanagement" element={<MentoManagement />} />
@@ -112,11 +103,11 @@ function App() {
 
           {/* 관리자 페이지 */}
           <Route path='/mypage/mentorequests' element={<MentoRequest/>}/>
-          <Route path='/mypage/leturereport' element={<LectureReport/>}/>
-          <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>
+          <Route path='/mypage/lecturereport' element={<LectureReport/>}/>
+          <Route path='/mypage/suggestionsmanage' element={<SuggestionsManage/>}/>
           <Route path='/mypage/notification' element={<Notification/>}/>
-          <Route path="/mypage/notificationwrite" element={<NotificationWrite />}/>
-          <Route path="/mypage/notification/:ntId" element={<NotificationDetail />} />
+          <Route path="/mypage/notificationwrite/:ntId" element={<NotificationWrite />}/>
+          <Route path="/mypage/notificationdetail/:ntId" element={<NotificationDetail />}/>
         </Route>
       </Routes>
     </BrowserRouter>
