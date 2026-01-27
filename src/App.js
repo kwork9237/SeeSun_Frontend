@@ -22,6 +22,7 @@ import LectureReport from './pages/mypage/admin/LectureReport';
 import SuggestionsManage from './pages/mypage/admin/SuggestionsManage'; 
 import Notification from './pages/mypage/admin/Notification';
 import NotificationWrite from './pages/mypage/admin/NotificationWrite';  
+import NotificationDetail from './pages/mypage/admin/NotificationDetail'; // 파일 위치 확인 필요
 
 function App() {
   return (
@@ -58,6 +59,7 @@ function App() {
           <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>
           <Route path='/mypage/notification' element={<Notification/>}/>
           <Route path="/mypage/notificationwrite" element={<NotificationWrite />}/>
+          <Route path="/mypage/notification/:ntId" element={<NotificationDetail />} />
 
         </Route>
       </Routes>
