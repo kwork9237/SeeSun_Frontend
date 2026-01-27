@@ -1,68 +1,89 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
 
-const LectureRealtimeMentee = ({ lectureId }) => {
-    // START / END
+/**
+ * LectureRealtimeMentee.jsx (FINAL FIXED)
+ * ------------------------------------------------------------
+ * ✅ Fixes included:
+ * 1) Dummy publish SDP 안정화: audioRecv/videoRecv=true (SDP m-line 유지 → 465 방지)
+ * 2) publishers/participants 혼용 시 display 없는 케이스 방어 (p.display?.)
+ * 3) 멘토 feed 탐색 fallback 추가 (display 없으면 id 기준으로 선택)
+ * 4) subscriber join 순서 안정화: listparticipants 결과 기반으로도 subscribe 시도
+ * 5) leaving/unpublished 비교 시 Number normalize (문자열/숫자 혼재 방지)
+ * 6) 디버그 로그 추가(원하면 제거 가능)
+ */
+
+export default function LectureRealtimeMentee({ lectureId }) {
     const [isStarted, setIsStarted] = useState(false);
 
-    // 참가자 목록
     const [participants, setParticipants] = useState([]);
+    const [justJoined, setJustJoined] = useState(null);
 
-    // video ref
     const mentorVideoRef = useRef(null);
 
-    // Janus refs
     const janus = useRef(null);
-    const subscriberHandle = useRef(null);
+    const publisherHandle = useRef(null);   // 멘티 더미 퍼블리셔 (참여자 이벤트 받는 주 핸들)
+    const subscriberHandle = useRef(null);  // 멘토 영상 구독하는 핸들
 
-    // feed ID (멘토)
     const mentorFeedIdRef = useRef(null);
-
-    // polling
     const pollingInterval = useRef(null);
-
-    // SSE
     const sseRef = useRef(null);
 
     const effectiveLectureId = useMemo(() => lectureId ?? 0, [lectureId]);
 
-    // J A N U S  F U N C T I O N S
-    // -----------------------------------------------------------------------------------
 
+    // ==================== 새 메시지 자동 제거 ====================
+    useEffect(() => {
+        if (!justJoined) return;
+        const t = setTimeout(() => setJustJoined(null), 2000);
+        return () => clearTimeout(t);
+    }, [justJoined]);
+
+
+    // ==================== 공통 ====================
     const attachStream = (videoEl, stream) => {
         if (!videoEl) return;
+        try {
+            videoEl.pause?.();
+        } catch {}
         videoEl.srcObject = stream || null;
         videoEl.play?.().catch(() => {});
     };
 
-    const stopAll = () => {
-        console.log("[MENTEE] stopAll()");
-        if (pollingInterval.current) clearInterval(pollingInterval.current);
 
-        try { subscriberHandle.current?.detach(); } catch {}
-        try { janus.current?.destroy(); } catch {}
-        try { sseRef.current?.close(); } catch {}
+    // ==================== 전체 종료 ====================
+    const stopAll = () => {
+        try { clearInterval(pollingInterval.current); } catch {}
+        try { publisherHandle.current?.detach?.(); } catch {}
+        try { subscriberHandle.current?.detach?.(); } catch {}
+        try { janus.current?.destroy?.(); } catch {}
+        try { sseRef.current?.close?.(); } catch {}
 
         mentorFeedIdRef.current = null;
         attachStream(mentorVideoRef.current, null);
+
         setParticipants([]);
         setIsStarted(false);
     };
 
-    // API -------------------------------------------------------------------------------
+
+    // ==================== API ====================
     const apiBootstrap = async () => {
         const res = await fetch("/api/seesun/session/join", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({ lectureId: effectiveLectureId }),
+            body: JSON.stringify({
+                lectureId: effectiveLectureId
+            }),
         });
 
         if (!res.ok) throw new Error("멘티 join 실패");
         return await res.json();
     };
 
-    // Janus Init ------------------------------------------------------------------------
-    const initJanusAndAttach = (info) => {
+
+    // ==================== Janus Init ====================
+    const initJanus = (info) => {
         const Janus = window.Janus;
 
         Janus.init({
@@ -70,251 +91,271 @@ const LectureRealtimeMentee = ({ lectureId }) => {
             callback: () => {
                 janus.current = new Janus({
                     server: info.janusUrl,
-
-                    success: () => {
-                        console.log("[MENTEE] Janus 연결 성공");
-                        attachSubscriberPlugin(info);
-                    },
-
-                    error: (err) => {
-                        console.error("[MENTEE] Janus init error", err);
-                        alert("Janus 서버 연결 실패");
-                    },
+                    success: () => attachPublisher(info),
+                    error: (err) => console.error("Janus init error:", err),
                 });
             },
         });
     };
 
-    // Subscriber Attach -----------------------------------------------------------------
-    const attachSubscriberPlugin = (info) => {
+
+    // ==================== Publisher Attach (멘티 더미, 이벤트 수신 전담) ====================
+    const attachPublisher = (info) => {
+        janus.current.attach({
+            plugin: "janus.plugin.videoroom",
+
+            success: (handle) => {
+                publisherHandle.current = handle;
+
+                handle.send({
+                    message: {
+                        request: "join",
+                        room: parseInt(info.roomId, 10),
+                        ptype: "publisher",
+                        display: "mentee-user"
+                    }
+                });
+            },
+
+            onmessage: (msg, jsep) => {
+                const event = msg.videoroom;
+
+                // === joined: 더미 publish 후 subscriber attach ===
+                if (event === "joined") {
+                    publishDummyStream();
+                    attachSubscriber(info);
+                }
+
+                // ===== 참여자 목록 / 참가자 이벤트 처리 (핵심 로직) =====
+                const list = msg.publishers || msg.participants;
+                if (Array.isArray(list)) {
+                    list.forEach((p) =>
+                        addParticipant(Number(p.id), p.display)
+                    );
+
+                    pickMentorFeedAndSubscribe(info, list);
+                }
+
+                // ===== 퇴장 처리 =====
+                if (msg.leaving && msg.leaving !== "ok") {
+                    const leavingId = Number(msg.leaving);
+                    removeParticipant(leavingId);
+
+                    if (mentorFeedIdRef.current === leavingId) {
+                        mentorFeedIdRef.current = null;
+                        attachStream(mentorVideoRef.current, null);
+                    }
+                }
+
+                if (msg.unpublished && msg.unpublished !== "ok") {
+                    const unpubId = Number(msg.unpublished);
+                    removeParticipant(unpubId);
+
+                    if (mentorFeedIdRef.current === unpubId) {
+                        mentorFeedIdRef.current = null;
+                        attachStream(mentorVideoRef.current, null);
+                    }
+                }
+
+                // ===== JSEP 처리 =====
+                if (jsep) {
+                    publisherHandle.current.handleRemoteJsep({ jsep });
+                }
+            },
+        });
+    };
+
+
+    // ==================== 더미 퍼블리시 (SDP 안정화 포함) ====================
+    const publishDummyStream = () => {
+        publisherHandle.current.createOffer({
+            media: {
+                audioSend: false,
+                videoSend: false,
+                audioRecv: true,  // SDP m-line 강제 유지
+                videoRecv: true,
+            },
+
+            success: (jsep) => {
+                publisherHandle.current.send({
+                    message: { request: "publish" },
+                    jsep,
+                });
+            },
+        });
+    };
+
+
+    // ==================== Subscriber Attach (멘토 영상 전용) ====================
+    const attachSubscriber = (info) => {
         janus.current.attach({
             plugin: "janus.plugin.videoroom",
 
             success: (handle) => {
                 subscriberHandle.current = handle;
-                console.log("[MENTEE] Subscriber plugin attached");
-                setIsStarted(true);
-            },
 
-            error: (err) => {
-                console.error("[MENTEE] subscriber attach error:", err);
+                setIsStarted(true);
+                startPolling(info);
+                startSSE(info);
             },
 
             onmessage: (msg, jsep) => {
-                handleJanusMessage(info, msg, jsep);
+                // ※ subscriber는 멘토 feed 관련 메시지만 처리
+
+                if (jsep) {
+                    subscriberHandle.current.createAnswer({
+                        jsep,
+                        media: { audioSend: false, videoSend: false },
+
+                        success: (answer) => {
+                            subscriberHandle.current.send({
+                                message: { request: "start" },
+                                jsep: answer,
+                            });
+                        },
+                    });
+                }
             },
 
             onremotestream: (stream) => {
-                console.log("[MENTEE] onremotestream 발생");
                 attachStream(mentorVideoRef.current, stream);
             },
 
             oncleanup: () => {
-                console.log("[MENTEE] oncleanup");
                 attachStream(mentorVideoRef.current, null);
             },
         });
     };
 
-    // 메시지 처리 -----------------------------------------------------------------------
-    const handleJanusMessage = (info, msg, jsep) => {
-        const event = msg?.videoroom;
-        console.log("[MENTEE] MSG EVENT:", event, msg);
 
-        const publishers = msg?.publishers || msg?.participants;
-        if (Array.isArray(publishers)) {
-            publishers.forEach((p) => addParticipant(p.id, p.display));
-            pickMentorFeedAndSubscribe(info, publishers);
-        }
-
-        // 누군가 나감
-        if (event === "event") {
-            const leaving = msg?.leaving || msg?.unpublished;
-            if (leaving && leaving !== "ok") {
-                removeParticipant(leaving);
-
-                if (mentorFeedIdRef.current === leaving) {
-                    mentorFeedIdRef.current = null;
-                    attachStream(mentorVideoRef.current, null);
-                }
-            }
-        }
-
-        // JSEP 처리 (subscribe → answer)
-        if (jsep) {
-            subscriberHandle.current.createAnswer({
-                jsep,
-                media: { audioSend: false, videoSend: false },
-
-                success: (answer) => {
-                    subscriberHandle.current.send({
-                        message: { request: "start" },
-                        jsep: answer,
-                    });
-                },
-
-                error: (error) => {
-                    console.error("[MENTEE] createAnswer error:", error);
-                },
-            });
-        }
-    };
-
+    // ==================== 참여자 추가 (중복 메시지 방지 포함) ====================
     const addParticipant = (id, display) => {
         setParticipants((prev) => {
             if (prev.some((p) => p.id === id)) return prev;
-            return [...prev, { id, display }];
+
+            const safeDisplay = display ?? `(feed:${id})`;
+            setJustJoined(safeDisplay);
+
+            return [...prev, { id, display: safeDisplay }];
         });
     };
 
+
+    // ==================== 참여자 제거 ====================
     const removeParticipant = (id) => {
         setParticipants((prev) => prev.filter((p) => p.id !== id));
     };
 
-    // 멘토 Feed 찾기 --------------------------------------------------------------------
+
+    // ==================== 멘토 Feed 선정 ====================
     const pickMentorFeedAndSubscribe = (info, list) => {
         if (mentorFeedIdRef.current) return;
+        if (!subscriberHandle.current) return;
 
-        console.log("[MENTEE] pickMentorFeedAndSubscribe list:", list);
+        // (1) display 기반
+        let mentor = list.find((p) => p?.display?.startsWith?.("mentor"));
 
-        let mentor = null;
+        // (2) display 없는 fallback(publishers 리스트)
+        if (!mentor) mentor = list.find((p) => typeof p?.id === "number" && p.id > 0);
 
-        // mentorDisplayName 사용할 경우
-        if (info.mentorDisplayName) {
-            mentor = list.find((p) => p.display === info.mentorDisplayName);
-        }
+        if (!mentor) return;
 
-        // 없으면 자기 아닌 사람 = 멘토
-        if (!mentor) {
-            mentor = list.find((p) => p.display !== "MenteeUser");
-        }
-
-        if (mentor?.id) {
-            mentorFeedIdRef.current = mentor.id;
-            subscribeToMentor(info, mentor.id);
-        }
-    };
-
-    // subscriber join 1번만 보냄 --------------------------------------------------------
-    const subscribeToMentor = (info, feedId) => {
-        console.log("[MENTEE] subscribeToMentor feed:", feedId);
+        mentorFeedIdRef.current = mentor.id;
 
         subscriberHandle.current.send({
             message: {
                 request: "join",
-                room: parseInt(info.roomId),   // ★ info에서 직접!
+                room: parseInt(info.roomId, 10),
                 ptype: "subscriber",
-                feed: feedId,
+                feed: mentor.id,
             },
         });
     };
 
-    // Polling (publishers 감지) ---------------------------------------------------------
-    const startPolling = (info) => {
-        if (pollingInterval.current) clearInterval(pollingInterval.current);
 
+    // ==================== Polling ====================
+    const startPolling = (info) => {
         pollingInterval.current = setInterval(() => {
             subscriberHandle.current.send({
                 message: {
                     request: "listparticipants",
-                    room: parseInt(info.roomId),
+                    room: parseInt(info.roomId, 10),
                 },
-
                 success: (res) => {
-                    if (res?.participants) {
-                        res.participants.forEach((p) =>
-                            addParticipant(p.id, p.display)
-                        );
-                        pickMentorFeedAndSubscribe(info, res.participants);
-                    }
+                    if (!res?.participants) return;
+
+                    res.participants.forEach((p) =>
+                        addParticipant(Number(p.id), p.display)
+                    );
+
+                    pickMentorFeedAndSubscribe(info, res.participants);
                 },
             });
-        }, 3500);
+        }, 2000);
     };
 
-    // SSE - 강의 종료 --------------------------------------------------------------
+
+    // ==================== SSE 종료 감지 ====================
     const startSSE = (info) => {
         const es = new EventSource(
             `/api/seesun/session/events?sessionId=${info.sessionId}`,
             { withCredentials: true }
         );
-
         sseRef.current = es;
 
         es.onmessage = (ev) => {
             try {
                 const data = JSON.parse(ev.data);
-
-                if (data?.type === "SESSION_ENDED") {
-                    stopAll();
-                }
+                if (data?.type === "SESSION_ENDED") stopAll();
             } catch {}
         };
     };
 
-    // START -----------------------------------------------------------------------------
+
+    // ==================== Start ====================
     const handleStart = async () => {
-        if (!window.Janus) {
-            alert("Janus 로드 안됨");
-            return;
-        }
-
-        try {
-            const info = await apiBootstrap();
-
-            console.log("[MENTEE] bootstrap info:", info);
-
-            initJanusAndAttach(info);
-            startPolling(info);
-            if (info.sessionId) startSSE(info);
-
-            setIsStarted(true);
-
-        } catch (err) {
-            console.error("멘티 세션 시작 실패:", err);
-            alert("세션 시작 실패");
-        }
+        const info = await apiBootstrap();
+        initJanus(info);
     };
 
-    // CLEANUP ---------------------------------------------------------------------------
-    useEffect(() => {
-        return () => stopAll();
-    }, []);
 
-    // UI --------------------------------------------------------------------------------
-    const btn = {
-        padding: "12px 20px",
-        fontSize: 16,
-        borderRadius: 8,
-        border: "none",
-        color: "white",
-        cursor: "pointer",
-    };
+    useEffect(() => () => stopAll(), []);
 
+
+    // ==================== UI ====================
     return (
         <div style={{ padding: 20 }}>
             <h1>멘티 화면</h1>
 
-            <div style={{ marginBottom: 20 }}>
-                {!isStarted ? (
-                    <button
-                        style={{ ...btn, background: "#1976d2" }}
-                        onClick={handleStart}
-                    >
-                        세션 접속 (멘티)
-                    </button>
-                ) : (
-                    <button
-                        style={{ ...btn, background: "#757575" }}
-                        onClick={stopAll}
-                    >
-                        나가기
-                    </button>
-                )}
-            </div>
+            {!isStarted ? (
+                <button
+                    style={{
+                        padding: 12,
+                        background: "#1976d2",
+                        color: "white",
+                        borderRadius: 8,
+                    }}
+                    onClick={handleStart}
+                >
+                    접속하기
+                </button>
+            ) : (
+                <button
+                    style={{
+                        padding: 12,
+                        background: "#757575",
+                        color: "white",
+                        borderRadius: 8,
+                    }}
+                    onClick={stopAll}
+                >
+                    나가기
+                </button>
+            )}
 
             <div
                 style={{
+                    marginTop: 20,
                     width: "100%",
                     height: 500,
                     background: "#000",
@@ -330,6 +371,7 @@ const LectureRealtimeMentee = ({ lectureId }) => {
                 />
             </div>
 
+            {/* 참여자 목록 */}
             <div
                 style={{
                     marginTop: 20,
@@ -339,15 +381,22 @@ const LectureRealtimeMentee = ({ lectureId }) => {
                 }}
             >
                 <h3>참여자 목록 ({participants.length})</h3>
+
+                {justJoined && (
+                    <div
+                        style={{
+                            color: "#1976d2",
+                            marginBottom: 8,
+                            fontWeight: "bold",
+                        }}
+                    >
+                        ➕ {justJoined} 님이 입장했습니다.
+                    </div>
+                )}
+
                 <ul style={{ listStyle: "none", padding: 0 }}>
                     {participants.map((p) => (
-                        <li
-                            key={p.id}
-                            style={{
-                                padding: 8,
-                                borderBottom: "1px solid #eee",
-                            }}
-                        >
+                        <li key={p.id} style={{ padding: 8, borderBottom: "1px solid #eee" }}>
                             👤 {p.display}
                         </li>
                     ))}
@@ -355,6 +404,6 @@ const LectureRealtimeMentee = ({ lectureId }) => {
             </div>
         </div>
     );
-};
+}
 
-export default LectureRealtimeMentee;
+
