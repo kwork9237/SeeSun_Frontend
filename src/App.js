@@ -46,6 +46,8 @@ import MentoRequest from './pages/mypage/admin/MentoRequest';
 import LectureReport from './pages/mypage/admin/LectureReport';
 import SuggestionsManage from './pages/mypage/admin/SuggestionsManage'; 
 import Notification from './pages/mypage/admin/Notification';
+import NotificationWrite from './pages/mypage/admin/NotificationWrite';  
+import NotificationDetail from './pages/mypage/admin/NotificationDetail'; // 파일 위치 확인 필요
 
 function App() {
   return (
@@ -100,20 +102,21 @@ function App() {
             <Route path="Mtmanagement" element={<MentoManagement />} />
             <Route path="Mtprofile" element={<MentoProfile />} /> 
             <Route path="Mtpayments" element={<MentoPayments />} /> 
-        </Route>
+          </Route>
 
-        {/* 강의 실시간(WebRTC 테스트) */}
-        <Route path='/lecture/realtime' element={<LectureRealtime/>}/>
-        <Route path="/mentor/lecture/:lectureId" element={<LectureRealtimeMentor />} />
-        <Route path="/mentee/lecture/:lectureId" element={<LectureRealtimeMentee />} />
-        <Route path='/webrtctest' element={<WebRTCTest/>}/>
+          {/* 강의 실시간(WebRTC 테스트) */}
+          <Route path='/lecture/realtime' element={<LectureRealtime/>}/>
+          <Route path="/mentor/lecture/:lectureId" element={<LectureRealtimeMentor />} />
+          <Route path="/mentee/lecture/:lectureId" element={<LectureRealtimeMentee />} />
+          <Route path='/webrtctest' element={<WebRTCTest/>}/>
 
-        {/* 관리자 페이지 */}
-        <Route path='/mypage/mentorequests' element={<MentoRequest/>}/>
-        <Route path='/mypage/leturereport' element={<LectureReport/>}/>
-        <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>
-        <Route path='/mypage/notification' element={<Notification/>}/>
-
+          {/* 관리자 페이지 */}
+          <Route path='/mypage/mentorequests' element={<MentoRequest/>}/>
+          <Route path='/mypage/leturereport' element={<LectureReport/>}/>
+          <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>
+          <Route path='/mypage/notification' element={<Notification/>}/>
+          <Route path="/mypage/notificationwrite" element={<NotificationWrite />}/>
+          <Route path="/mypage/notification/:ntId" element={<NotificationDetail />} />
         </Route>
       </Routes>
     </BrowserRouter>
