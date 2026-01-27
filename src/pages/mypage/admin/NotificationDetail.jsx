@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // 1. useRef 추가
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-// 기존 아이콘 + 뒤로가기 아이콘
+// ... (아이콘 컴포넌트들 생략 - 기존과 동일) ...
 const Icons = {
   Home: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>),
   Users: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>),
@@ -14,12 +14,14 @@ const Icons = {
 };
 
 const NotificationDetail = () => {
-  const { ntId } = useParams(); // URL에서 ID 가져오기
+  const { ntId } = useParams();
   const navigate = useNavigate();
   const [notice, setNotice] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 날짜 포맷
+  // 2. 데이터 로딩 여부를 체크하는 ref 생성
+  const hasFetched = useRef(false);
+
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
@@ -27,13 +29,21 @@ const NotificationDetail = () => {
   };
 
   useEffect(() => {
+    // 3. 이미 데이터를 가져왔다면(true) 함수 종료 -> 중복 실행 방지
+    if (hasFetched.current) {
+      return;
+    }
+    
+    // 4. 실행 표시 (true로 변경)
+    hasFetched.current = true;
+
     const fetchDetail = async () => {
       try {
         const response = await axios.get(`http://localhost:8080/api/admin/notices/${ntId}`);
         setNotice(response.data);
       } catch (error) {
         console.error('공지사항 상세 조회 실패:', error);
-        alert('공지사항을 불러오지 못했습니다.');
+        // 에러 발생 시 목록으로 이동
         navigate('/mypage/notification');
       } finally {
         setLoading(false);
@@ -72,7 +82,6 @@ const NotificationDetail = () => {
             </div>
           </div>
           <nav className="flex-1 space-y-8">
-            {/* 메뉴 생략 (기존과 동일하게 유지하거나 NotificationWrite의 사이드바 코드 복사) */}
              <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Support</div>
               <div className="space-y-1">
