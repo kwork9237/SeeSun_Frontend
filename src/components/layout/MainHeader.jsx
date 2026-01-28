@@ -4,12 +4,19 @@ import Button from "../common/Button";
 import NotificationDropdown from "../common/NotificationDropdown"; // 새로 만든 알림 컴포넌트
 
 const MainHeader = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const navigate = useNavigate();
 
   // 외부 클릭 감지를 위한 Ref
   const notificationRef = useRef(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken"); 
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
 
   // 외부 클릭 시 알림창 닫기 로직
   useEffect(() => {
@@ -85,7 +92,7 @@ const MainHeader = () => {
               )}
 
               {/* 마이페이지 */}
-              <Link to="/MyPage">
+              <Link to="/mypage">
                 <Button variant="primary" size="small">
                   마이페이지
                 </Button>
