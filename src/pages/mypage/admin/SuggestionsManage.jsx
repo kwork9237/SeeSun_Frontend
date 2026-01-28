@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 // --- 아이콘 컴포넌트 ---
 const Icons = {
@@ -33,7 +34,34 @@ const Icons = {
 };
 
 const SuggestionsManage = () => {
-  const [suggestions] = useState([]);
+  // 1. 상태 관리: 건의사항 목록, 로딩 상태
+  const [suggestions, setSuggestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // 2. 날짜 포맷팅 함수
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+  };
+
+  // 3. 백엔드 데이터 Fetch (useEffect)
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      try {
+        // AdminController에 만든 주소 호출
+        const response = await axios.get('http://localhost:8080/api/admin/suggestions');
+        console.log('건의사항 데이터:', response.data);
+        setSuggestions(response.data);
+      } catch (error) {
+        console.error('건의사항 조회 실패:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSuggestions();
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-gray-800 font-sans">
@@ -164,32 +192,38 @@ const SuggestionsManage = () => {
 
               {/* 테이블 바디 */}
               <div className="divide-y divide-gray-50 flex-1">
-                {suggestions.map((item) => (
+                {/* 로딩 중일 때 표시 */}
+                {loading && (
+                    <div className="p-10 text-center text-gray-500">데이터를 불러오는 중입니다...</div>
+                )}
+
+                {/* 데이터 렌더링 */}
+                {!loading && suggestions.map((item) => (
                   <div 
-                    key={item.id} 
+                    key={item.sgId} 
                     className="grid grid-cols-[80px_100px_1fr_120px_120px_100px] py-4 px-6 items-center text-sm hover:bg-gray-50 transition-colors cursor-pointer text-center"
                   >
-                    <div className="text-gray-400">{item.id}</div>
+                    <div className="text-gray-400">{item.sgId}</div>
                     <div>
                       <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-600">
-                        {item.type}
+                        일반 {/* DB에 타입 컬럼이 없어서 고정값 */}
                       </span>
                     </div>
                     <div className="text-left px-2 font-medium text-gray-800 truncate">
                       {item.title}
                     </div>
-                    <div className="text-gray-600">{item.author}</div>
-                    <div className="text-gray-500 text-xs">{item.date}</div>
+                    <div className="text-gray-600">{item.mbId}</div>
+                    <div className="text-gray-500 text-xs">{formatDate(item.createdAt)}</div>
                     <div>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        {item.status}
+                        접수 {/* DB에 상태 컬럼이 없어서 고정값 */}
                       </span>
                     </div>
                   </div>
                 ))}
                 
                 {/* 데이터가 없을 경우 (빈 상태) */}
-                {suggestions.length === 0 && (
+                {!loading && suggestions.length === 0 && (
                    <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20">
                      <div className="p-4 bg-gray-50 rounded-full mb-3 text-gray-300">
                         <Icons.FileText />

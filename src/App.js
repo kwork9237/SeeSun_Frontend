@@ -45,8 +45,8 @@ import SuggestionsManage from './pages/mypage/admin/SuggestionsManage';
 import Notification from './pages/mypage/admin/Notification';
 import NotificationWrite from './pages/mypage/admin/NotificationWrite'; 
 import NotificationDetail from './pages/mypage/admin/NotificationDetail';
- import NotificationEdit from './pages/mypage/admin/NotificationEdit'; // [추가] 수정 페이지 Import
- 
+import NotificationEdit from './pages/mypage/admin/NotificationEdit'; 
+
 function App() {
   return (
     <BrowserRouter>
@@ -104,12 +104,14 @@ function App() {
 
           {/* 관리자 페이지 */}
           <Route path='/mypage/mentorequests' element={<MentoRequest/>}/>
-          <Route path='/mypage/lecturereport' element={<LectureReport/>}/>
-          <Route path='/mypage/suggestionsmanage' element={<SuggestionsManage/>}/>
+          <Route path='/mypage/leturereport' element={<LectureReport/>}/>
+          <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>
+          
+          {/* 공지사항 라우트 */}
           <Route path='/mypage/notification' element={<Notification/>}/>
           <Route path="/mypage/notificationwrite" element={<NotificationWrite />}/>
           <Route path="/mypage/notification/:ntId" element={<NotificationDetail />}/>
-        <Route path="/mypage/notification/edit/:ntId" element={<NotificationEdit />}/>
+          <Route path="/mypage/notification/edit/:ntId" element={<NotificationEdit />}/>
 
         </Route>
       </Routes>
