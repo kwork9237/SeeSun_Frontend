@@ -184,9 +184,11 @@ const NotificationWrite = () => {
                   <Icons.X />
                   취소
                 </Link>
+                
+                {/* [수정됨] 등록 완료 버튼 색상 파란색으로 변경 */}
                 <button 
                   type="submit" 
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-[#FF6B4A] text-white font-bold text-sm hover:bg-[#ff5530] shadow-sm hover:shadow transition-all"
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 shadow-sm hover:shadow transition-all"
                 >
                   <Icons.Save />
                   등록 완료

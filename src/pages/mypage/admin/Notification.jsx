@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // 1. useNavigate import 추가
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-// --- 아이콘 컴포넌트 (기존과 동일) ---
+// --- 아이콘 컴포넌트 ---
 const Icons = {
   Home: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>),
   Users: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>),
@@ -18,7 +18,7 @@ const Icons = {
 
 const Notification = () => {
   const [notices, setNotices] = useState([]);
-  const navigate = useNavigate(); // 2. navigate 함수 초기화
+  const navigate = useNavigate();
 
   // 날짜 포맷 (YYYY-MM-DD)
   const formatDate = (dateString) => {
@@ -30,7 +30,7 @@ const Notification = () => {
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        const response = await axios.get('/api/admin/notices');
+        const response = await axios.get('http://localhost:8080/api/admin/notices');
         console.log('백엔드 응답 데이터:', response.data);
         setNotices(response.data);
       } catch (error) {
@@ -131,7 +131,8 @@ const Notification = () => {
               </div>
               
               <Link to="/mypage/notificationwrite">
-                <button className="flex items-center gap-2 px-4 py-2 bg-[#FF6B4A] text-white rounded-lg hover:bg-[#ff5530] transition-colors shadow-sm text-sm font-bold">
+                {/* [수정됨] 새 공지 작성 버튼 파란색으로 변경 */}
+                <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm text-sm font-bold">
                   <Icons.Edit3 />
                   새 공지 작성
                 </button>
@@ -152,12 +153,10 @@ const Notification = () => {
                 {notices.map((notice) => (
                   <div 
                     key={notice.ntId}
-                    // 3. onClick 이벤트 추가: 클릭 시 상세 페이지로 이동
                     onClick={() => navigate(`/mypage/notification/${notice.ntId}`)}
                     className="grid grid-cols-[80px_1fr_120px_120px_100px] py-4 px-6 items-center text-sm hover:bg-gray-50 transition-colors cursor-pointer text-center"
                   >
                     <div className="text-gray-400">{notice.ntId}</div>
-                    {/* 마우스 올렸을 때 제목에 강조 효과 추가 */}
                     <div className="text-left px-2 font-medium text-gray-800 truncate hover:text-orange-500 hover:underline">
                       {notice.title}
                     </div>
