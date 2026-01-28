@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // [수정 1] useRef 추가
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -11,7 +11,6 @@ const Icons = {
   MessageSquare: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>),
   Megaphone: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>),
   ArrowLeft: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>),
-  // Trash 아이콘 사용하지 않음
 };
 
 const SuggestionDetail = () => {
@@ -19,6 +18,9 @@ const SuggestionDetail = () => {
   const navigate = useNavigate();
   const [suggestion, setSuggestion] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // [수정 2] API 중복 호출 방지를 위한 Ref 생성
+  const dataFetchedRef = useRef(false);
 
   // 날짜 포맷
   const formatDate = (dateString) => {
@@ -28,6 +30,10 @@ const SuggestionDetail = () => {
   };
 
   useEffect(() => {
+    // [수정 3] 이미 데이터를 가져왔다면 실행하지 않음 (Strict Mode 방지)
+    if (dataFetchedRef.current) return;
+    dataFetchedRef.current = true;
+
     const fetchDetail = async () => {
       try {
         const response = await axios.get(`http://localhost:8080/api/admin/suggestions/${sgId}`);
@@ -42,8 +48,6 @@ const SuggestionDetail = () => {
     };
     fetchDetail();
   }, [sgId, navigate]);
-
-  // handleDelete 함수 삭제됨
 
   if (loading) return <div className="p-10 text-center text-gray-500">로딩 중...</div>;
   if (!suggestion) return null;
@@ -149,8 +153,6 @@ const SuggestionDetail = () => {
               </div>
             </div>
 
-            {/* 하단 버튼 그룹 제거됨 */}
-            
           </div>
         </main>
       </div>
