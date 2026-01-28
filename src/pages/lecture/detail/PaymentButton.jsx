@@ -4,36 +4,36 @@ import axios from "axios";
 
 const clientKey = process.env.REACT_APP_TOSS_CLIENT_KEY; 
 
-// 1. 여기서 className(디자인), buttonText(글자)까지 총 4개를 받습니다.
-export default function PaymentButton({ memberId, lectureId, className, buttonText }) {
+// 1. 이제 props에서 memberId는 받지 않아도 됩니다. (백엔드가 토큰으로 식별함)
+export default function PaymentButton({ lectureId, className, buttonText }) {
 
   const handlePayment = async () => {
+    // ★ 토큰 가져오기
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) {
+      alert("로그인이 필요한 서비스입니다.");
+      return;
+    }
+
     try {
-      // 2. 백엔드로 보낼 때는 memberId, lectureId 만 보냅니다.
-      const res = await axios.post("/api/orders/request", {
-        mb_id: memberId,
-        le_id: lectureId,
-      });
-
-      /* // ==========================================
-      // [보안 버전] 나중에 토큰 적용할 때 위 코드를 지우고 이걸 쓰세요!
-      // ==========================================
-      const token = localStorage.getItem("accessToken"); // 저장된 토큰 가져오기
-
+      // 2. 백엔드 주문 요청
       const res = await axios.post("/api/orders/request", 
         { 
-          le_id: lectureId // mb_id는 뺍니다 (백엔드가 알아서 찾음)
+          le_id: lectureId // mb_id는 뺍니다. (백엔드가 토큰에서 mbId를 직접 추출함)
         },
         {
           headers: {
-            Authorization: `Bearer ${token}` // 헤더에 토큰 탑승!
+            // ★ 이 헤더가 있어야 백엔드의 user 객체가 null이 되지 않습니다.
+            Authorization: `Bearer ${token}` 
           }
         }
       );
-      */
 
+      // 백엔드 OrdersService.java에서 반환한 4가지 정보 추출
       const { orderId, amount, orderName, customerName } = res.data;
 
+      // 3. 토스 결제창 호출
       const tossPayments = await loadTossPayments(clientKey);
       
       await tossPayments.requestPayment("카드", {
@@ -46,13 +46,13 @@ export default function PaymentButton({ memberId, lectureId, className, buttonTe
       });
       
     } catch (err) {
-      console.error(err);
-      alert("결제 에러! 백엔드 로그 확인 필요");
+      console.error("주문 생성 에러:", err);
+      // 백엔드에서 401(Unauthorized)이 오면 토큰 만료 처리 등을 할 수 있습니다.
+      alert("결제 요청 중 오류가 발생했습니다. 다시 로그인 후 시도해주세요.");
     }
   };
 
   return (
-    // 3. 받아온 디자인(className)을 여기에 적용!
     <button onClick={handlePayment} className={className}>
       {buttonText || "결제하기"}
     </button>

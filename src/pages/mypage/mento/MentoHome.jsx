@@ -9,8 +9,6 @@ const MentoHome = () => {
   const navigate = useNavigate();
 
   // 1. 로그인 정보
-  const storedInfo = JSON.parse(localStorage.getItem('userInfo'));
-  const memberId = storedInfo ? storedInfo.mbId : 3; 
 
   const [schedules, setSchedules] = useState([]);   
   const [myLectures, setMyLectures] = useState([]); 
@@ -35,11 +33,8 @@ const MentoHome = () => {
       try {
         let response; // 나중에 변수명 충돌 방지를 위해 미리 선언
 
-        // [현재 버전] : URL에 ID를 직접 넣어서 요청 (테스트용)
-        response = await axios.get(`/api/mentee/home/${memberId}`);
-        
         // 토큰(Token) 사용 시 
-        /*
+        
         // 1. 저장된 토큰 꺼내기
         const token = localStorage.getItem('accessToken'); 
 
@@ -56,9 +51,9 @@ const MentoHome = () => {
               Authorization: `Bearer ${token}` // 
            }
         });
-        */
+        
 
-        console.log("🔥 멘티 데이터:", response.data);
+        console.log("멘티 데이터:", response.data);
         setSchedules(response.data.schedules || []);
         setMyLectures(response.data.myLectures || []);
 
@@ -67,7 +62,7 @@ const MentoHome = () => {
       }
     };
     fetchData();
-  }, [memberId]); // 나중에 토큰 방식으로 바꾸면 [memberId] 의존성은 제거해도 됩니다.
+  }, []); // 나중에 토큰 방식으로 바꾸면 [memberId] 의존성은 제거해도 됩니다.
 
   // 3. 날짜 유틸
   const formatDateKey = (dateObj) => {

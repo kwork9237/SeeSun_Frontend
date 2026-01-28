@@ -3,8 +3,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom"; // 페이지 이동을 위해 사용
 
 import Admin from "./Admin";
-// import Mentee from "./Mentee";
-// import Mento from "./Mento";
+import Mentee from "./Mentee";
+import Mento from "./Mento";
 
 const MyPage = () => {
   const [mbType, setMbType] = useState(null);
@@ -33,6 +33,7 @@ const MyPage = () => {
         });
 
         // 3. 성공 시 받아온 타입(0, 1, 2) 저장
+        console.log(response.data);
         setMbType(response.data);
       } catch (error) {
         console.error("인증 실패 또는 데이터 로드 오류:", error);
@@ -64,12 +65,15 @@ const MyPage = () => {
       case 0:
         // navigate('/admin');
         return <Admin />;
+        break;
       case 1:
         navigate('/mentee');
         // return <Mentee />;
+        break;
       case 2:
         navigate('/mento');
         // return <Mento />;
+        break;
       default:
         // 예외 처리: DB에 0,1,2 이외의 값이 들어있거나 오류가 났을 때
         return <div>잘못된 접근이거나 알 수 없는 회원 타입입니다.</div>;

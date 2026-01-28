@@ -9,8 +9,6 @@ const MenteeHome = () => {
   const navigate = useNavigate();
 
   // 1. 로그인 정보
-  const storedInfo = JSON.parse(localStorage.getItem('userInfo'));
-  const memberId = storedInfo ? storedInfo.mbId : 201; 
 
   const [schedules, setSchedules] = useState([]);   
   const [myLectures, setMyLectures] = useState([]); 
@@ -33,21 +31,38 @@ const MenteeHome = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // [나중 보안용 주석]
-        // const token = localStorage.getItem('accessToken');
-        // axios.get('/api/mentee/home', { headers: { Authorization: ... } })
+        let response; // 나중에 변수명 충돌 방지를 위해 미리 선언
 
-        // [현재 코드] ★ mentee 주소 확인
-        const res = await axios.get(`/api/mentee/home/${memberId}`);
-        console.log("🔥 멘티 데이터:", res.data);
-        setSchedules(res.data.schedules || []);
-        setMyLectures(res.data.myLectures || []);
+        // 토큰(Token) 사용 시 
+        
+        // 1. 저장된 토큰 꺼내기
+        const token = localStorage.getItem('accessToken'); 
+
+        // 2. 토큰이 없으면 로그인 페이지로 튕겨내기 (선택사항)
+        if (!token) {
+           alert("로그인이 필요합니다.");
+           navigate('/login');
+           return;
+        }
+
+        // 3. 헤더에 토큰을 실어서 요청 (URL에 ID가 필요 없어짐!)
+        response = await axios.get('/api/mentee/home', {
+           headers: {
+              Authorization: `Bearer ${token}` // 
+           }
+        });
+        
+
+        console.log("멘티 데이터:", response.data);
+        setSchedules(response.data.schedules || []);
+        setMyLectures(response.data.myLectures || []);
+
       } catch (err) {
         console.error("데이터 로딩 실패:", err);
       }
     };
     fetchData();
-  }, [memberId]);
+  }, []); // 나중에 토큰 방식으로 바꾸면 [memberId] 의존성은 제거해도 됩니다.
 
   // 3. 날짜 유틸
   const formatDateKey = (dateObj) => {
