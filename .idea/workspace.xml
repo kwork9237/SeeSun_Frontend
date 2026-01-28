@@ -3,7 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="f2a05d28-5d79-446f-a22b-9c114d9d065e" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pages/lecture/LectureRealtimeMentee.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/lecture/LectureRealtimeMentee.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,7 +40,7 @@
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;jin-dev&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;jin-dev-2&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/KDT4/SeeSun/SeeSun_Frontend/public/js&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
@@ -74,7 +74,8 @@
       <workItem from="1768954425205" duration="13391000" />
       <workItem from="1769046995729" duration="8937000" />
       <workItem from="1769388115343" duration="8165000" />
-      <workItem from="1769473521176" duration="260000" />
+      <workItem from="1769473521176" duration="15302000" />
+      <workItem from="1769510090895" duration="131000" />
     </task>
     <servers />
   </component>
