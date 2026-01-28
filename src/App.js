@@ -41,7 +41,8 @@ import MentoManagement from './pages/mypage/mento/MentoManagement';
 // 관리자
 import MentoRequest from './pages/mypage/admin/MentoRequest';
 import LectureReport from './pages/mypage/admin/LectureReport'; 
-import SuggestionsManage from './pages/mypage/admin/SuggestionsManage'; 
+import SuggestionsManage from './pages/mypage/admin/SuggestionsManage';
+import SuggestionDetail from './pages/mypage/admin/SuggestionDetail'; 
 import Notification from './pages/mypage/admin/Notification';
 import NotificationWrite from './pages/mypage/admin/NotificationWrite'; 
 import NotificationDetail from './pages/mypage/admin/NotificationDetail';
@@ -105,7 +106,11 @@ function App() {
           {/* 관리자 페이지 */}
           <Route path='/mypage/mentorequests' element={<MentoRequest/>}/>
           <Route path='/mypage/leturereport' element={<LectureReport/>}/>
+
+          {/* 건의사항 관리 라우트 */}
           <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>
+          <Route path='/mypage/suggestonsmanage/:sgId' element={<SuggestionDetail/>}/>
+          
           
           {/* 공지사항 라우트 */}
           <Route path='/mypage/notification' element={<Notification/>}/>

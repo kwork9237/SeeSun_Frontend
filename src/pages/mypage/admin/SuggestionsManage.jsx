@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // useNavigate 추가
 import axios from 'axios';
 
 // --- 아이콘 컴포넌트 ---
@@ -34,22 +34,21 @@ const Icons = {
 };
 
 const SuggestionsManage = () => {
-  // 1. 상태 관리: 건의사항 목록, 로딩 상태
+  const navigate = useNavigate(); // [추가] 페이지 이동 훅
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 2. 날짜 포맷팅 함수
+  // 날짜 포맷팅 함수
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
     return date.toISOString().split('T')[0]; // YYYY-MM-DD 형식
   };
 
-  // 3. 백엔드 데이터 Fetch (useEffect)
+  // 백엔드 데이터 Fetch
   useEffect(() => {
     const fetchSuggestions = async () => {
       try {
-        // AdminController에 만든 주소 호출
         const response = await axios.get('http://localhost:8080/api/admin/suggestions');
         console.log('건의사항 데이터:', response.data);
         setSuggestions(response.data);
@@ -66,15 +65,12 @@ const SuggestionsManage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-gray-800 font-sans">
       
-      {/* 1. 상단 네비게이션 (헤더) */}
+      {/* 헤더 */}
       <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 fixed w-full top-0 z-20">
-        {/* 로고 영역 */}
         <Link to="/" className="flex items-center gap-2 cursor-pointer text-inherit no-underline">
           <span className="text-orange-500 text-2xl leading-none">●</span> 
           <span className="font-bold text-xl tracking-tight text-gray-900">LinguaConnect</span>
         </Link>
-
-        {/* 우측 유저 메뉴 */}
         <div className="flex items-center gap-4">
           <div className="text-sm text-gray-600">
             <span className="font-semibold text-gray-800">관리자</span>님, 환영합니다.
@@ -85,13 +81,11 @@ const SuggestionsManage = () => {
         </div>
       </header>
 
-      {/* 2. 메인 레이아웃 */}
+      {/* 메인 레이아웃 */}
       <div className="flex flex-1 pt-16">
         
-        {/* 왼쪽 사이드바 */}
+        {/* 사이드바 */}
         <aside className="w-64 bg-white fixed left-0 top-16 h-[calc(100vh-64px)] overflow-y-auto z-10 flex flex-col pt-8 px-6">
-          
-          {/* 프로필 섹션 */}
           <div className="flex items-center gap-3 mb-10">
             <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-gray-500"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -102,10 +96,7 @@ const SuggestionsManage = () => {
             </div>
           </div>
 
-          {/* 메뉴 리스트 */}
           <nav className="flex-1 space-y-8">
-            
-            {/* DASHBOARD */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Dashboard</div>
               <Link to="/mypage" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
@@ -113,8 +104,6 @@ const SuggestionsManage = () => {
                 <span className="text-sm font-medium">홈</span>
               </Link>
             </div>
-
-            {/* MANAGEMENT */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Management</div>
               <div className="space-y-1">
@@ -128,8 +117,6 @@ const SuggestionsManage = () => {
                 </div>
               </div>
             </div>
-
-            {/* CONTENTS */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Contents</div>
               <div className="space-y-1">
@@ -139,8 +126,6 @@ const SuggestionsManage = () => {
                 </Link>
               </div>
             </div>
-
-            {/* SUPPORT */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Support</div>
               <div className="space-y-1">
@@ -148,7 +133,6 @@ const SuggestionsManage = () => {
                   <span className="text-[#A78BFA]"><Icons.MessageSquare /></span>
                   <span className="text-sm font-bold">건의 사항 관리</span>
                 </Link>
-                {/* --- 공지 사항 작성 (Notification) 링크 적용 --- */}
                 <Link to="/mypage/notification" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
                    <span className="text-rose-500"><Icons.Megaphone /></span>
                   <span className="text-sm font-medium">공지 사항 작성</span>
@@ -162,7 +146,6 @@ const SuggestionsManage = () => {
         <main className="flex-1 ml-64 p-10 bg-[#F8F9FA]">
           <div className="max-w-6xl mx-auto">
             
-            {/* 페이지 헤더 */}
             <div className="mb-8 flex justify-between items-end">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">건의 사항 관리</h1>
@@ -177,10 +160,8 @@ const SuggestionsManage = () => {
               </div>
             </div>
 
-            {/* 게시판 테이블 영역 */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px] flex flex-col">
               
-              {/* 테이블 헤더 */}
               <div className="grid grid-cols-[80px_100px_1fr_120px_120px_100px] bg-[#F9FAFB] border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider py-4 px-6 text-center">
                 <div>NO</div>
                 <div>구분</div>
@@ -190,23 +171,22 @@ const SuggestionsManage = () => {
                 <div>상태</div>
               </div>
 
-              {/* 테이블 바디 */}
               <div className="divide-y divide-gray-50 flex-1">
-                {/* 로딩 중일 때 표시 */}
                 {loading && (
                     <div className="p-10 text-center text-gray-500">데이터를 불러오는 중입니다...</div>
                 )}
 
-                {/* 데이터 렌더링 */}
                 {!loading && suggestions.map((item) => (
                   <div 
                     key={item.sgId} 
+                    // [수정됨] 클릭 시 상세 페이지로 이동
+                    onClick={() => navigate(`/mypage/suggestonsmanage/${item.sgId}`)}
                     className="grid grid-cols-[80px_100px_1fr_120px_120px_100px] py-4 px-6 items-center text-sm hover:bg-gray-50 transition-colors cursor-pointer text-center"
                   >
                     <div className="text-gray-400">{item.sgId}</div>
                     <div>
                       <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-600">
-                        일반 {/* DB에 타입 컬럼이 없어서 고정값 */}
+                        일반
                       </span>
                     </div>
                     <div className="text-left px-2 font-medium text-gray-800 truncate">
@@ -216,13 +196,12 @@ const SuggestionsManage = () => {
                     <div className="text-gray-500 text-xs">{formatDate(item.createdAt)}</div>
                     <div>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        접수 {/* DB에 상태 컬럼이 없어서 고정값 */}
+                        접수
                       </span>
                     </div>
                   </div>
                 ))}
                 
-                {/* 데이터가 없을 경우 (빈 상태) */}
                 {!loading && suggestions.length === 0 && (
                    <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20">
                      <div className="p-4 bg-gray-50 rounded-full mb-3 text-gray-300">
@@ -234,16 +213,13 @@ const SuggestionsManage = () => {
               </div>
             </div>
 
-            {/* 페이지네이션 */}
             <div className="mt-8 flex justify-center items-center gap-2">
               <button className="p-2 rounded border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 disabled:opacity-50 transition-colors" disabled>
                 <Icons.ChevronLeft />
               </button>
-              
               <button className="w-9 h-9 flex items-center justify-center rounded bg-orange-500 text-white font-bold text-sm shadow-sm hover:bg-orange-600 transition-colors">
                 1
               </button>
-              
               <button className="p-2 rounded border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 disabled:opacity-50 transition-colors" disabled>
                 <Icons.ChevronRight />
               </button>
