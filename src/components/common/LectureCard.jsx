@@ -102,7 +102,7 @@ const LectureCard = ({ data }) => {
         <div className="flex flex-col items-end gap-2">
           <div className="text-right">
               <span className="font-bold text-gray-900 text-lg">{data.price}</span>
-              <span className="text-xs text-gray-400 ml-0.5">/시간</span>
+              <span className="text-xs text-gray-400 ml-0.5">원</span>
           </div>
           
           <Link to={`/lecture/detail/${data.id}`}>
