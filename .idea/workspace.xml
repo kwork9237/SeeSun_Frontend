@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="f2a05d28-5d79-446f-a22b-9c114d9d065e" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,6 +51,10 @@
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\KDT4\SeeSun\SeeSun_Frontend\public\js" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\KDT4\SeeSun\SeeSun_Frontend\src\pages" />
+      <recent name="C:\KDT4\SeeSun\SeeSun_Frontend\src\pages\lecture\realtime" />
+    </key>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -76,6 +79,8 @@
       <workItem from="1769388115343" duration="8165000" />
       <workItem from="1769473521176" duration="15302000" />
       <workItem from="1769510090895" duration="131000" />
+      <workItem from="1769559809629" duration="23937000" />
+      <workItem from="1769646669389" duration="230000" />
     </task>
     <servers />
   </component>

@@ -116,12 +116,47 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
     // Polling(listparticipants)
     // -------------------------------
     const requestParticipantsOnce = (roomId) => {
+        const h = publisherDummyRef.current;
+        if (!h) return;
+
+        const rid = Number(roomId);
+        console.log("[MENTEE] listparticipants -> room", rid);
+
         try {
-            publisherDummyRef.current?.send({
-                message: { request: "listparticipants", room: Number(roomId) },
+            h.send({
+                message: { request: "listparticipants", room: rid },
+
+                // ✅ 핵심: 응답을 onmessage 말고 여기서 받는다
+                success: (res) => {
+                    const participants =
+                        res?.plugindata?.data?.participants ??
+                        res?.plugindata?.data?.participants_list ??
+                        res?.participants;
+
+                    if (Array.isArray(participants)) {
+                        console.log("[MENTEE] listparticipants OK:", participants.length);
+
+                        const list = participants.map((p) => ({ ...p, id: Number(p.id) }));
+                        setParticipants(list);
+
+                        // (기존 로직 유지) mentor feed 추출 후 subscribe
+                        const fid = pickMentorFeedId(list);
+                        if (fid) subscribeToMentorFeed(bootRef.current ?? { roomId: rid }, fid);
+                    } else {
+                        // 응답 구조 확인용
+                        console.log("[MENTEE] listparticipants res(no list):", res);
+                    }
+                },
+
+                error: (err) => {
+                    console.error("[MENTEE] listparticipants ERROR:", err);
+                },
             });
-        } catch {}
+        } catch (e) {
+            console.error("[MENTEE] listparticipants send failed:", e);
+        }
     };
+
 
     const startPolling = (roomId) => {
         if (pollingRef.current) return;
@@ -279,6 +314,11 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
             },
 
             onmessage: (msg, jsep) => {
+
+                if(msg?.videoroom === "participants" || Array.isArray(msg?.participants) || msg?.error) {
+                    console.log("[MENTEE][dummy] onmessage = ", msg);
+                }
+
                 const event = msg?.videoroom;
 
                 if (event === "joined") {
@@ -286,9 +326,16 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
                     publishDummyStream();
                     requestParticipantsOnce(boot.roomId);
 
+                    // 리스트 날아가는 것 방지(초기화 방지
+                    setParticipants((prev) => [...prev]);
+
+
                     // PATCH1: 멘토 입장 직후 참여자 목록 2회 강제 요청
                     setTimeout(() => requestParticipantsOnce(boot.roomId), 300);
                     setTimeout(() => requestParticipantsOnce(boot.roomId), 1000);
+
+                    // 더 안정적 동기화를 위한 추가 요청
+                    setTimeout(() => requestParticipantsOnce(boot.roomId), 1500);
 
                     startPolling(boot.roomId);
                 }
@@ -310,6 +357,8 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
 
                     // patch2: publishers 이벤트 발생 시 참여자 목록 갱신
                     requestParticipantsOnce(boot.roomId);
+
+                    setTimeout(() => requestParticipantsOnce(boot.roomId), 200);
                 }
 
                 // leaving / unpublished 처리
@@ -319,6 +368,13 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
 
                     // patch3 : 나간 사람 반영 후 재 요청해서 sync 맞추기
                     requestParticipantsOnce(boot.roomId);
+
+                    // 딜레이 동기화 300ms
+                    setTimeout(() => requestParticipantsOnce(boot.roomId), 300);
+
+                    // 더 안정적인 최종 동기화 1000ms
+                    setTimeout(() => requestParticipantsOnce(boot.roomId), 1000);
+
 
                     if (mentorFeedIdRef.current === leavingId) {
                         console.log("[MENTEE] mentor feed left. cleanup remote video");
@@ -362,6 +418,10 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
             },
 
             onmessage: (msg, jsep) => {
+
+                if (msg?.videoroom === "participants" || Array.isArray(msg?.participants) || msg?.error) {
+                           console.log("[MENTOR] onmessage =", msg);
+                }
                 // subscriber join ack 이후 publishers 정보가 오기도 함
                 if (Array.isArray(msg?.publishers) && msg.publishers.length > 0) {
                     const fid = pickMentorFeedId(msg.publishers);

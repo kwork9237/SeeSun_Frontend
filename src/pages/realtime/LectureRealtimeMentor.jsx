@@ -109,12 +109,36 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
     // Participants polling
     // ---------------------------------
     const requestParticipantsOnce = (roomId) => {
+        const h = publisherHandleRef.current;
+        if (!h) return;
+
+        const rid = Number(roomId);
+        console.log("[MENTOR] listparticipants -> room", rid);
+
         try {
-            publisherHandleRef.current?.send({
-                message: { request: "listparticipants", room: Number(roomId) },
+            h.send({
+                message: { request: "listparticipants", room: rid },
+                success: (res) => {
+                    const participants =
+                        res?.plugindata?.data?.participants ??
+                        res?.plugindata?.data?.participants_list ??
+                        res?.participants;
+
+                    if (Array.isArray(participants)) {
+                        console.log("[MENTOR] listparticipants OK:", participants.length);
+                        const list = participants.map((p) => ({ ...p, id: Number(p.id) }));
+                        setParticipants(list);
+                    } else {
+                        console.log("[MENTOR] listparticipants res(no list):", res);
+                    }
+                },
+                error: (err) => console.error("[MENTOR] listparticipants ERROR:", err),
             });
-        } catch {}
+        } catch (e) {
+            console.error("[MENTOR] listparticipants send failed:", e);
+        }
     };
+
 
     const startPolling = (roomId) => {
         if (pollingRef.current) return;
@@ -372,12 +396,21 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
                                     setParticipants(msg.participants.map((p) => ({ ...p, id: Number(p.id) })));
                                 }
 
+                                if (Array.isArray(msg?.publishers) && msg.publishers.length > 0) {
+                                    requestParticipantsOnce(boot.roomId);
+                                }
+
                                 const event = msg?.videoroom;
 
                                 if (event === "joined") {
                                     setMyFeedId(Number(msg?.id));
                                     requestParticipantsOnce(boot.roomId);
                                     startPolling(boot.roomId);
+
+                                    // 참가자 목록 강제 동기화 2회 추가
+                                    setTimeout(() => requestParticipantsOnce(boot.roomId), 300);
+                                    setTimeout(() => requestParticipantsOnce(boot.roomId), 1000);
+
 
                                     // ✅ 최초 publish (camera)
                                     republishWithCamera().catch(console.error);
@@ -386,10 +419,18 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
                                 if (msg?.leaving) {
                                     const leavingId = Number(msg.leaving);
                                     setParticipants((prev) => prev.filter((p) => Number(p.id) !== leavingId));
+
+
+                                    // 참가자 목록 강제 동기화
+                                    requestParticipantsOnce(boot.roomId);
+                                    setTimeout(() => requestParticipantsOnce(boot.roomId), 300);
                                 }
                                 if (msg?.unpublished && msg.unpublished !== "ok") {
                                     const unpubId = Number(msg.unpublished);
                                     setParticipants((prev) => prev.filter((p) => Number(p.id) !== unpubId));
+
+                                    requestParticipantsOnce(boot.roomId);
+                                    setTimeout(() => requestParticipantsOnce(boot.roomId), 300);
                                 }
 
                                 if (jsep) {
