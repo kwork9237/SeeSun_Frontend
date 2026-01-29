@@ -1,12 +1,14 @@
 import axios from "axios";
 
-const axiosInstance = axios.create({
+// spring server에 api 요청을 위함
+
+const apiClient = axios.create({
   baseURL: "/api",       // 불필요하게 api를 안 붙이기 위해 사용함
   withCredentials: true, // 쿠키 안 쓰면 빼도 됨
 });
 
 // axios 개체 인터셉터
-axiosInstance.interceptors.request.use((config) => {
+apiClient.interceptors.request.use((config) => {
   // localstorage에서 token 가져오기
   const token = localStorage.getItem("accessToken");
 
@@ -17,4 +19,4 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-export default axiosInstance;
+export default apiClient;

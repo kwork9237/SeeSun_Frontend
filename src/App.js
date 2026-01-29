@@ -49,77 +49,82 @@ import Notification from './pages/mypage/admin/Notification';
 import NotificationWrite from './pages/mypage/admin/NotificationWrite';  
 import NotificationDetail from './pages/mypage/admin/NotificationDetail'; // 파일 위치 확인 필요
 
+// 보안 기능
+import { AuthProvider } from './auth/AuthContext';
+
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
 
-        {/* 메인 레이아웃을 사용하는 페이지 */}
-        <Route element={<MainLayout/>}>
+          {/* 메인 레이아웃을 사용하는 페이지 */}
+          <Route element={<MainLayout/>}>
 
-          {/* 메인 페이지 */}
-          <Route path='/' element={<MainPage/>}/>
+            {/* 메인 페이지 */}
+            <Route path='/' element={<MainPage/>}/>
 
-          <Route path="/payment/success" element={<SuccessPage />} />
-          <Route path="/payment/fail" element={<FailPage />} />
+            <Route path="/payment/success" element={<SuccessPage />} />
+            <Route path="/payment/fail" element={<FailPage />} />
 
-          {/* 회원가입 */}
-          <Route path='/join' element={<Join/>}/>
-          {/* <Route path='/join/Mento' element={<Mento/>}/>
-          <Route path='/join/Mentee' element={<Mentee/>}/> */}
+            {/* 회원가입 */}
+            <Route path='/join' element={<Join/>}/>
+            {/* <Route path='/join/Mento' element={<Mento/>}/>
+            <Route path='/join/Mentee' element={<Mentee/>}/> */}
 
-          {/* 로그인 */}
-          <Route path='/login' element={<Login/>}/>
+            {/* 로그인 */}
+            <Route path='/login' element={<Login/>}/>
 
-          {/* 마이페이지 */}
-          <Route path='/mypage' element={<MyPage/>}/>
+            {/* 마이페이지 */}
+            <Route path='/mypage' element={<MyPage/>}/>
 
-          {/* 강의 목록 */}
-          <Route path='/lecture' element={<LectureList/>}/>
-          <Route path='/lecture/detail/:id' element={<LectureDetail/>}/>
-          
-          {/* 강의 생성 (멘토) */}
-          <Route path='/lecture/create' element={<Create/>}/>
-
-          <Route path="/mentee" element={<MenteeLayout />}>
-            {/* 1. /mentee 로 그냥 들어오면 -> /mentee/home 으로 납치(리다이렉트) */}
-            <Route index element={<MenteeHome />} />
+            {/* 강의 목록 */}
+            <Route path='/lecture' element={<LectureList/>}/>
+            <Route path='/lecture/detail/:id' element={<LectureDetail/>}/>
             
-            {/* 2. 각 메뉴별 페이지 갈아 끼우기 */}
-            <Route path="home" element={<MenteeHome />} />      
-            <Route path="classes" element={<MenteeClasses />} /> 
-            <Route path="profile" element={<MenteeProfile />} /> 
-            <Route path="payments" element={<MenteePayments />} /> 
+            {/* 강의 생성 (멘토) */}
+            <Route path='/lecture/create' element={<Create/>}/>
+
+            <Route path="/mentee" element={<MenteeLayout />}>
+              {/* 1. /mentee 로 그냥 들어오면 -> /mentee/home 으로 납치(리다이렉트) */}
+              <Route index element={<MenteeHome />} />
+              
+              {/* 2. 각 메뉴별 페이지 갈아 끼우기 */}
+              <Route path="home" element={<MenteeHome />} />      
+              <Route path="classes" element={<MenteeClasses />} /> 
+              <Route path="profile" element={<MenteeProfile />} /> 
+              <Route path="payments" element={<MenteePayments />} /> 
+            </Route>
+
+            <Route path="/mento" element={<MentoLayout />}>
+              {/* 1. /mento 로 그냥 들어오면 -> /mento/home 으로 납치(리다이렉트) */}
+              <Route index element={<MentoHome />} />
+              
+              {/* 2. 각 메뉴별 페이지 갈아 끼우기 */}
+              <Route path="Mthome" element={<MentoHome />} />      
+              <Route path="Mtclasses" element={<MentoClasses />} /> 
+              <Route path="Mtmanagement" element={<MentoManagement />} />
+              <Route path="Mtprofile" element={<MentoProfile />} /> 
+              <Route path="Mtpayments" element={<MentoPayments />} /> 
+            </Route>
+
+            {/* 강의 실시간(WebRTC 테스트) */}
+            <Route path='/lecture/realtime' element={<LectureRealtime/>}/>
+            <Route path="/mentor/lecture/:lectureId" element={<LectureRealtimeMentor />} />
+            <Route path="/mentee/lecture/:lectureId" element={<LectureRealtimeMentee />} />
+            <Route path='/webrtctest' element={<WebRTCTest/>}/>
+
+            {/* 관리자 페이지 */}
+            <Route path='/mypage/mentorequests' element={<MentoRequest/>}/>
+            <Route path='/mypage/leturereport' element={<LectureReport/>}/>
+            <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>
+            <Route path='/mypage/notification' element={<Notification/>}/>
+            <Route path="/mypage/notificationwrite" element={<NotificationWrite />}/>
+            <Route path="/mypage/notification/:ntId" element={<NotificationDetail />} />
           </Route>
-
-          <Route path="/mento" element={<MentoLayout />}>
-            {/* 1. /mento 로 그냥 들어오면 -> /mento/home 으로 납치(리다이렉트) */}
-            <Route index element={<MentoHome />} />
-            
-            {/* 2. 각 메뉴별 페이지 갈아 끼우기 */}
-            <Route path="Mthome" element={<MentoHome />} />      
-            <Route path="Mtclasses" element={<MentoClasses />} /> 
-            <Route path="Mtmanagement" element={<MentoManagement />} />
-            <Route path="Mtprofile" element={<MentoProfile />} /> 
-            <Route path="Mtpayments" element={<MentoPayments />} /> 
-          </Route>
-
-          {/* 강의 실시간(WebRTC 테스트) */}
-          <Route path='/lecture/realtime' element={<LectureRealtime/>}/>
-          <Route path="/mentor/lecture/:lectureId" element={<LectureRealtimeMentor />} />
-          <Route path="/mentee/lecture/:lectureId" element={<LectureRealtimeMentee />} />
-          <Route path='/webrtctest' element={<WebRTCTest/>}/>
-
-          {/* 관리자 페이지 */}
-          <Route path='/mypage/mentorequests' element={<MentoRequest/>}/>
-          <Route path='/mypage/leturereport' element={<LectureReport/>}/>
-          <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>
-          <Route path='/mypage/notification' element={<Notification/>}/>
-          <Route path="/mypage/notificationwrite" element={<NotificationWrite />}/>
-          <Route path="/mypage/notification/:ntId" element={<NotificationDetail />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

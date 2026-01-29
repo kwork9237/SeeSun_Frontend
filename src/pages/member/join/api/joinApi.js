@@ -1,9 +1,8 @@
-// 예시: 너가 axiosInstance를 어디에 두었는지에 맞춰 경로 조절
-import axiosInstance from "../../../../api/axiosInstance";
+import apiClient from "../../../../api/apiClient";
 
 // 전체 중복 검사
 const checkDuplicate = async (field, value) => {
-  const res = await axiosInstance.get("/members/exists", {
+  const res = await apiClient.get("/members/exists", {
     params: { field, value },
   });
 
@@ -24,17 +23,17 @@ export const checkPhoneDuplicate = (phone) =>
 
 // 인증번호 발송
 export const sendEmailCode = async (email) => {
-  return axiosInstance.post("/members/email/send-code", { email });
+  return apiClient.post("/members/email/send-code", { email });
 };
 
 // 인증번호 검증
 export const verifyEmailCode = async (email, code) => {
-  return axiosInstance.post("/members/email/verify-code", { email, code });
+  return apiClient.post("/members/email/verify-code", { email, code });
 };
 
 // 회원가입 (멘티)
 export const joinMember = async (payload) => {
-  return axiosInstance.post("/members/join", payload);
+  return apiClient.post("/members/join", payload);
 };
 
 // 멘토 회원가입 (파일 포함)
@@ -50,5 +49,5 @@ export const joinMentorMultipart = async (joinData, intro, portfolioFile) => {
   // ✅ @RequestPart("file") MultipartFile (required=true)
   formData.append("file", portfolioFile);
 
-  return axiosInstance.post("/members/join-mentor", formData);
+  return apiClient.post("/members/join-mentor", formData);
 };

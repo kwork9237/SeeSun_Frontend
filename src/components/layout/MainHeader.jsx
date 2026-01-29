@@ -1,23 +1,21 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../common/Button";
-import NotificationDropdown from "../common/NotificationDropdown"; // 새로 만든 알림 컴포넌트
+import NotificationDropdown from "../common/NotificationDropdown";
+import { useAuth } from "../../auth/AuthContext"; // ✅ 경로는 네 프로젝트 구조에 맞게 조정
 
 const MainHeader = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [showNotifications, setShowNotifications] = useState(false);
   const navigate = useNavigate();
+  const { isLoggedIn, logout } = useAuth(); // ✅ 전역 로그인 상태 사용
 
-  // 외부 클릭 감지를 위한 Ref
+  // 알림 설정 (기존 유지)
+  const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef(null);
 
-  // 외부 클릭 시 알림창 닫기 로직
+  // 외부 클릭 시 알림창 닫기 로직 (기존 유지)
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        notificationRef.current &&
-        !notificationRef.current.contains(event.target)
-      ) {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
         setShowNotifications(false);
       }
     };
@@ -27,17 +25,14 @@ const MainHeader = () => {
 
   const handleLogout = () => {
     const confirmLogout = window.confirm("로그아웃 하시겠습니까?");
-    if (confirmLogout) {
-      localStorage.removeItem('accessToken');     // 토큰 삭제
-      localStorage.removeItem('refreshToken');    // 리프레시 토큰 삭제
-      setIsLoggedIn(false);
-      navigate("/");
-    }
+    if (!confirmLogout) return;
+
+    logout();      // ✅ 토큰/상태 정리는 AuthContext가 담당
+    navigate("/"); // ✅ 홈으로 이동
   };
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 h-20 transition-all">
-      {/* Grid 레이아웃으로 중앙 탭 고정 (1:auto:1 비율) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between md:grid md:grid-cols-[1fr_auto_1fr] items-center">
         {/* 1. 좌측: 로고 */}
         <div
@@ -69,7 +64,7 @@ const MainHeader = () => {
         <div className="flex items-center gap-3 justify-self-end">
           {isLoggedIn ? (
             <>
-              {/* 알림 영역 (현재 기능 비활성화)*/}
+              {/* 알림 영역 (현재 기능 비활성화) */}
               {false && (
                 <div className="relative" ref={notificationRef}>
                   <button
@@ -79,7 +74,6 @@ const MainHeader = () => {
                     <i className="fa-solid fa-bell text-xl"></i>
                     <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
                   </button>
-                  {/* 알림 드롭다운 컴포넌트 */}
                   {showNotifications && <NotificationDropdown />}
                 </div>
               )}
@@ -98,7 +92,6 @@ const MainHeader = () => {
             </>
           ) : (
             <>
-              {/* 비로그인 상태 */}
               <Link to="/Join">
                 <Button variant="primary" size="small">
                   회원가입
