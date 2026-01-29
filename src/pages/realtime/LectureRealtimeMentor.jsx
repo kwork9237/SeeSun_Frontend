@@ -1,14 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 import LectureRealtimeLayout from "./LectureRealtimeLayout";
 import MentorMainVideo from "./components/MentorMainVideo";
 import ParticipantsPanel from "./components/ParticipantsPanel";
 import ChatPanel from "./components/ChatPanel";
 import ControlsBar from "./components/ControlsBar";
 
-export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토" }) {
+export default function LectureRealtimeMentor({ mentorName = "멘토" }) {
+    const { lectureId } = useParams();
+    const numericLectureId = Number(lectureId);
+
     const janusRef = useRef(null);
     const publisherHandleRef = useRef(null);
-
     const mentorVideoRef = useRef(null);
 
     const [sessionStarted, setSessionStarted] = useState(false);
@@ -24,33 +27,43 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
     const janusInitedRef = useRef(false);
     const pollingRef = useRef(null);
 
-    // ✅ 실제 송출 스트림
     const publishedStreamRef = useRef(null);
-
-    // ✅ publish 한 번이라도 했는지
     const publishedOnceRef = useRef(false);
 
-    // ✅ bootstrap 캐시
     const bootRef = useRef(null);
-
-    // ✅ StrictMode 중복 방지
     const startedRef = useRef(false);
 
-    // ✅ replaceTrack용 sender
     const videoSenderRef = useRef(null);
     const audioSenderRef = useRef(null);
+
+    // ✅ 채팅은 lectureId가 아니라 Janus roomId로 묶어야 함
+    const [chatRoomId, setChatRoomId] = useState(null);
 
     // ---------------------------------
     // Chat
     // ---------------------------------
-    const handleSendMessage = (text) => {
-        const newMessage = {
+    const handleSendMessage = async (text) => {
+        const rid = chatRoomId; // ✅ roomId 기준
+        if (!rid) {
+            console.warn("[MENTOR] chatRoomId not ready yet. skip send");
+            return;
+        }
+
+        const msg = {
+            roomId: rid, // ✅ roomId를 lectureId 자리에 넣어서 broadcast key 통일
             sender: mentorName,
-            text,
             role: "mentor",
-            color: "#3498db",
+            text,
         };
-        setChatMessages((prev) => [...prev, newMessage]);
+
+        await fetch("/api/seesun/session/chat/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(msg),
+        });
+
+        // UI에 즉시 추가
+        // setChatMessages((prev) => [...prev, msg]);
     };
 
     // ---------------------------------
@@ -82,6 +95,10 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
         if (!roomId) throw new Error("bootstrap 응답에 roomId가 없습니다.");
 
         bootRef.current = { janusUrl, roomId, raw: data };
+
+        // ✅ 채팅은 roomId로 고정
+        setChatRoomId(roomId);
+
         return bootRef.current;
     };
 
@@ -139,7 +156,6 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
         }
     };
 
-
     const startPolling = (roomId) => {
         if (pollingRef.current) return;
         pollingRef.current = setInterval(() => requestParticipantsOnce(roomId), 2000);
@@ -170,7 +186,6 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
         const v = mentorVideoRef.current;
         if (!v || !stream) return;
 
-        // ✅ 로컬 프리뷰 딜레이 제거 핵심
         if (v.srcObject !== stream) v.srcObject = stream;
         v.muted = true;
         v.playsInline = true;
@@ -192,7 +207,6 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
             audio: false,
         });
 
-        // 마이크 트랙은 기존 스트림에서 가져오거나 새로 획득
         let micTrack = null;
         const current = publishedStreamRef.current;
         if (current?.getAudioTracks?.().length) {
@@ -207,7 +221,6 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
         if (vTrack) composed.addTrack(vTrack);
         if (micTrack) composed.addTrack(micTrack);
 
-        // 화면공유 종료 시 카메라 복귀
         if (vTrack) {
             vTrack.onended = () => {
                 setIsSharing(false);
@@ -279,28 +292,19 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
         const aTrack = stream?.getAudioTracks?.()?.[0] ?? null;
 
         applyTrackEnabled(stream, isCamOn, isMicOn);
-
-        // ✅ 멘토 로컬 프리뷰 즉시 반영(딜레이 제거 1차)
         attachLocalPreviewNow(stream);
 
-        // sender 아직 없으면(초기/예외) → renegotiate로 보정
         if (!videoSenderRef.current || !audioSenderRef.current) {
             console.log("[MENTOR] senders not ready -> renegotiateWithStream()");
             await renegotiateWithStream(stream);
-            // renegotiate 후 sender 다시 확보(약간 delay)
             setTimeout(refreshSendersFromPC, 50);
             return;
         }
 
         try {
-            if (videoSenderRef.current && vTrack) {
-                await videoSenderRef.current.replaceTrack(vTrack);
-            }
-            if (audioSenderRef.current && aTrack) {
-                await audioSenderRef.current.replaceTrack(aTrack);
-            }
+            if (videoSenderRef.current && vTrack) await videoSenderRef.current.replaceTrack(vTrack);
+            if (audioSenderRef.current && aTrack) await audioSenderRef.current.replaceTrack(aTrack);
 
-            // ✅ 빠른 반영을 위한 configure (bitrate 지정으로 전환 지연 감소)
             try {
                 publisherHandleRef.current?.send({
                     message: {
@@ -313,9 +317,6 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
                 });
             } catch {}
 
-            console.log("[MENTOR] replaceTrack applied (video/audio)");
-
-            // ✅ 멘토 로컬 프리뷰 즉시 반영(딜레이 제거 2차, 확실히)
             attachLocalPreviewNow(stream);
         } catch (e) {
             console.error("[MENTOR] replaceTrack failed -> fallback renegotiate:", e);
@@ -327,31 +328,20 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
 
     const republishWithCamera = async () => {
         const cam = await getCameraStream();
-
         const prev = publishedStreamRef.current;
         publishedStreamRef.current = cam;
-
-        // ✅ 멘토 화면 즉시 카메라로(딜레이 제거)
         attachLocalPreviewNow(cam);
-
         await replaceTracks(cam);
-
         if (prev && prev !== cam) stopStreamTracks(prev);
     };
 
     const republishWithScreen = async () => {
         const screen = await getScreenStream();
-
         const prev = publishedStreamRef.current;
         publishedStreamRef.current = screen;
-
-        // ✅ 멘토 화면 즉시 화면공유로(딜레이 제거)
         attachLocalPreviewNow(screen);
-
         await replaceTracks(screen);
-
         if (prev && prev !== screen) stopStreamTracks(prev);
-
         setIsSharing(true);
     };
 
@@ -407,28 +397,21 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
                                     requestParticipantsOnce(boot.roomId);
                                     startPolling(boot.roomId);
 
-                                    // 참가자 목록 강제 동기화 2회 추가
                                     setTimeout(() => requestParticipantsOnce(boot.roomId), 300);
                                     setTimeout(() => requestParticipantsOnce(boot.roomId), 1000);
 
-
-                                    // ✅ 최초 publish (camera)
                                     republishWithCamera().catch(console.error);
                                 }
 
                                 if (msg?.leaving) {
                                     const leavingId = Number(msg.leaving);
                                     setParticipants((prev) => prev.filter((p) => Number(p.id) !== leavingId));
-
-
-                                    // 참가자 목록 강제 동기화
                                     requestParticipantsOnce(boot.roomId);
                                     setTimeout(() => requestParticipantsOnce(boot.roomId), 300);
                                 }
                                 if (msg?.unpublished && msg.unpublished !== "ok") {
                                     const unpubId = Number(msg.unpublished);
                                     setParticipants((prev) => prev.filter((p) => Number(p.id) !== unpubId));
-
                                     requestParticipantsOnce(boot.roomId);
                                     setTimeout(() => requestParticipantsOnce(boot.roomId), 300);
                                 }
@@ -439,10 +422,7 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
                             },
 
                             onlocalstream: (stream) => {
-                                // ✅ publish/renegotiate 때 들어오는 stream도 로컬 프리뷰에 반영
                                 attachLocalPreviewNow(stream);
-
-                                // ✅ sender 확보(초기 publish 직후 잡힘)
                                 refreshSendersFromPC();
                                 setTimeout(refreshSendersFromPC, 50);
                             },
@@ -489,7 +469,6 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
     const toggleCam = () => {
         setIsCamOn((prev) => {
             const next = !prev;
-
             const s = publishedStreamRef.current;
             applyTrackEnabled(s, next, isMicOn);
 
@@ -506,7 +485,6 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
     const toggleMic = () => {
         setIsMicOn((prev) => {
             const next = !prev;
-
             const s = publishedStreamRef.current;
             applyTrackEnabled(s, isCamOn, next);
 
@@ -597,6 +575,37 @@ export default function LectureRealtimeMentor({ lectureId, mentorName = "멘토"
             startedRef.current = false;
         };
     }, []);
+
+    // ---------------------------------------------
+    // ✅ SSE Listener (MENTOR) - roomId 기준으로 구독
+    // ---------------------------------------------
+    useEffect(() => {
+        if (!chatRoomId) return;
+
+        const url = `/api/seesun/session/chat/stream?roomId=${chatRoomId}`;
+        const evtSource = new EventSource(url, { withCredentials: true });
+
+        const onChat = (e) => {
+            try {
+                const data = JSON.parse(e.data);
+                console.log("[SSE][MENTOR] RECEIVED:", data);
+                setChatMessages((prev) => [...prev, data]);
+            } catch (err) {
+                console.error("[SSE][MENTOR] parse error:", err, e.data);
+            }
+        };
+
+        evtSource.addEventListener("chat", onChat);
+
+        evtSource.onerror = (err) => {
+            console.warn("[SSE][MENTOR] error:", err);
+        };
+
+        return () => {
+            evtSource.removeEventListener("chat", onChat);
+            evtSource.close();
+        };
+    }, [chatRoomId]);
 
     return (
         <LectureRealtimeLayout

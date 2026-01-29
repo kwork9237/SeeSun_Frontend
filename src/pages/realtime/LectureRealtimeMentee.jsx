@@ -1,17 +1,9 @@
 // LectureRealtimeMentee.jsx (FIXED FULL)
 // -----------------------------------------------------------
 // 멘티(MENTEE) 전용 실시간 강의 화면 (Janus VideoRoom)
-// - 멘티는 송출 없음(더미 publisher로만 room 유지 + listparticipants 요청)
-// - 멘토의 feed를 subscriber로 구독해서 화면에 표시
-//
-// ✅ Fixes
-// 1) ref.current dependency useEffect 제거 (React가 ref 변경 감지 안함)
-// 2) subscriber attach 전/후 레이스 컨디션 해결 (pending feed 강제 처리)
-// 3) subscriber start 요청에 room 포함 + 흐름 안정화
-// 4) onremotetrack 기반에서도 항상 video DOM에 stream 부착
-// 5) publishers/participants 갱신마다 mentor feed 재탐색
 
 import React, { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 
 import LectureRealtimeLayout from "./LectureRealtimeLayout";
 import MentorMainVideo from "./components/MentorMainVideo";
@@ -19,17 +11,16 @@ import ParticipantsPanel from "./components/ParticipantsPanel";
 import ChatPanel from "./components/ChatPanel";
 import ControlsBar from "./components/ControlsBar";
 
-export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티" }) {
+export default function LectureRealtimeMentee({ menteeName = "멘티" }) {
+    const { lectureId } = useParams();
+    const numericLectureId = Number(lectureId);
+
     const janusRef = useRef(null);
 
-    // videoroom handles
     const publisherDummyRef = useRef(null);
     const subscriberRef = useRef(null);
 
-    // DOM ref
     const mentorVideoRef = useRef(null);
-
-    // Remote stream 저장 (subscriber에서 받는 스트림)
     const remoteStreamRef = useRef(null);
 
     const [sessionReady, setSessionReady] = useState(false);
@@ -42,21 +33,37 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
     const bootRef = useRef(null);
     const startedRef = useRef(false);
 
-    // mentor feed 관리
     const mentorFeedIdRef = useRef(null);
     const pendingMentorFeedIdRef = useRef(null);
 
-    // -------------------------------
-    // Chat
-    // -------------------------------
-    const handleSendMessage = (text) => {
-        const newMessage = {
+    // ✅ 채팅용 roomId (bootstrap에서 세팅)
+    const [chatRoomId, setChatRoomId] = useState(null);
+
+    // ---------------------------------
+    // Chat send (MENTEE) - roomId 기준
+    // ---------------------------------
+    const handleSendMessage = async (text) => {
+        const rid = chatRoomId;
+        if (!rid) {
+            console.warn("[MENTEE] chatRoomId not ready yet. skip send");
+            return;
+        }
+
+        const msg = {
+            roomId: rid, // ✅ roomId를 lectureId 자리에 넣어서 broadcast key 통일
             sender: menteeName,
-            text,
             role: "mentee",
-            color: "#3498db",
+            text,
         };
-        setChatMessages((prev) => [...prev, newMessage]);
+
+        await fetch("/api/seesun/session/chat/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(msg),
+        });
+
+        // setChatMessages((prev) => [...prev, msg]);
     };
 
     // -------------------------------
@@ -70,7 +77,7 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
             headers: { "Content-Type": "application/json" },
             credentials: "include",
             body: JSON.stringify({
-                lectureId,
+                lectureId, // URL의 lectureId (강의 PK)
                 role: "MENTEE",
             }),
         });
@@ -89,6 +96,10 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
         if (!janusUrl || !roomId) throw new Error("bootstrap 응답 누락(janusUrl/roomId)");
 
         bootRef.current = { janusUrl, roomId, raw: data };
+
+        // ✅ 채팅은 roomId로 고정
+        setChatRoomId(roomId);
+
         return bootRef.current;
     };
 
@@ -126,7 +137,6 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
             h.send({
                 message: { request: "listparticipants", room: rid },
 
-                // ✅ 핵심: 응답을 onmessage 말고 여기서 받는다
                 success: (res) => {
                     const participants =
                         res?.plugindata?.data?.participants ??
@@ -139,11 +149,9 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
                         const list = participants.map((p) => ({ ...p, id: Number(p.id) }));
                         setParticipants(list);
 
-                        // (기존 로직 유지) mentor feed 추출 후 subscribe
                         const fid = pickMentorFeedId(list);
                         if (fid) subscribeToMentorFeed(bootRef.current ?? { roomId: rid }, fid);
                     } else {
-                        // 응답 구조 확인용
                         console.log("[MENTEE] listparticipants res(no list):", res);
                     }
                 },
@@ -156,7 +164,6 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
             console.error("[MENTEE] listparticipants send failed:", e);
         }
     };
-
 
     const startPolling = (roomId) => {
         if (pollingRef.current) return;
@@ -174,8 +181,6 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
     // -------------------------------
     const tryPlayVideo = (video) => {
         if (!video) return;
-
-        // 크롬 자동재생 정책 때문에 muted=true가 가장 안전
         video.muted = true;
         video.playsInline = true;
         video.autoplay = true;
@@ -192,7 +197,6 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
         const v = mentorVideoRef.current;
         if (!v || !stream) return;
 
-        // 같은 stream이면 재할당 불필요
         if (v.srcObject !== stream) {
             v.srcObject = stream;
         }
@@ -205,11 +209,9 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
     const pickMentorFeedId = (list) => {
         const arr = Array.isArray(list) ? list : [];
 
-        // display에 [MENTOR] 포함된 feed 우선
         const mentor = arr.find((p) => String(p?.display ?? "").includes("[MENTOR]"));
         if (mentor?.id) return Number(mentor.id);
 
-        // 그래도 없으면 가장 첫 publisher id
         const any = arr.find((p) => Number(p?.id) > 0);
         if (any?.id) return Number(any.id);
 
@@ -217,21 +219,19 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
     };
 
     // -------------------------------
-    // Subscribe (핵심 안정화)
+    // Subscribe
     // -------------------------------
     const subscribeToMentorFeed = (boot, feedId) => {
         const roomId = Number(boot?.roomId);
         const fid = Number(feedId);
         if (!roomId || !fid) return;
 
-        // subscriber 아직 없으면 pending에 저장만
         if (!subscriberRef.current) {
             pendingMentorFeedIdRef.current = fid;
             console.log("[MENTEE] subscriber not ready, pending feed =", fid);
             return;
         }
 
-        // 이미 같은 feed를 구독 중이면 skip
         if (mentorFeedIdRef.current === fid) return;
 
         mentorFeedIdRef.current = fid;
@@ -239,7 +239,6 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
 
         console.log("[MENTEE] subscribing to mentor feed =", fid);
 
-        // ✅ videoroom subscriber join
         try {
             subscriberRef.current.send({
                 message: {
@@ -257,7 +256,6 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
     const flushPendingSubscribe = (boot) => {
         const fid = Number(pendingMentorFeedIdRef.current);
         if (!fid) return;
-        // 약간 지연을 두면 attach 직후 안정적
         setTimeout(() => {
             const still = Number(pendingMentorFeedIdRef.current);
             if (still) subscribeToMentorFeed(boot, still);
@@ -302,7 +300,6 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
             success: (handle) => {
                 publisherDummyRef.current = handle;
 
-                // join as publisher
                 handle.send({
                     message: {
                         request: "join",
@@ -314,11 +311,6 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
             },
 
             onmessage: (msg, jsep) => {
-
-                if(msg?.videoroom === "participants" || Array.isArray(msg?.participants) || msg?.error) {
-                    console.log("[MENTEE][dummy] onmessage = ", msg);
-                }
-
                 const event = msg?.videoroom;
 
                 if (event === "joined") {
@@ -326,55 +318,38 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
                     publishDummyStream();
                     requestParticipantsOnce(boot.roomId);
 
-                    // 리스트 날아가는 것 방지(초기화 방지
                     setParticipants((prev) => [...prev]);
 
-
-                    // PATCH1: 멘토 입장 직후 참여자 목록 2회 강제 요청
                     setTimeout(() => requestParticipantsOnce(boot.roomId), 300);
                     setTimeout(() => requestParticipantsOnce(boot.roomId), 1000);
-
-                    // 더 안정적 동기화를 위한 추가 요청
                     setTimeout(() => requestParticipantsOnce(boot.roomId), 1500);
 
                     startPolling(boot.roomId);
                 }
 
-                // listparticipants response
                 if (Array.isArray(msg?.participants)) {
                     const list = msg.participants.map((p) => ({ ...p, id: Number(p.id) }));
                     setParticipants(list);
 
-                    // ✅ participants에서 mentor feed 추출 후 subscribe 시도
                     const fid = pickMentorFeedId(list);
                     if (fid) subscribeToMentorFeed(boot, fid);
                 }
 
-                // publishers event
                 if (Array.isArray(msg?.publishers) && msg.publishers.length > 0) {
                     const fid = pickMentorFeedId(msg.publishers);
                     if (fid) subscribeToMentorFeed(boot, fid);
 
-                    // patch2: publishers 이벤트 발생 시 참여자 목록 갱신
                     requestParticipantsOnce(boot.roomId);
-
                     setTimeout(() => requestParticipantsOnce(boot.roomId), 200);
                 }
 
-                // leaving / unpublished 처리
                 const leavingId = Number(msg?.leaving ?? msg?.unpublished);
                 if (leavingId && msg?.unpublished !== "ok") {
                     setParticipants((prev) => prev.filter((p) => Number(p.id) !== leavingId));
 
-                    // patch3 : 나간 사람 반영 후 재 요청해서 sync 맞추기
                     requestParticipantsOnce(boot.roomId);
-
-                    // 딜레이 동기화 300ms
                     setTimeout(() => requestParticipantsOnce(boot.roomId), 300);
-
-                    // 더 안정적인 최종 동기화 1000ms
                     setTimeout(() => requestParticipantsOnce(boot.roomId), 1000);
-
 
                     if (mentorFeedIdRef.current === leavingId) {
                         console.log("[MENTEE] mentor feed left. cleanup remote video");
@@ -389,7 +364,6 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
                     }
                 }
 
-                // remote jsep
                 if (jsep) {
                     publisherDummyRef.current?.handleRemoteJsep({ jsep });
                 }
@@ -412,25 +386,16 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
             success: (handle) => {
                 subscriberRef.current = handle;
                 remoteStreamRef.current = null;
-
-                // ✅ pending feed가 이미 잡혀있으면 반드시 구독 시도
                 flushPendingSubscribe(boot);
             },
 
             onmessage: (msg, jsep) => {
-
-                if (msg?.videoroom === "participants" || Array.isArray(msg?.participants) || msg?.error) {
-                           console.log("[MENTOR] onmessage =", msg);
-                }
-                // subscriber join ack 이후 publishers 정보가 오기도 함
                 if (Array.isArray(msg?.publishers) && msg.publishers.length > 0) {
                     const fid = pickMentorFeedId(msg.publishers);
                     if (fid) subscribeToMentorFeed(boot, fid);
                 }
 
                 if (jsep) {
-
-                    // ✅ jsep 오면 answer 만들고 start (room 포함)
                     subscriberRef.current.createAnswer({
                         jsep,
                         media: { audioSend: false, videoSend: false },
@@ -451,7 +416,6 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
                 }
             },
 
-            // (Janus 버전에 따라 onremotestream이 안 올 수도 있어서 onremotetrack도 보강)
             onremotestream: (stream) => {
                 console.log("[MENTEE] onremotestream", stream);
                 remoteStreamRef.current = stream;
@@ -462,7 +426,6 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
             },
 
             onremotetrack: (track, mid, on) => {
-                // ✅ onremotestream이 없어도 트랙만으로 stream 구성
                 let ms = remoteStreamRef.current;
                 if (!ms) {
                     ms = new MediaStream();
@@ -478,7 +441,6 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
                     } catch {}
                 }
 
-                // 트랙 구성될 때마다 video에 부착 보장
                 attachStreamToVideo(ms);
 
                 const hasVideo = ms.getVideoTracks().length > 0;
@@ -524,7 +486,6 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
                         server: boot.janusUrl,
 
                         success: () => {
-                            // ✅ subscriber 먼저 attach (레이스 방지)
                             attachSubscriber(boot);
                             attachDummyPublisher(boot);
                         },
@@ -579,8 +540,6 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
         };
     }, [lectureId, menteeName]);
 
-    // ✅ sessionReady가 true가 되는 순간 DOM video에 다시 한번 확실히 붙여준다.
-    // (ref.current dependency를 쓰지 않기 위한 안전장치)
     useEffect(() => {
         if (!sessionReady) return;
         if (remoteStreamRef.current) {
@@ -588,6 +547,37 @@ export default function LectureRealtimeMentee({ lectureId, menteeName = "멘티"
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sessionReady]);
+
+    // --------------------------------------------------------
+    // ✅ SSE Listener(MENTEE) - roomId 기준으로 구독
+    // --------------------------------------------------------
+    useEffect(() => {
+        if (!chatRoomId) return;
+
+        const url = `/api/seesun/session/chat/stream?roomId=${chatRoomId}`;
+        const evtSource = new EventSource(url, { withCredentials: true });
+
+        const onChat = (e) => {
+            try {
+                const data = JSON.parse(e.data);
+                console.log("[SSE][MENTEE] RECEIVED:", data);
+                setChatMessages((prev) => [...prev, data]);
+            } catch (err) {
+                console.error("[SSE][MENTEE] parse error:", err, e.data);
+            }
+        };
+
+        evtSource.addEventListener("chat", onChat);
+
+        evtSource.onerror = () => {
+            console.warn("[SSE][MENTEE] error -> reconnect handled by browser");
+        };
+
+        return () => {
+            evtSource.removeEventListener("chat", onChat);
+            evtSource.close();
+        };
+    }, [chatRoomId]);
 
     // -------------------------------
     // End Session
