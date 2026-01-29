@@ -47,6 +47,8 @@ import Notification from './pages/mypage/admin/Notification';
 import NotificationWrite from './pages/mypage/admin/NotificationWrite'; 
 import NotificationDetail from './pages/mypage/admin/NotificationDetail';
 import NotificationEdit from './pages/mypage/admin/NotificationEdit'; 
+import MemberManage from './pages/mypage/admin/MemberManage';
+
 
 function App() {
   return (
@@ -106,6 +108,10 @@ function App() {
           {/* 관리자 페이지 */}
           <Route path='/mypage/mentorequests' element={<MentoRequest/>}/>
           <Route path='/mypage/leturereport' element={<LectureReport/>}/>
+
+          {/* 회원 관리 라우트 */}
+          <Route path='/mypage/membermanage' element={<MemberManage/>}/>
+          
 
           {/* 건의사항 관리 라우트 */}
           <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>

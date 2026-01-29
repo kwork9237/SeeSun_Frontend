@@ -103,10 +103,10 @@ const LectureReport = () => {
                   <span className="text-purple-500"><Icons.Users /></span>
                   <span className="text-sm font-medium">멘토 승인 관리</span>
                 </Link>
-                <div className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer">
+                <Link to="/mypage/membermanage" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
                   <span className="text-orange-400"><Icons.Clipboard /></span>
-                  <span className="text-sm font-medium">전체 회원 조회</span>
-                </div>
+                  <span className="text-sm font-medium">전체 회원 조회</span>   
+                </Link>
               </div>
             </div>
 

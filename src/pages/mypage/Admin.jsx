@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-// --- 아이콘 컴포넌트 (SuggestionsManage와 동일한 디자인) ---
+// --- 아이콘 컴포넌트 ---
 const Icons = {
   Home: () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -57,7 +57,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#111827] font-sans">
       
-      {/* --- Header (고정형으로 변경하여 사이드바와 레이아웃 일치) --- */}
+      {/* --- Header --- */}
       <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 fixed w-full top-0 z-20">
         {/* 로고 */}
         <Link to="/" className="flex items-center gap-2 cursor-pointer text-inherit no-underline">
@@ -79,7 +79,7 @@ const Admin = () => {
       {/* --- Body Area --- */}
       <div className="flex flex-1 pt-16">
         
-        {/* --- Sidebar (새로운 디자인 적용) --- */}
+        {/* --- Sidebar --- */}
         <aside className="w-64 bg-white fixed left-0 top-16 h-[calc(100vh-64px)] overflow-y-auto z-10 flex flex-col pt-8 px-6 border-r border-gray-100">
           
           {/* 프로필 섹션 */}
@@ -96,7 +96,7 @@ const Admin = () => {
           {/* 메뉴 리스트 */}
           <nav className="flex-1 space-y-8">
             
-            {/* DASHBOARD - 현재 활성화됨 (Active) */}
+            {/* DASHBOARD */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Dashboard</div>
               <Link to="/mypage" className="flex items-center gap-3 px-3 py-2.5 bg-[#FFF7ED] text-[#FF6B4A] rounded-lg transition-colors">
@@ -113,10 +113,12 @@ const Admin = () => {
                   <span className="text-purple-500"><Icons.Users /></span>
                   <span className="text-sm font-medium">멘토 승인 관리</span>
                 </Link>
-                <div className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer">
+                
+                {/* [수정] 전체 회원 조회 링크 연결 (MemberManage.jsx) */}
+                <Link to="/mypage/membermanage" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
                   <span className="text-orange-400"><Icons.Clipboard /></span>
                   <span className="text-sm font-medium">전체 회원 조회</span>
-                </div>
+                </Link>
               </div>
             </div>
 
@@ -140,10 +142,8 @@ const Admin = () => {
                   <span className="text-sm font-medium">건의 사항 관리</span>
                 </Link>
                 <Link to="/mypage/notification" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
-                <div className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer">
                    <span className="text-rose-500"><Icons.Megaphone /></span>
                   <span className="text-sm font-medium">공지 사항 작성</span>
-                </div>
                 </Link>
               </div>
             </div>
@@ -175,7 +175,6 @@ const Admin = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-500 font-medium">대기 건수: <strong className="text-[#FF6B4A]">{dashboardStats.newMentorCount}</strong>건</span>
-                  {/* 바로가기 버튼 -> 멘토 승인 페이지로 링크 연결 */}
                   <Link to="/mypage/mentorequests" className="px-4 py-1.5 text-sm bg-[#2563EB] text-white rounded-lg hover:bg-blue-700 transition-colors">
                     바로가기
                   </Link>
@@ -189,7 +188,6 @@ const Admin = () => {
                 </div>
                 <div className="flex items-center gap-3">
                    <span className="text-sm text-gray-500 font-medium">미처리 건수: <strong className="text-[#EF4444]">{dashboardStats.reportedLectureCount}</strong>건</span>
-                  {/* 확인하기 버튼 -> 강의 신고 페이지로 링크 연결 */}
                   <Link to="/mypage/leturereport" className="px-4 py-1.5 text-sm border border-gray-300 bg-white text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
                     확인하기
                   </Link>
