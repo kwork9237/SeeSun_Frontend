@@ -1,16 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react'; // [수정 1] useRef 추가
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 // --- 아이콘 컴포넌트 ---
 const Icons = {
   Home: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>),
+  // ... (나머지 아이콘 동일) ...
   Users: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>),
   Clipboard: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>),
   Siren: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="M4 2C4 2 5 5 5 5C5 5 2 7 2 7C2 7 5 5 5 5C5 5 4 2 4 2Z"/><path d="M20 2C20 2 19 5 19 5C19 5 22 7 22 7C22 7 19 5 19 5C19 5 20 2 20 2Z"/></svg>),
   MessageSquare: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>),
   Megaphone: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>),
   ArrowLeft: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>),
+  Trash: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>),
+  Pen: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>),
+  CheckCircle: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>),
+  Edit: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>), // 수정 아이콘 추가
 };
 
 const SuggestionDetail = () => {
@@ -19,35 +24,90 @@ const SuggestionDetail = () => {
   const [suggestion, setSuggestion] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // [수정 2] API 중복 호출 방지를 위한 Ref 생성
+  // 답변 작성 모드 및 내용 상태
+  const [isAnswering, setIsAnswering] = useState(false);
+  const [answerText, setAnswerText] = useState("");
+
   const dataFetchedRef = useRef(false);
 
-  // 날짜 포맷
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
     return date.toISOString().split('T')[0];
   };
 
+  const fetchDetail = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8080/api/admin/suggestions/${sgId}`);
+      console.log("받아온 데이터:", response.data);
+      setSuggestion(response.data);
+    } catch (error) {
+      console.error('건의사항 상세 조회 실패:', error);
+      alert('존재하지 않거나 삭제된 게시글입니다.');
+      navigate('/mypage/suggestonsmanage');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // [수정 3] 이미 데이터를 가져왔다면 실행하지 않음 (Strict Mode 방지)
     if (dataFetchedRef.current) return;
     dataFetchedRef.current = true;
-
-    const fetchDetail = async () => {
-      try {
-        const response = await axios.get(`http://localhost:8080/api/admin/suggestions/${sgId}`);
-        setSuggestion(response.data);
-      } catch (error) {
-        console.error('건의사항 상세 조회 실패:', error);
-        alert('존재하지 않거나 삭제된 게시글입니다.');
-        navigate('/mypage/suggestonsmanage');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDetail();
   }, [sgId, navigate]);
+
+  const handleDelete = async () => {
+    if (window.confirm('정말로 이 건의사항을 삭제하시겠습니까?')) {
+      try {
+        await axios.delete(`http://localhost:8080/api/admin/suggestions/${sgId}`);
+        alert('삭제되었습니다.');
+        navigate('/mypage/suggestonsmanage');
+      } catch (error) {
+        console.error('삭제 실패:', error);
+        alert('삭제 중 오류가 발생했습니다.');
+      }
+    }
+  };
+
+  const handleRegisterAnswer = async () => {
+    if (!answerText.trim()) {
+      alert("답변 내용을 입력해주세요.");
+      return;
+    }
+
+    if (window.confirm("답변을 등록(수정)하시겠습니까?")) {
+      try {
+        await axios.post('http://localhost:8080/api/admin/suggestions/answers', {
+          sgId: sgId,
+          content: answerText,
+          mbId: 1
+        });
+        
+        alert("답변이 저장되었습니다.");
+        setIsAnswering(false);
+        setAnswerText("");
+        
+        // 데이터 다시 불러오기
+        fetchDetail(); 
+        
+      } catch (error) {
+        console.error("답변 등록 실패:", error);
+        alert("답변 등록 중 오류가 발생했습니다.");
+      }
+    }
+  };
+
+  // [추가] 답변 수정 버튼 클릭 핸들러
+  const handleEditClick = () => {
+    setAnswerText(suggestion.answerContent); // 기존 내용을 입력창에 채움
+    setIsAnswering(true); // 입력 모드로 전환
+  };
+
+  // [추가] 취소 버튼 핸들러
+  const handleCancelClick = () => {
+    setIsAnswering(false);
+    setAnswerText("");
+  };
 
   if (loading) return <div className="p-10 text-center text-gray-500">로딩 중...</div>;
   if (!suggestion) return null;
@@ -138,8 +198,8 @@ const SuggestionDetail = () => {
               </button>
             </div>
 
-            {/* 내용 카드 */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            {/* --- 1. 건의사항 내용 카드 --- */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
               <div className="border-b border-gray-100 p-6">
                 <h2 className="text-xl font-bold text-gray-800 mb-4">{suggestion.title}</h2>
                 <div className="flex items-center gap-6 text-sm text-gray-500">
@@ -148,11 +208,96 @@ const SuggestionDetail = () => {
                   <div className="flex items-center gap-2"><span className="font-semibold text-gray-700">조회수</span><span>{suggestion.viewCount}</span></div>
                 </div>
               </div>
-              <div className="p-8 min-h-[300px] text-gray-800 leading-relaxed whitespace-pre-wrap">
+              <div className="p-8 min-h-[200px] text-gray-800 leading-relaxed whitespace-pre-wrap">
                 {suggestion.content}
               </div>
             </div>
 
+            {/* --- 2. 관리자 답변 영역 --- */}
+            {/* 조건부 렌더링 로직 수정: isAnswering이 true면 무조건 폼을 보여줌 */}
+            {isAnswering ? (
+              // [답변 입력/수정 폼]
+              <div className="bg-white rounded-xl shadow-sm border border-blue-200 overflow-hidden mb-6 p-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-3">답변 작성</h3>
+                <textarea
+                  className="w-full h-40 p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
+                  placeholder="사용자에게 전달할 답변 내용을 입력하세요."
+                  value={answerText}
+                  onChange={(e) => setAnswerText(e.target.value)}
+                />
+                <div className="flex justify-end gap-2 mt-3">
+                  <button 
+                    onClick={handleCancelClick}
+                    className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+                  >
+                    취소
+                  </button>
+                  <button 
+                    onClick={handleRegisterAnswer}
+                    className="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                  >
+                    등록하기
+                  </button>
+                </div>
+              </div>
+            ) : suggestion.answerContent ? (
+              // [답변 완료 상태] -> 여기서 수정 버튼 노출됨
+              <div className="bg-blue-50 rounded-xl shadow-sm border border-blue-100 overflow-hidden mb-6">
+                <div className="border-b border-blue-100 p-6 flex justify-between items-center">
+                   <div className="flex items-center gap-2">
+                      <span className="text-blue-500"><Icons.CheckCircle /></span>
+                      <h3 className="text-lg font-bold text-blue-900">관리자 답변</h3>
+                   </div>
+                   <span className="text-sm text-blue-500">
+                      {suggestion.answerCreatedAt ? formatDate(suggestion.answerCreatedAt) : '날짜 정보 없음'}
+                   </span>
+                </div>
+                <div className="p-8 text-gray-800 leading-relaxed whitespace-pre-wrap">
+                  {suggestion.answerContent}
+                </div>
+              </div>
+            ) : (
+              // [답변 대기 상태]
+              <div className="bg-gray-50 rounded-xl border border-gray-200 border-dashed p-8 mb-6 text-center">
+                 <p className="text-gray-500 font-medium">아직 등록된 관리자 답변이 없습니다.</p>
+                 <p className="text-sm text-gray-400 mt-1">아래 버튼을 눌러 답변을 작성해주세요.</p>
+              </div>
+            )}
+
+            {/* --- 3. 하단 버튼 그룹 --- */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button 
+                onClick={handleDelete}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 font-bold text-sm hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                <Icons.Trash />
+                삭제
+              </button>
+
+              {/* [수정] 조건에 따라 '답변 입력' 또는 '답변 수정' 버튼 표시 */}
+              {!isAnswering && (
+                suggestion.answerContent ? (
+                  // 답변이 있으면 [수정] 버튼
+                  <button 
+                    onClick={handleEditClick}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-green-600 text-white font-bold text-sm hover:bg-green-700 transition-colors shadow-sm shadow-green-200"
+                  >
+                    <Icons.Edit />
+                    답변 수정
+                  </button>
+                ) : (
+                  // 답변이 없으면 [입력] 버튼
+                  <button 
+                    onClick={() => setIsAnswering(true)}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
+                  >
+                    <Icons.Pen />
+                    답변 입력
+                  </button>
+                )
+              )}
+            </div>
+            
           </div>
         </main>
       </div>

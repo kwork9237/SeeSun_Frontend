@@ -34,7 +34,7 @@ const Icons = {
 };
 
 const SuggestionsManage = () => {
-  const navigate = useNavigate(); // [추가] 페이지 이동 훅
+  const navigate = useNavigate(); 
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -146,12 +146,14 @@ const SuggestionsManage = () => {
         <main className="flex-1 ml-64 p-10 bg-[#F8F9FA]">
           <div className="max-w-6xl mx-auto">
             
+            {/* 페이지 헤더 */}
             <div className="mb-8 flex justify-between items-end">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">건의 사항 관리</h1>
                 <p className="text-sm text-gray-500 mt-2">사용자가 접수한 건의 사항을 확인하고 관리합니다.</p>
               </div>
               <div className="flex gap-2">
+                 {/* 상태 필터가 필요 없다면 이 select 박스도 제거 가능하지만, 일단 유지했습니다 */}
                  <select className="border border-gray-200 rounded text-sm px-3 py-2 bg-white text-gray-600 focus:outline-none focus:border-orange-500 cursor-pointer shadow-sm">
                    <option>전체 보기</option>
                    <option>처리중</option>
@@ -160,17 +162,20 @@ const SuggestionsManage = () => {
               </div>
             </div>
 
+            {/* 게시판 테이블 영역 */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px] flex flex-col">
               
-              <div className="grid grid-cols-[80px_100px_1fr_120px_120px_100px] bg-[#F9FAFB] border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider py-4 px-6 text-center">
+              {/* 테이블 헤더 - [수정됨] 상태 컬럼 제거 */}
+              <div className="grid grid-cols-[80px_100px_1fr_120px_120px] bg-[#F9FAFB] border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider py-4 px-6 text-center">
                 <div>NO</div>
                 <div>구분</div>
                 <div className="text-left px-2">제목</div>
                 <div>작성자</div>
                 <div>작성일</div>
-                <div>상태</div>
+                {/* 상태 컬럼 제거됨 */}
               </div>
 
+              {/* 테이블 바디 */}
               <div className="divide-y divide-gray-50 flex-1">
                 {loading && (
                     <div className="p-10 text-center text-gray-500">데이터를 불러오는 중입니다...</div>
@@ -179,9 +184,9 @@ const SuggestionsManage = () => {
                 {!loading && suggestions.map((item) => (
                   <div 
                     key={item.sgId} 
-                    // [수정됨] 클릭 시 상세 페이지로 이동
                     onClick={() => navigate(`/mypage/suggestonsmanage/${item.sgId}`)}
-                    className="grid grid-cols-[80px_100px_1fr_120px_120px_100px] py-4 px-6 items-center text-sm hover:bg-gray-50 transition-colors cursor-pointer text-center"
+                    // [수정됨] grid-cols 수정 (상태 컬럼 제거에 맞춰서)
+                    className="grid grid-cols-[80px_100px_1fr_120px_120px] py-4 px-6 items-center text-sm hover:bg-gray-50 transition-colors cursor-pointer text-center"
                   >
                     <div className="text-gray-400">{item.sgId}</div>
                     <div>
@@ -194,11 +199,7 @@ const SuggestionsManage = () => {
                     </div>
                     <div className="text-gray-600">{item.mbId}</div>
                     <div className="text-gray-500 text-xs">{formatDate(item.createdAt)}</div>
-                    <div>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        접수
-                      </span>
-                    </div>
+                    {/* 상태 Badge 제거됨 */}
                   </div>
                 ))}
                 
@@ -213,6 +214,7 @@ const SuggestionsManage = () => {
               </div>
             </div>
 
+            {/* 페이지네이션 */}
             <div className="mt-8 flex justify-center items-center gap-2">
               <button className="p-2 rounded border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 disabled:opacity-50 transition-colors" disabled>
                 <Icons.ChevronLeft />

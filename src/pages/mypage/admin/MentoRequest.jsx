@@ -28,7 +28,8 @@ const MentoRequest = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const response = await axios.get('/api/admin/pending');
+        const response = await axios.get('http://localhost:8080/api/admin/pending');
+        console.log("멘토 신청 목록:", response.data); // 데이터 확인용 로그
         setRequests(response.data);
       } catch (error) {
         console.error('멘토 요청 목록 조회 실패:', error);
@@ -43,7 +44,7 @@ const MentoRequest = () => {
 
     if (window.confirm(`회원번호 ${mbId}님의 멘토 신청을 승인하시겠습니까?`)) {
       try {
-        const response = await axios.post('/api/admin/approve', { reqId: reqId });
+        const response = await axios.post('http://localhost:8080/api/admin/approve', { reqId: reqId });
         
         if (response.data === "SUCCESS") {
             alert(`회원번호 ${mbId}님이 멘토로 승인되었습니다.`);
@@ -72,8 +73,12 @@ const MentoRequest = () => {
           <span className="font-bold text-xl tracking-tight text-gray-900">LinguaConnect</span>
         </Link>
         <div className="flex items-center gap-4">
-          <button className="px-4 py-1.5 text-sm font-semibold text-[#FF6B4A] bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">Sign In</button>
-          <button className="px-4 py-1.5 text-sm font-semibold text-white bg-[#FF6B4A] rounded-lg hover:bg-[#ff5530] shadow-sm transition-colors">Get Started</button>
+          <div className="text-sm text-gray-600">
+            <span className="font-semibold text-gray-800">관리자</span>님, 환영합니다.
+          </div>
+          <button className="px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-300 rounded hover:bg-gray-100 transition-colors">
+            로그아웃
+          </button>
         </div>
       </header>
 
@@ -140,7 +145,6 @@ const MentoRequest = () => {
                   <span className="text-[#A78BFA]"><Icons.MessageSquare /></span>
                   <span className="text-sm font-medium">건의 사항 관리</span>
                 </Link>
-                {/* --- 공지 사항 작성 (Notification) 링크 적용 --- */}
                 <Link to="/mypage/notification" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
                   <span className="text-rose-500"><Icons.Megaphone /></span>
                   <span className="text-sm font-medium">공지 사항 작성</span>
@@ -194,14 +198,26 @@ const MentoRequest = () => {
                              <span className="text-xs text-gray-500 leading-snug break-keep">{req.details}</span>
                           </div>
                         </td>
+                        
+                        {/* [수정됨] 첨부 파일 영역: fileId 확인 */}
                         <td className="px-6 py-4 align-middle">
-                          <div className="flex items-center p-2 border border-gray-200 rounded-lg bg-gray-50 max-w-fit cursor-pointer hover:bg-gray-100 transition-all">
-                            <Icons.File className="text-gray-500 mr-2" />
-                            <span className="text-sm text-gray-600 underline decoration-gray-400 underline-offset-2 truncate max-w-[150px]">
-                              {req.attachment || '파일 없음'}
-                            </span>
-                          </div>
+                          {req.fileId && req.fileId !== 0 && req.fileId !== '0' ? (
+                            <a 
+                              href={`http://localhost:8080/api/file/download/${req.fileId}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center p-2 border border-blue-200 rounded-lg bg-blue-50 hover:bg-blue-100 transition-all cursor-pointer no-underline w-fit"
+                            >
+                              <Icons.File className="text-blue-500 mr-2" />
+                              <span className="text-sm text-blue-700 font-medium underline decoration-blue-300 underline-offset-2">
+                                첨부파일 보기
+                              </span>
+                            </a>
+                          ) : (
+                            <span className="text-sm text-gray-400 pl-2">-</span>
+                          )}
                         </td>
+
                         <td className="px-6 py-4 align-middle text-center">
                             <button 
                               onClick={() => !isApproved && handleApprove(req.reqId, req.mbId)} 
