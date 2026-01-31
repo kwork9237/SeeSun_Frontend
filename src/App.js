@@ -51,6 +51,8 @@ import NotificationDetail from './pages/mypage/admin/NotificationDetail'; // 파
 
 // 보안 기능
 import { AuthProvider } from './auth/AuthContext';
+import DebugLivePage from './_debug/DebugLivePage';
+import DebugCreatePage from './_debug/DebugCreatePage';
 
 function App() {
   return (
@@ -121,6 +123,10 @@ function App() {
             <Route path='/mypage/notification' element={<Notification/>}/>
             <Route path="/mypage/notificationwrite" element={<NotificationWrite />}/>
             <Route path="/mypage/notification/:ntId" element={<NotificationDetail />} />
+
+            {/* 디버그 전용 페이지 */}
+            <Route path='/debug/create' element={<DebugCreatePage/>}/>
+            <Route path='/debug/live/:id' element={<DebugLivePage/>}/>
           </Route>
         </Routes>
       </BrowserRouter>

@@ -22,7 +22,8 @@ const MainLayout = () => {
       <MainHeader />
 
       {/* 페이지 항목 출력 (flex-1을 주면 남은 공간을 차지합니다) */}
-      <main className="flex-1">
+      {/* 26 02 01 상단 헤더 묻힘 현상 수정 */}
+      <main className="flex-1 pt-16">
         <Outlet />
       </main>
 
