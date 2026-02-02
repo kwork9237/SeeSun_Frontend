@@ -5,11 +5,13 @@ import { ChevronLeft, Star, Share2, Heart, Shield, Globe, Award } from 'lucide-r
 
 // ✅ 컴포넌트 경로 확인 필요
 import MainHeader from '../../components/layout/MainHeader';
-import Overview from './detail/Overview';
-import Curriculum from './detail/Curriculum';
-import Reviews from './detail/Reviews';
-import QnA from './detail/QnA';
-import EnrollCard from './detail/EnrollCard'; 
+
+// ✅ 상세 탭 및 예약 카드 컴포넌트
+import Overview from '../lecture/detail/Overview';
+import Curriculum from '../lecture/detail/Curriculum';
+import Reviews from '../lecture/detail/Reviews';
+import QnA from '../lecture/detail/QnA';
+import EnrollCard from '../lecture/detail/EnrollCard';
 
 const LectureDetail = () => {
   const { id } = useParams();

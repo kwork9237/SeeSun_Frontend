@@ -8,16 +8,16 @@ import MyPage from './pages/mypage/MyPage';
 // 강의
 import LectureList from './pages/lecture/LectureList';
 import LectureDetail from './pages/lecture/LectureDetail';
-import LectureRealtime from './pages/lecture/LectureRealtime';
-import WebRTCTest from './pages/lecture/MentorRoom'
+import LectureRealtime from './pages/realtime/LectureRealtime';
+import WebRTCTest from './pages/realtime/MentorRoom'
 
 // 회원가입
 import Join from './pages/member/join/JoinMain';
 import Create from './pages/lecture/mento/Create';
 
 // 실시간 강의
-import LectureRealtimeMentee from "./pages/lecture/LectureRealtimeMentee";
-import LectureRealtimeMentor from "./pages/lecture/LectureRealtimeMentor";
+import LectureRealtimeMentee from "./pages/realtime/LectureRealtimeMentee";
+import LectureRealtimeMentor from "./pages/realtime/LectureRealtimeMentor";
 
 // 강의 상세정보 (?)
 import SuccessPage from "./pages/lecture/detail/SuccessPage";
