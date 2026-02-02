@@ -1,36 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Heart } from 'lucide-react';
-// 경로가 맞는지 꼭 확인하세요! (보통 components 폴더가 src 밑에 있다면 ../../../가 맞습니다)
+// 경로가 프로젝트 구조에 맞는지 확인하세요!
 import PaymentButton from './PaymentButton';
 
 const EnrollCard = ({ lecture, activeDays, activeTimes, weekDays, formatDate }) => {
-
-  // ============================================================
-  // [1] 나중에 로그인 기능 완성되면 주석 풀고 사용할 코드 (Real Mode)
-  // ============================================================
-  /*
-  const [memberId, setMemberId] = useState(null);
-
-  useEffect(() => {
-    // 저장된 키 이름(userInfo)과 내부 변수명(mbId)은 실제 로그인 코드에 맞춰 수정 필요
-    const userInfo = localStorage.getItem('userInfo'); 
-    if (userInfo) {
-      try {
-        const parsed = JSON.parse(userInfo);
-        setMemberId(parsed.mbId); 
-      } catch (e) {
-        console.error("회원 정보 파싱 에러", e);
-      }
-    }
-  }, []);
-  */
-
-  // ============================================================
-  // [2] 현재 개발 단계에서 사용할 하드코딩 (Test Mode)
-  // ============================================================
-  // ★ 중요: DB에 실제로 존재하는 회원 ID (예: 1, 3, 8 등)를 적어주세요.
-  const memberId = 201; 
-
+  console.log("🎯 현재 강의 데이터:", lecture);
+  console.log("📊 current:", lecture.currentStudents, " / max:", lecture.maxStudents);
+  
+  // 1. [집계 로직] 현재 수강 인원과 최대 정원을 비교하여 정원 초과 여부 확인
+  // 백엔드 Mapper에서 계산되어 넘어온 데이터를 활용합니다.
+  const currentStudents = lecture.currentStudents || 0;
+  const maxStudents = lecture.maxStudents || 0;
+  const isFull = currentStudents >= maxStudents && maxStudents > 0;
 
   return (
     <div className="sticky top-28 bg-white border border-gray-100 rounded-[32px] shadow-2xl shadow-gray-200/60 overflow-hidden">
@@ -70,43 +51,35 @@ const EnrollCard = ({ lecture, activeDays, activeTimes, weekDays, formatDate }) 
           ))}
         </div>
 
-        {/* 가격 표시 */}
+        {/* 가격 및 수강 현황 표시 */}
         <div className="text-center mb-10">
-          <span className="text-4xl font-black text-gray-900">
+          <div className="text-4xl font-black text-gray-900">
             ₩{(lecture.cost || 0).toLocaleString()}
-          </span>
+          </div>
+          {/* 수강 인원 현황 시각화 */}
+          <div className={`mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold 
+            ${isFull ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isFull ? 'bg-red-500' : 'bg-green-500'}`}></span>
+            수강 현황: {currentStudents} / {maxStudents}명
+          </div>
         </div>
 
         {/* 버튼 영역 */}
         <div className="space-y-3">
           
-          {/* ★ 핵심 수정 사항 ★
-              1. PaymentButton 사용
-              2. memberId는 하드코딩된 값(1) 사용 -> 나중에 state로 교체
-              3. lectureId는 props로 받은 진짜 데이터(lecture.leId) 사용
-              4. price는 보안상 삭제함
-              5. className으로 팀원 디자인 그대로 적용
+          {/* [핵심 방어 로직 적용]
+              1. isFull 상수에 따라 buttonText 동적 변경
+              2. isFull 상수에 따라 스타일(회색/주황색) 및 클릭 막기 적용
           */}
           <PaymentButton 
-             memberId={memberId}
              lectureId={lecture.leId}
-             buttonText="Enroll Now"
-             className="w-full bg-[#FF6B4E] text-white py-5 rounded-[20px] font-black text-xl hover:bg-[#FF5A36] transition-all shadow-xl shadow-orange-100"
+             buttonText={isFull ? "정원 초과 (Sold Out)" : "결제하기"}
+             disabled={isFull}
+             className={`w-full py-5 rounded-[20px] font-black text-xl transition-all shadow-xl 
+               ${isFull 
+                 ? 'bg-gray-300 text-white cursor-not-allowed shadow-none' 
+                 : 'bg-[#FF6B4E] text-white hover:bg-[#FF5A36] shadow-orange-100'}`}
           />
-
-          {/* // =========================================================
-            // [미래 토큰 버전] memberId Props 삭제
-            // =========================================================
-            // 나중에 PaymentButton을 토큰 방식으로 바꾸면, 
-            // 여기선 memberId를 아예 안 넘겨줘도 됩니다. 
-            
-            <PaymentButton 
-               // memberId={...}  <-- 이거 삭제됨
-               lectureId={lecture.leId}
-               buttonText="Enroll Now"
-               className="..."
-            />
-          */}
 
           <button className="w-full bg-white text-gray-500 py-4 rounded-[20px] font-bold text-sm border border-gray-100 hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
             <Heart size={16} /> Add to Wishlist

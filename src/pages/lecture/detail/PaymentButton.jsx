@@ -1,39 +1,38 @@
-import React from "react";
+import React, { useState } from "react"; // useState 추가
 import { loadTossPayments } from "@tosspayments/payment-sdk";
 import axios from "axios";
 
 const clientKey = process.env.REACT_APP_TOSS_CLIENT_KEY; 
 
-// 1. 여기서 className(디자인), buttonText(글자)까지 총 4개를 받습니다.
-export default function PaymentButton({ memberId, lectureId, className, buttonText }) {
+// 1. props에 disabled를 추가해서 EnrollCard에서 보낸 신호를 받습니다.
+export default function PaymentButton({ lectureId, className, buttonText, disabled }) {
+  // 중복 클릭 방지를 위한 로딩 상태
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlePayment = async () => {
+    // ★ [방어막] 이미 로딩 중이거나, 정원이 꽉 찼으면 실행 안 함
+    if (isLoading || disabled) return;
+
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      alert("로그인이 필요한 서비스입니다.");
+      return;
+    }
+
     try {
-      // 2. 백엔드로 보낼 때는 memberId, lectureId 만 보냅니다.
-      const res = await axios.post("/api/orders/request", {
-        mb_id: memberId,
-        le_id: lectureId,
-      });
+      setIsLoading(true); // ★ 클릭하자마자 로딩 시작 (중복 클릭 원천 봉쇄)
 
-      /* // ==========================================
-      // [보안 버전] 나중에 토큰 적용할 때 위 코드를 지우고 이걸 쓰세요!
-      // ==========================================
-      const token = localStorage.getItem("accessToken"); // 저장된 토큰 가져오기
-
+      // 2. 백엔드 주문 요청
       const res = await axios.post("/api/orders/request", 
-        { 
-          le_id: lectureId // mb_id는 뺍니다 (백엔드가 알아서 찾음)
-        },
+        { le_id: lectureId },
         {
-          headers: {
-            Authorization: `Bearer ${token}` // 헤더에 토큰 탑승!
-          }
+          headers: { Authorization: `Bearer ${token}` }
         }
       );
-      */
 
       const { orderId, amount, orderName, customerName } = res.data;
 
+      // 3. 토스 결제창 호출
       const tossPayments = await loadTossPayments(clientKey);
       
       await tossPayments.requestPayment("카드", {
@@ -46,15 +45,24 @@ export default function PaymentButton({ memberId, lectureId, className, buttonTe
       });
       
     } catch (err) {
-      console.error(err);
-      alert("결제 에러! 백엔드 로그 확인 필요");
+      console.error("주문 생성 에러:", err);
+      // 에러 발생 시 다시 버튼을 누를 수 있게 로딩 해제
+      setIsLoading(false); 
+      
+      // 백엔드에서 던진 정원 초과 에러(GlobalException) 처리
+      const errorMessage = err.response?.data?.message || "결제 요청 중 오류가 발생했습니다.";
+      alert(errorMessage);
     }
   };
 
   return (
-    // 3. 받아온 디자인(className)을 여기에 적용!
-    <button onClick={handlePayment} className={className}>
-      {buttonText || "결제하기"}
+    <button 
+      onClick={handlePayment} 
+      className={className}
+      // ★ HTML 버튼 자체를 비활성화해서 스타일과 클릭을 모두 막음
+      disabled={disabled || isLoading}
+    >
+      {isLoading ? "처리 중..." : (buttonText || "결제하기")}
     </button>
   );
 }

@@ -2,50 +2,36 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const MentoClasses = () => {
+const MenteeClasses = () => {
   const navigate = useNavigate();
   
   const [lectures, setLectures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('ING');
 
-  // [현재] 로그인 정보 (토큰사용시 삭제)
-  const storedInfo = JSON.parse(localStorage.getItem('userInfo'));
-  const memberId = storedInfo ? storedInfo.mbId : 201; 
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        let response; // 나중에 주석 풀 때 변수명 충돌 방지용 선언
-
-        // 현재 URL에 ID(memberId)를 붙여서 요청
-        response = await axios.get(`/api/mentee/home/${memberId}`);
-        
-
-        // ==========================================================
-        // [미래 버전] : 토큰(Token)을 헤더에 담아서 요청 
-        // ==========================================================
-        /*
-        // 1. 로컬 스토리지에서 토큰 꺼내기 (이름은 저장할 때 정한 대로, 보통 'accessToken')
+        let response; 
+       
+        // 1. 로컬 스토리지에서 토큰 꺼내기 
         const token = localStorage.getItem('accessToken'); 
 
-        // 2. 토큰 없으면 로그인 화면으로 쫓아내기 (선택 사항)
+        // 2. 토큰 없으면 로그인 화면으로 쫓아내기
         if (!token) {
             alert("로그인이 필요합니다.");
             navigate('/login');
             return;
         }
 
-        // 3. 헤더에 토큰 실어서 보내기 (URL에는 ID 없음!)
+        // 3. 헤더에 토큰 실어서 보내기 
         response = await axios.get('/api/mentee/home', {
             headers: {
                 Authorization: `Bearer ${token}` //토큰 정보 넘기기
             }
         });
-        */
-        // ==========================================================
 
         setLectures(response.data.myLectures || []);
         
@@ -57,7 +43,7 @@ const MentoClasses = () => {
       }
     };
     fetchData();
-  }, [memberId]); //토큰 방식으로 바꾸면 의존성 배열에서 [memberId] 빼고 []로 비워도 됩니다.
+  }, []); 
 
   // 3. 탭 필터링 로직
   const filteredLectures = lectures.filter(lecture => {
@@ -197,4 +183,4 @@ const MentoClasses = () => {
   );
 };
 
-export default MentoClasses;
+export default MenteeClasses;
