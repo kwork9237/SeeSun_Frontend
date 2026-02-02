@@ -5,7 +5,7 @@ import apiClient from '../../../api/apiClient';
 const Create = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({}); // ✅ 에러 상태 추가
+  const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
     title: '',
@@ -25,10 +25,9 @@ const Create = () => {
 
   const updateData = (updates) => {
     setFormData((prev) => ({ ...prev, ...updates }));
-    setErrors({}); // 데이터 수정 시 에러 초기화
+    setErrors({});
   };
 
-  // ✅ 유효성 검사 로직
   const validateStep = () => {
     const newErrors = {};
 
@@ -68,8 +67,10 @@ const Create = () => {
     setStep(prev => prev - 1);
   };
 
+  // ✅ 수정된 결제 요청 함수
   const handleCreateLecture = async () => {
     if (!validateStep()) return;
+    
     setLoading(true);
     try {
       const payload = {
@@ -90,11 +91,12 @@ const Create = () => {
 
       // 전역 처리에 따른 axios post 변경
       const response = await apiClient.post('/lectures', payload);
+
       alert(`강의가 생성되었습니다!`);
       window.location.reload();
     } catch (error) {
       console.error('강의 생성 실패:', error);
-      alert('강의 생성에 실패했습니다.');
+      alert(error.response?.status === 403 ? '권한이 없습니다 (멘토 계정 확인)' : '강의 생성에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -129,12 +131,8 @@ const Create = () => {
         {step < 4 ? (
           <button onClick={nextStep} className="px-8 py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 shadow-lg shadow-orange-200 transition-all">다음</button>
         ) : (
-          <button 
-            onClick={handleCreateLecture} 
-            disabled={loading}
-            className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold hover:shadow-xl transition-all disabled:opacity-50"
-          >
-            {loading ? '생성 중...' : 'Create Lecture'}
+          <button onClick={handleCreateLecture} disabled={loading} className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold hover:shadow-xl transition-all disabled:opacity-50">
+            {loading ? '생성 중...' : '강의 만들기'}
           </button>
         )}
       </div>
@@ -195,7 +193,7 @@ const Curriculum = ({ data, updateData, errors }) => {
   const removeSection = (id) => updateData({ sections: data.sections.filter(s => s.id !== id) });
   const addLesson = (sId) => updateData({ sections: data.sections.map(s => s.id === sId ? {...s, lessons: [...s.lessons, {id: crypto.randomUUID(), title: '', duration: '50'}]} : s)});
   const removeLesson = (sId, lId) => updateData({ sections: data.sections.map(s => s.id === sId ? {...s, lessons: s.lessons.filter(l => l.id !== lId)} : s)});
-
+  
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-black text-gray-900 mb-8">Step 2. 강의 커리큘럼</h2>
@@ -239,13 +237,13 @@ const Schedule = ({ data, updateData, errors }) => {
     const end = new Date(data.endDate);
     const slots = [];
     const dayIndices = data.selectedDays.map(d => (days.indexOf(d) + 1) % 7);
-
+    
     let current = new Date(start);
-    while(current <= end) {
-      if(dayIndices.includes(current.getDay())) {
-        slots.push(`${current.toLocaleDateString('en-US', {month:'short', day:'numeric'})} ${data.startTime}`);
+    while(current <= end) { 
+      if(dayIndices.includes(current.getDay())) { 
+        slots.push(`${current.toLocaleDateString('en-US', {month:'short', day:'numeric'})} ${data.startTime}`); 
       }
-      current.setDate(current.getDate() + 1);
+      current.setDate(current.getDate() + 1); 
     }
     updateData({ generatedSlots: slots });
   };
