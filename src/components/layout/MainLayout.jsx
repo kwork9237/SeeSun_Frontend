@@ -8,7 +8,7 @@ const MainLayout = () => {
 
   // SimpleFooter를 보여줄 경로들의 목록을 정의합니다.
   // 예: 마이페이지, 로그인, 회원가입 등
-  const simpleFooterPaths = ["/mypage", "/login", "/join"];
+  const simpleFooterPaths = ["/mypage", "/login", "/join", "/mento", "/mentee"];
 
   // 현재 경로가 simpleFooterPaths 중 하나로 시작하는지 확인합니다.
   // startsWith를 사용하면 '/MyPage/Edit' 같은 하위 경로도 포함됩니다.

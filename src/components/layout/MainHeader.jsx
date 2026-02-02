@@ -79,7 +79,7 @@ const MainHeader = () => {
               )}
 
               {/* 마이페이지 */}
-              <Link to="/MyPage">
+              <Link to="/mypage">
                 <Button variant="primary" size="small">
                   마이페이지
                 </Button>

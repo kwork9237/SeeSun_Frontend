@@ -61,7 +61,7 @@ const Login = () => {
       // ✅ ProtectedRoute가 넘긴 원래 목적지로 복귀 (없으면 MyPage)
       const to = location.state?.from || "/mypage";
       navigate(to, { replace: true });
-    } catch (e2) {
+    } catch (e) {
       setError("아이디 또는 비밀번호가 올바르지 않습니다.");
     } finally {
       setLoading(false);
