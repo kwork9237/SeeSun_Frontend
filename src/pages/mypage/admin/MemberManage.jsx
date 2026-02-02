@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 // --- 아이콘 컴포넌트 ---
@@ -10,35 +10,55 @@ const Icons = {
   Siren: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="M4 2C4 2 5 5 5 5C5 5 2 7 2 7C2 7 5 5 5 5C5 5 4 2 4 2Z"/><path d="M20 2C20 2 19 5 19 5C19 5 22 7 22 7C22 7 19 5 19 5C19 5 20 2 20 2Z"/></svg>),
   MessageSquare: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>),
   Megaphone: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>),
-  ChevronLeft: () => (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>),
-  ChevronRight: () => (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>),
-  Edit3: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>),
-  Bell: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>)
+  Search: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>),
+  ChevronLeft: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>,
+  ChevronRight: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
 };
 
-const Notification = () => {
-  const [notices, setNotices] = useState([]);
-  const navigate = useNavigate();
+const MemberManage = () => {
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [keyword, setKeyword] = useState(""); 
 
-  // 날짜 포맷 (YYYY-MM-DD)
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
     return date.toISOString().split('T')[0];
   };
 
+  const getRoleName = (typeId) => {
+    switch (typeId) {
+      case 0: return <span className="px-2 py-1 bg-red-100 text-red-600 rounded text-xs font-bold">관리자</span>;
+      case 1: return <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-bold">일반 회원</span>;
+      case 2: return <span className="px-2 py-1 bg-purple-100 text-purple-600 rounded text-xs font-bold">멘토</span>;
+      default: return <span className="px-2 py-1 bg-gray-100 text-gray-400 rounded text-xs">기타</span>;
+    }
+  };
+
+  const fetchMembers = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('http://localhost:8080/api/admin/members', {
+        params: { keyword: keyword } 
+      });
+      setMembers(response.data);
+    } catch (error) {
+      console.error('회원 목록 조회 실패:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchNotices = async () => {
-      try {
-        const response = await axios.get('http://localhost:8080/api/admin/notices');
-        console.log('백엔드 응답 데이터:', response.data);
-        setNotices(response.data);
-      } catch (error) {
-        console.error('데이터 조회 에러:', error);
-      }
-    };
-    fetchNotices();
+    fetchMembers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      fetchMembers();
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-gray-800 font-sans">
@@ -50,23 +70,17 @@ const Notification = () => {
           <span className="font-bold text-xl tracking-tight text-gray-900">LinguaConnect</span>
         </Link>
         <div className="flex items-center gap-4">
-          <div className="text-sm text-gray-600">
-            <span className="font-semibold text-gray-800">관리자</span>님, 환영합니다.
-          </div>
-          <button className="px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-300 rounded hover:bg-gray-100 transition-colors">
-            로그아웃
-          </button>
+          <div className="text-sm text-gray-600"><span className="font-semibold text-gray-800">관리자</span>님, 환영합니다.</div>
+          <button className="px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-300 rounded hover:bg-gray-100 transition-colors">로그아웃</button>
         </div>
       </header>
 
-      {/* 메인 레이아웃 */}
       <div className="flex flex-1 pt-16">
-        
         {/* 사이드바 */}
         <aside className="w-64 bg-white fixed left-0 top-16 h-[calc(100vh-64px)] overflow-y-auto z-10 flex flex-col pt-8 px-6">
           <div className="flex items-center gap-3 mb-10">
             <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-gray-500"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-gray-500"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-gray-800 text-base">Administrator</span>
@@ -89,9 +103,9 @@ const Notification = () => {
                   <span className="text-purple-500"><Icons.Users /></span>
                   <span className="text-sm font-medium">멘토 승인 관리</span>
                 </Link>
-                <Link to="/mypage/membermanage" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                <Link to="/mypage/members" className="flex items-center gap-3 px-3 py-2.5 bg-[#FFF7ED] text-[#FF6B4A] rounded-lg transition-colors">
                   <span className="text-orange-400"><Icons.Clipboard /></span>
-                  <span className="text-sm font-medium">전체 회원 조회</span>
+                  <span className="text-sm font-bold">전체 회원 조회</span>
                 </Link>
               </div>
             </div>
@@ -111,69 +125,89 @@ const Notification = () => {
                   <span className="text-[#A78BFA]"><Icons.MessageSquare /></span>
                   <span className="text-sm font-medium">건의 사항 관리</span>
                 </Link>
-                <Link to="/mypage/notification" className="flex items-center gap-3 px-3 py-2.5 bg-[#FFF7ED] text-[#FF6B4A] rounded-lg transition-colors">
+                <Link to="/mypage/notification" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
                    <span className="text-rose-500"><Icons.Megaphone /></span>
-                  <span className="text-sm font-bold">공지 사항 작성</span>
+                  <span className="text-sm font-medium">공지 사항 작성</span>
                 </Link>
               </div>
             </div>
           </nav>
         </aside>
 
-        {/* 컨텐츠 영역 */}
+        {/* 메인 컨텐츠 */}
         <main className="flex-1 ml-64 p-10 bg-[#F8F9FA]">
           <div className="max-w-6xl mx-auto">
             
             <div className="mb-8 flex justify-between items-end">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">공지 사항 관리</h1>
-                <p className="text-sm text-gray-500 mt-2">전체 회원에게 전달할 공지사항을 작성하고 관리합니다.</p>
+                <h1 className="text-2xl font-bold text-gray-900">전체 회원 조회</h1>
+                <p className="text-sm text-gray-500 mt-2">가입된 모든 회원의 정보를 조회하고 관리합니다.</p>
               </div>
               
-              <Link to="/mypage/notificationwrite">
-                {/* [수정됨] 새 공지 작성 버튼 파란색으로 변경 */}
-                <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm text-sm font-bold">
-                  <Icons.Edit3 />
-                  새 공지 작성
-                </button>
-              </Link>
+              {/* [수정] 검색바 + 파란색 버튼 */}
+              <div className="flex gap-2">
+                 <div className="relative">
+                    <input 
+                       type="text" 
+                       placeholder="이름, 아이디, 닉네임 검색" 
+                       className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 shadow-sm w-64"
+                       value={keyword}
+                       onChange={(e) => setKeyword(e.target.value)}
+                       onKeyDown={handleKeyDown}
+                    />
+                    <span 
+                       className="absolute left-3 top-2.5 text-gray-400 cursor-pointer"
+                       onClick={fetchMembers}
+                    >
+                       <Icons.Search />
+                    </span>
+                 </div>
+                 {/* [추가] 파란색 검색 버튼 */}
+                 <button 
+                    onClick={fetchMembers}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-bold text-sm shadow-sm"
+                 >
+                    검색
+                 </button>
+              </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px] flex flex-col">
-              
-              <div className="grid grid-cols-[80px_1fr_120px_120px_100px] bg-[#F9FAFB] border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider py-4 px-6 text-center">
-                <div>NO</div>
-                <div className="text-left px-2">제목</div>
-                <div>작성자</div>
-                <div>작성일</div>
-                <div>조회수</div>
-              </div>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[500px]">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#F9FAFB] border-b border-gray-100 text-xs uppercase text-gray-500 font-semibold tracking-wider text-center">
+                      <th className="px-6 py-4 w-[8%]">NO</th>
+                      <th className="px-6 py-4 w-[22%] text-left">아이디 (Username)</th>
+                      <th className="px-6 py-4 w-[15%]">이름</th>
+                      <th className="px-6 py-4 w-[15%]">닉네임</th>
+                      <th className="px-6 py-4 w-[15%]">전화번호</th>
+                      <th className="px-6 py-4 w-[10%]">유형</th>
+                      <th className="px-6 py-4 w-[15%]">가입일</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50 text-center text-sm text-gray-700">
+                    {loading && (
+                       <tr><td colSpan="7" className="p-10 text-gray-500">데이터를 불러오는 중입니다...</td></tr>
+                    )}
 
-              <div className="divide-y divide-gray-50 flex-1">
-                {notices.map((notice) => (
-                  <div 
-                    key={notice.ntId}
-                    onClick={() => navigate(`/mypage/notification/${notice.ntId}`)}
-                    className="grid grid-cols-[80px_1fr_120px_120px_100px] py-4 px-6 items-center text-sm hover:bg-gray-50 transition-colors cursor-pointer text-center"
-                  >
-                    <div className="text-gray-400">{notice.ntId}</div>
-                    <div className="text-left px-2 font-medium text-gray-800 truncate hover:text-orange-500 hover:underline">
-                      {notice.title}
-                    </div>
-                    <div className="text-gray-600">{notice.mbId}</div>
-                    <div className="text-gray-500 text-xs">{formatDate(notice.createdAt)}</div>
-                    <div className="text-gray-400 text-xs">{notice.viewCount}</div>
-                  </div>
-                ))}
-                
-                {notices.length === 0 && (
-                   <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20">
-                     <div className="p-4 bg-gray-50 rounded-full mb-3 text-gray-300">
-                        <Icons.Bell />
-                     </div>
-                     <span className="text-sm font-medium text-gray-500">등록된 공지 사항이 없습니다.</span>
-                   </div>
-                )}
+                    {!loading && members.map((member) => (
+                      <tr key={member.mbId} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 text-gray-400">{member.mbId}</td>
+                        <td className="px-6 py-4 font-medium text-gray-900 text-left">{member.username}</td>
+                        <td className="px-6 py-4">{member.name}</td>
+                        <td className="px-6 py-4">{member.nickname}</td>
+                        <td className="px-6 py-4 text-gray-500">{member.phone || '-'}</td>
+                        <td className="px-6 py-4">{getRoleName(member.mbTypeId)}</td>
+                        <td className="px-6 py-4 text-gray-500">{formatDate(member.createdAt)}</td>
+                      </tr>
+                    ))}
+
+                    {!loading && members.length === 0 && (
+                       <tr><td colSpan="7" className="p-20 text-gray-400">검색 결과가 없습니다.</td></tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
 
@@ -194,6 +228,6 @@ const Notification = () => {
       </div>
     </div>
   );
-}
+};
 
-export default Notification;  
+export default MemberManage;

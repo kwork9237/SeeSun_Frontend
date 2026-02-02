@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 
 // --- 아이콘 컴포넌트 ---
@@ -11,18 +11,42 @@ const Icons = {
   MessageSquare: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>),
   Megaphone: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>),
   Save: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>),
-  X: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 18 12"/></svg>)
+  X: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 18 12"/></svg>),
+  ArrowLeft: () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>)
 };
 
-const NotificationWrite = () => {
+const NotificationEdit = () => {
+  const { ntId } = useParams();
   const navigate = useNavigate();
   
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
+    ntId: '',
     title: '',
     content: '',
-    // 관리자(작성자)의 실제 회원 번호(PK)를 넣어야 합니다. (예: 1)
-    mbId: 1
+    mbId: '' 
   });
+
+  // 1. 기존 데이터 불러오기
+  useEffect(() => {
+    const fetchDetail = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8080/api/admin/notices/${ntId}`);
+        setFormData({
+            ntId: response.data.ntId,
+            title: response.data.title,
+            content: response.data.content,
+            mbId: response.data.mbId
+        });
+        setLoading(false);
+      } catch (error) {
+        console.error('데이터 불러오기 실패:', error);
+        alert('게시글 정보를 불러오지 못했습니다.');
+        navigate('/mypage/notification');
+      }
+    };
+    fetchDetail();
+  }, [ntId, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,21 +56,29 @@ const NotificationWrite = () => {
     });
   };
 
+  // 2. 수정 요청 (PUT)
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!formData.title || !formData.content) {
       alert("제목과 내용을 모두 입력해주세요.");
       return;
     }
+
     try {
-      await axios.post('/api/admin/notices', formData);
-      alert('공지사항이 등록되었습니다.');
-      navigate('/mypage/notification');
+      await axios.put(`http://localhost:8080/api/admin/notices/${ntId}`, formData);
+      alert('공지사항이 수정되었습니다.');
+      
+      // [수정됨] 수정 완료 후 목록 페이지로 이동
+      navigate('/mypage/notification'); 
+      
     } catch (error) {
-      console.error('공지사항 등록 실패:', error);
-      alert('등록 중 오류가 발생했습니다.');
+      console.error('공지사항 수정 실패:', error);
+      alert('수정 중 오류가 발생했습니다.');
     }
   };
+
+  if (loading) return <div className="p-10 text-center text-gray-500">데이터를 불러오는 중...</div>;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-gray-800 font-sans">
@@ -70,7 +102,7 @@ const NotificationWrite = () => {
       {/* 메인 레이아웃 */}
       <div className="flex flex-1 pt-16">
         
-        {/* 사이드바 (모든 메뉴 포함) */}
+        {/* 사이드바 */}
         <aside className="w-64 bg-white fixed left-0 top-16 h-[calc(100vh-64px)] overflow-y-auto z-10 flex flex-col pt-8 px-6">
           <div className="flex items-center gap-3 mb-10">
             <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
@@ -83,7 +115,6 @@ const NotificationWrite = () => {
           </div>
 
           <nav className="flex-1 space-y-8">
-            {/* Dashboard */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Dashboard</div>
               <Link to="/mypage" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
@@ -91,8 +122,6 @@ const NotificationWrite = () => {
                 <span className="text-sm font-medium">홈</span>
               </Link>
             </div>
-
-            {/* Management */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Management</div>
               <div className="space-y-1">
@@ -100,14 +129,12 @@ const NotificationWrite = () => {
                   <span className="text-purple-500"><Icons.Users /></span>
                   <span className="text-sm font-medium">멘토 승인 관리</span>
                 </Link>
-                <Link to="/mypage/membermanage" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
+               <Link to="/mypage/membermanage" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
                   <span className="text-orange-400"><Icons.Clipboard /></span>
                   <span className="text-sm font-medium">전체 회원 조회</span>
-                </Link>
+               </Link>
               </div>
             </div>
-
-            {/* Contents */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Contents</div>
               <div className="space-y-1">
@@ -117,8 +144,6 @@ const NotificationWrite = () => {
                 </Link>
               </div>
             </div>
-
-            {/* Support */}
             <div>
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Support</div>
               <div className="space-y-1">
@@ -126,10 +151,9 @@ const NotificationWrite = () => {
                   <span className="text-[#A78BFA]"><Icons.MessageSquare /></span>
                   <span className="text-sm font-medium">건의 사항 관리</span>
                 </Link>
-                {/* 현재 활성화된 메뉴 표시 (공지사항) */}
                 <Link to="/mypage/notification" className="flex items-center gap-3 px-3 py-2.5 bg-[#FFF7ED] text-[#FF6B4A] rounded-lg transition-colors">
                    <span className="text-rose-500"><Icons.Megaphone /></span>
-                  <span className="text-sm font-bold">공지 사항 작성</span>
+                  <span className="text-sm font-bold">공지 사항 수정</span>
                 </Link>
               </div>
             </div>
@@ -140,11 +164,21 @@ const NotificationWrite = () => {
         <main className="flex-1 ml-64 p-10 bg-[#F8F9FA]">
           <div className="max-w-4xl mx-auto">
             
-            <div className="mb-8">
-              <h1 className="text-2xl font-bold text-gray-900">공지 사항 등록</h1>
-              <p className="text-sm text-gray-500 mt-2">새로운 공지사항을 작성하여 회원들에게 알립니다.</p>
+            {/* 페이지 헤더 - 목록으로 버튼 */}
+            <div className="mb-8 flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">공지 사항 수정</h1>
+                <p className="text-sm text-gray-500 mt-2">등록된 공지사항의 내용을 수정합니다.</p>
+              </div>
+              <button 
+                onClick={() => navigate('/mypage/notification')} 
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors shadow-sm text-sm font-bold"
+              >
+                <Icons.ArrowLeft /> 목록으로
+              </button>
             </div>
 
+            {/* 작성 폼 영역 */}
             <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
               
               <div className="mb-6">
@@ -157,7 +191,6 @@ const NotificationWrite = () => {
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  placeholder="공지사항 제목을 입력하세요"
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all text-sm"
                 />
               </div>
@@ -171,27 +204,27 @@ const NotificationWrite = () => {
                   name="content"
                   value={formData.content}
                   onChange={handleChange}
-                  placeholder="공지 내용을 상세히 입력하세요..."
                   className="w-full h-64 px-4 py-3 rounded-lg border border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all resize-none text-sm leading-relaxed"
                 ></textarea>
               </div>
 
+              {/* 하단 버튼 그룹 */}
               <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
-                <Link 
-                  to="/mypage/notification" 
+                <button
+                  type="button" 
+                  onClick={() => navigate(`/mypage/notification/${ntId}`)} // 취소 시 상세 페이지로 이동
                   className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-300 text-gray-600 font-medium text-sm hover:bg-gray-50 transition-colors"
                 >
                   <Icons.X />
                   취소
-                </Link>
+                </button>
                 
-                {/* [수정됨] 등록 완료 버튼 색상 파란색으로 변경 */}
                 <button 
                   type="submit" 
                   className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 shadow-sm hover:shadow transition-all"
                 >
                   <Icons.Save />
-                  등록 완료
+                  수정 완료
                 </button>
               </div>
 
@@ -204,4 +237,4 @@ const NotificationWrite = () => {
   );
 }
 
-export default NotificationWrite;
+export default NotificationEdit;
