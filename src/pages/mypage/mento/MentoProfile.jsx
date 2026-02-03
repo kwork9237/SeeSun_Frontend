@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom'; 
-import { User, Edit, Lock, X } from 'lucide-react';
+import { User, Edit, Lock, X, AlertCircle } from 'lucide-react';
 
 const MentoProfile = () => {
   const navigate = useNavigate();
@@ -17,6 +17,9 @@ const MentoProfile = () => {
   const [editForm, setEditForm] = useState({ name: '', nickname: '', phone: '', password: '' });
   const [pwForm, setPwForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
 
+  // --- 유효성 검사 에러 메시지 상태 ---
+  const [nicknameError, setNicknameError] = useState('');
+
   // [API] 내 정보 조회
   const fetchProfile = async () => {
     const token = localStorage.getItem('accessToken');
@@ -28,7 +31,6 @@ const MentoProfile = () => {
     }
 
     try {
-      // 조회는 기존에 성공했던 주소 그대로 유지 (/api/members/profile)
       const res = await axios.get('/api/members/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -66,19 +68,55 @@ const MentoProfile = () => {
     fetchProfile();
   }, [navigate]);
 
-  // 정보 수정 (기존 백엔드 코드 대응)
+  // --- [수정] 닉네임 변경 핸들러 (실시간 검사: 16글자) ---
+  const handleNicknameChange = (e) => {
+    const newNickname = e.target.value;
+    setEditForm({ ...editForm, nickname: newNickname });
 
+    // 유효성 검사 로직
+    // 1. 최대 16글자 제한
+    if (newNickname.length > 16) {
+        setNicknameError("최대 16글자까지 입력 가능합니다.");
+        return;
+    }
+
+    // 2. 영어 알파벳이 최소 1글자 포함되어야 함
+    const hasEnglish = /[a-zA-Z]/.test(newNickname);
+    
+    if (!hasEnglish) {
+        setNicknameError("영어가 최소 1글자는 포함되어야 합니다.");
+    } else {
+        setNicknameError(""); // 조건 만족 시 에러 제거
+    }
+  };
+
+  // 정보 수정 요청
   const handleUpdateInfo = async () => {
-    if (!editForm.password) return alert("본인 확인을 위해 현재 비밀번호를 입력해주세요.");
+    // 1. 에러 상태가 남아있으면 중단
+    if (nicknameError) return alert(nicknameError);
+
+    // 2. [수정] 닉네임 길이 강제 확인 (최대 16자)
+    if (editForm.nickname.length > 16) {
+        return alert("닉네임은 최대 16글자까지만 가능합니다.");
+    }
+
+    // 3. 영어 포함 여부 확인
+    if (!/[a-zA-Z]/.test(editForm.nickname)) {
+        return alert("닉네임에 영어가 최소 1글자는 포함되어야 합니다.");
+    }
+
+    // 4. 비밀번호 입력 확인
+    if (!editForm.password) {
+        return alert("본인 확인을 위해 현재 비밀번호를 입력해주세요.");
+    }
     
     const token = localStorage.getItem('accessToken');
 
     try {
-      // 
       await axios.patch('/api/mypage/profile', 
         {
-          password: editForm.password, // 검증용 비번 데이터 
-          myPageData: {                // 수정할 데이터 
+          password: editForm.password, 
+          myPageData: {                
              name: editForm.name,
              nickname: editForm.nickname,
              phone: editForm.phone
@@ -91,31 +129,29 @@ const MentoProfile = () => {
       
       alert("회원 정보가 수정되었습니다! 🎉");
       setIsEditModalOpen(false);
-      fetchProfile(); // 수정된 정보 다시 불러오기
+      fetchProfile(); 
     } catch (err) {
       console.error(err);
       alert("수정 실패: 비밀번호가 일치하지 않거나 서버 오류입니다.");
     }
   };
 
-  // 비밀번호 변경 (PasswordUpdateDTO 대응)
+  // 비밀번호 변경
   const handleUpdatePassword = async () => {
-    // 유효성 검사 (새 비번 확인)
     if (pwForm.newPassword !== pwForm.confirmPassword) {
         return alert("새 비밀번호가 서로 일치하지 않습니다.");
     }
-    if (pwForm.newPassword.length < 8) { // 예시: 길이 체크
+    if (pwForm.newPassword.length < 8) {
         return alert("비밀번호는 최소 8자 이상이어야 합니다.");
     }
     
     const token = localStorage.getItem('accessToken');
 
     try {
-      // ★ 백엔드 PasswordUpdateDTO 구조에 맞춰 전송
       await axios.patch('/api/mypage/password', 
         {
-          oldPassword: pwForm.oldPassword, // 현재 비번
-          newPassword: pwForm.newPassword  // 바꿀 비번
+          oldPassword: pwForm.oldPassword, 
+          newPassword: pwForm.newPassword  
         }, 
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -125,19 +161,16 @@ const MentoProfile = () => {
       alert("비밀번호가 성공적으로 변경되었습니다.\n보안을 위해 다시 로그인해주세요.");
       setIsPwModalOpen(false);
       
-      // 2. 로그아웃 처리
       localStorage.removeItem('accessToken');
       localStorage.removeItem('userInfo');
       navigate('/login');
 
     } catch (err) {
       console.error(err);
-      // 백엔드 에러 메시지에 따라 분기 가능
       alert("변경 실패: 현재 비밀번호가 틀렸습니다.");
     }
   };
   
-  // 날짜 포맷 함수
   const formatDate = (d) => {
     if (!d) return '-';
     return new Date(d).toLocaleDateString('ko-KR', {
@@ -156,7 +189,7 @@ const MentoProfile = () => {
 
       <div className="bg-white border border-gray-200 rounded-[20px] p-12 shadow-sm min-h-[600px]">
         
-        {/* 상단 영역 */}
+        {/* 상단 프로필 영역 */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 w-full">
           <div className="flex items-center gap-6">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 border border-gray-200 overflow-hidden shrink-0">
@@ -177,7 +210,10 @@ const MentoProfile = () => {
 
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
             <button 
-              onClick={() => setIsEditModalOpen(true)} 
+              onClick={() => {
+                  setIsEditModalOpen(true);
+                  setNicknameError(""); // 모달 열 때 에러 초기화
+              }} 
               className="flex items-center justify-center gap-2 px-5 py-3 border border-gray-300 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition bg-white shadow-sm whitespace-nowrap"
             >
               <Edit size={16} /> 내 정보 수정
@@ -208,7 +244,23 @@ const MentoProfile = () => {
              <div className="flex justify-between mb-6"><h3 className="text-xl font-bold">정보 수정</h3><button onClick={()=>setIsEditModalOpen(false)}><X className="text-gray-400"/></button></div>
              <div className="space-y-4">
                <div><label className="text-sm font-bold text-gray-600 block mb-1">이름</label><input className="w-full border border-gray-300 rounded-lg p-3" value={editForm.name} onChange={(e)=>setEditForm({...editForm, name:e.target.value})} /></div>
-               <div><label className="text-sm font-bold text-gray-600 block mb-1">닉네임</label><input className="w-full border border-gray-300 rounded-lg p-3" value={editForm.nickname} onChange={(e)=>setEditForm({...editForm, nickname:e.target.value})} /></div>
+               
+               {/* 닉네임 입력 (16글자 제한) */}
+               <div>
+                  <label className="text-sm font-bold text-gray-600 block mb-1">닉네임(영어포함 최대 16글자)</label>
+                  <input 
+                    className={`w-full border rounded-lg p-3 ${nicknameError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`} 
+                    value={editForm.nickname} 
+                    onChange={handleNicknameChange} 
+                    maxLength={16} // HTML 속성 제한
+                  />
+                  {nicknameError && (
+                    <p className="text-red-500 text-xs font-bold mt-1 flex items-center gap-1">
+                      <AlertCircle size={12}/> {nicknameError}
+                    </p>
+                  )}
+               </div>
+
                <div><label className="text-sm font-bold text-gray-600 block mb-1">전화번호</label><input className="w-full border border-gray-300 rounded-lg p-3" value={editForm.phone} onChange={(e)=>setEditForm({...editForm, phone:e.target.value})} /></div>
                
                <div className="pt-4 border-t">
@@ -216,7 +268,13 @@ const MentoProfile = () => {
                  <input className="w-full border border-blue-200 bg-blue-50 rounded-lg p-3" type="password" value={editForm.password} onChange={(e)=>setEditForm({...editForm, password:e.target.value})} placeholder="현재 비밀번호를 입력해야 수정됩니다."/>
                </div>
                
-               <button onClick={handleUpdateInfo} className="w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-gray-800 transition">수정 완료</button>
+               <button 
+                onClick={handleUpdateInfo} 
+                disabled={!!nicknameError} // 에러 있으면 버튼 비활성화
+                className={`w-full font-bold py-4 rounded-xl transition ${nicknameError ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'}`}
+               >
+                 수정 완료
+               </button>
              </div>
           </div>
         </div>
@@ -228,15 +286,9 @@ const MentoProfile = () => {
           <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl">
              <div className="flex justify-between mb-6"><h3 className="text-xl font-bold">비밀번호 변경</h3><button onClick={()=>setIsPwModalOpen(false)}><X className="text-gray-400"/></button></div>
              <div className="space-y-4">
-               {/* oldPassword 매핑 */}
                <input className="w-full border border-gray-300 rounded-lg p-3" type="password" value={pwForm.oldPassword} onChange={(e)=>setPwForm({...pwForm, oldPassword:e.target.value})} placeholder="현재 비밀번호"/>
-               
-               {/* newPassword 매핑 */}
                <input className="w-full border border-gray-300 rounded-lg p-3" type="password" value={pwForm.newPassword} onChange={(e)=>setPwForm({...pwForm, newPassword:e.target.value})} placeholder="새 비밀번호(8~20자)"/>
-               
-               {/* confirmPassword (프론트 확인용) */}
                <input className="w-full border border-gray-300 rounded-lg p-3" type="password" value={pwForm.confirmPassword} onChange={(e)=>setPwForm({...pwForm, confirmPassword:e.target.value})} placeholder="새 비밀번호 확인"/>
-               
                <button onClick={handleUpdatePassword} className="w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-gray-800 transition">변경하기</button>
              </div>
           </div>
