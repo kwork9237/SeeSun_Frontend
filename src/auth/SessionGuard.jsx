@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import apiClient from "@/api/apiClient";
+import apiClient from "../api/apiClient";
 
 export default function SessionGuard({ mode, children }) {
-  const { lectureId } = useParams(); // 지금은 lectureId가 uuid 역할
+  const { uuid } = useParams(); // 지금은 lectureId가 uuid 역할
   const navigate = useNavigate();
   const [state, setState] = useState("loading"); // loading|waiting|ready|error
 
@@ -12,7 +12,7 @@ export default function SessionGuard({ mode, children }) {
 
     const validate = async () => {
       try {
-        const res = await apiClient.get(`/room/${lectureId}`);
+        const res = await apiClient.get(`/lectures/sessions/room/${uuid}`);
 
         // (선택) 서버가 role 내려주면 여기서 체크
         // if (mode === "mentor" && res.data.role !== "MENTOR") throw new Error("forbidden");
@@ -41,7 +41,7 @@ export default function SessionGuard({ mode, children }) {
 
     validate();
     return () => clearTimeout(timer);
-  }, [lectureId, navigate]);
+  }, [uuid, navigate]);
 
   if (state === "loading") return <div>입장 확인중...</div>;
   if (state === "waiting") return <div>강의 시작 대기중...</div>;

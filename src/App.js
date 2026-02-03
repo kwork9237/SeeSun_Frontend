@@ -88,8 +88,8 @@ function App() {
 
               {/* 강의 실시간(WebRTC 테스트) */}
               <Route path='/lecture/realtime' element={<LectureRealtime/>}/>
-              <Route path="/mentor/lecture/:lectureId" element={<LectureRealtimeMentor />} />
-              <Route path="/mentee/lecture/:lectureId" element={<LectureRealtimeMentee />} />
+              <Route path="/mentor/lecture/:uuid" element={<LectureRealtimeMentor />} />
+              <Route path="/mentee/lecture/:uuid" element={<LectureRealtimeMentee />} />
               <Route path='/webrtctest' element={<WebRTCTest/>}/>
 
               {/* 관리자 페이지 */}

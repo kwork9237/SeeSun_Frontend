@@ -9,6 +9,22 @@ import apiClient from '../../../api/apiClient';
 const MenteeHome = () => {
   const navigate = useNavigate(); // 페이지 이동을 위한 훅
 
+  // 강의실 입장로직
+  const handleEnterLectureRoom = async (leId) => {
+    try {
+      // 백엔드: 강의별 ACTIVE 세션 조회 (없으면 404 같은 걸로)
+      const res = await apiClient.get(`/lectures/sessions/check/${leId}`);
+
+      const { uuid } = res.data;
+
+      // 방이 있는데 시작 전이면, uuid 라우트로 보내서 대기화면 보여주는 게 UX가 좋음
+      navigate(`/mentee/session/${uuid}`);
+    } catch (err) {
+      // ACTIVE 세션이 없으면 입장 불가
+      alert("강의 방이 준비되지 않았습니다. (멘토가 아직 방을 열지 않았습니다)");
+    }
+  };
+
   // =================================================================
   // 1. 상태 관리 (State)
   // =================================================================
@@ -188,7 +204,9 @@ const MenteeHome = () => {
                 
                 {/* 강의실 입장 버튼 */}
                 {/* 아까 이야기한 대로, 여기서 onClick에 navigate(`/classroom/${schedule.leId}`) 추가 가능 */}
-                <button className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-600 transition-colors shadow-sm">
+                <button 
+                  onClick={() => handleEnterLectureRoom(schedule.leId)}
+                  className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-600 transition-colors shadow-sm">
                   <Video size={16} /> 강의실 입장
                 </button>
               </div>
