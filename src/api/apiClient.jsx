@@ -14,8 +14,6 @@ apiClient.interceptors.request.use((config) => {
 
   // 토큰이 있을 경우 Bearer 첨부
   if (token) config.headers.Authorization = `Bearer ${token}`;
-
-  // 
   return config;
 });
 

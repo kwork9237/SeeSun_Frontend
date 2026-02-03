@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"; // 페이지 이동을 위해 �
 import Admin from "./Admin";
 import Mentee from "./Mentee";
 import Mento from "./Mento";
+import apiClient from "../../api/apiClient";
 
 const MyPage = () => {
   const [mbType, setMbType] = useState(null);
@@ -13,24 +14,9 @@ const MyPage = () => {
 
   useEffect(() => {
     const fetchMemberType = async () => {
-      // 1. 저장된 JWT 토큰 가져오기 (로그인 시 localStorage에 'accessToken'이란 이름으로 저장했다고 가정)
-      const token = localStorage.getItem("accessToken");
-
-      // 토큰이 없으면 로그인 페이지로 튕겨내기
-      if (!token) {
-        alert("로그인이 필요합니다.");
-        navigate("/login");
-        return;
-      }
-
       try {
         // 2. API 호출 시 헤더에 토큰 포함
-        const response = await axios.get("/api/mypage/member-type", {
-          headers: {
-            Authorization: `Bearer ${token}`, // 중요: Bearer 공백 토큰
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await apiClient.get("/mypage/member-type");
 
         // 3. 성공 시 받아온 타입(0, 1, 2) 저장
         console.log(response.data);

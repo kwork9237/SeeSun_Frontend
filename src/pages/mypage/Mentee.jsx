@@ -8,6 +8,7 @@ import MenteeHome from './mentee/MenteeHome';
 import MenteeClasses from './mentee/MenteeClasses';
 import MenteeProfile from './mentee/MenteeProfile';
 import MenteePayments from './mentee/MenteePayments';
+import apiClient from '../../api/apiClient';
 
 const Mento = () => {
   const navigate = useNavigate();
@@ -25,17 +26,9 @@ const Mento = () => {
   // 2. 백엔드에서 정보 가져오기
   useEffect(() => {
     const fetchMyInfo = async () => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        alert("로그인이 필요합니다.");
-        navigate('/login');
-        return;
-      }
 
       try {
-        const response = await axios.get('/api/members/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await apiClient.get('/members/profile');
         
         console.log("백엔드에서 받은 데이터:", response.data); 
 
@@ -83,13 +76,10 @@ const Mento = () => {
 
     try {
       // 회원탈퇴 로직 사용
-      await axios.delete('/api/members/me', {
-        headers: { 
-            Authorization: `Bearer ${token}` 
+      await apiClient.delete("/members/me", {
+        data: {
+          password: leavePw, // @RequestBody LeaveRequestDTO
         },
-        data: { 
-            password: leavePw // @RequestBody LeaveRequestDTO 매핑
-        } 
       });
 
       alert("탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다. 🙇‍♂️");

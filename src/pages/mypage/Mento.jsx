@@ -9,6 +9,7 @@ import MentoClasses from './mento/MentoClasses';
 import MentoProfile from './mento/MentoProfile';
 import MentoPayments from './mento/MentoPayments';
 import MentoManagement from './mento/MentoManagement';
+import apiClient from '../../api/apiClient';
 
 const Mento = () => {
   const navigate = useNavigate();
@@ -26,25 +27,16 @@ const Mento = () => {
   // 2. 백엔드에서 정보 가져오기
   useEffect(() => {
     const fetchMyInfo = async () => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        alert("로그인이 필요합니다.");
-        navigate('/login');
-        return;
-      }
-
       try {
         //membercontroller 에서 값 가져오기
-        const response = await axios.get('/api/members/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
+        const response = await apiClient.get('/members/profile');
+
         console.log("백엔드에서 받은 데이터:", response.data); 
         // 콘솔 꼭 확인해보세요! { mbId: 1, email: "...", nickname: "..." } 이렇게 와야 함
 
         // ★ 데이터 매핑 (여기가 핵심!)
         setUserInfo({
-          mbId: response.data.mbId,
+          mbId: response.data.mbId, 
           name: response.data.name,
           nickname: response.data.nickname, // 닉네임을 화면에 띄울 예정
           email: response.data.email        // @JsonProperty("email") 때문에 username이 아니라 email로 옴
@@ -77,22 +69,13 @@ const Mento = () => {
   const handleDeleteMember = async () => {
     if (!leavePw) return alert("비밀번호를 입력해주세요.");
     if (confirmText !== "회원탈퇴") return alert("'회원탈퇴'라는 문구를 정확히 입력해주세요.");
-    
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-        alert("로그인 정보가 없습니다.");
-        return navigate('/login');
-    }
 
     try {
       // 회원탈퇴 로직 사용
-      await axios.delete('/api/members/me', {
-        headers: { 
-            Authorization: `Bearer ${token}` 
+      await apiClient.delete("/members/me", {
+        data: {
+          password: leavePw, // @RequestBody LeaveRequestDTO
         },
-        data: { 
-            password: leavePw // @RequestBody LeaveRequestDTO 매핑
-        } 
       });
 
       alert("탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다. 🙇‍♂️");

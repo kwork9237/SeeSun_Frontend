@@ -10,22 +10,9 @@ const MentoPayment = () => {
 
   useEffect(() => {
     const fetchHistory = async () => {
-      // 로컬 스토리지에서 토큰 가져오기
-      const token = localStorage.getItem('accessToken');
-      
-      if (!token) {
-        alert("로그인이 필요합니다.");
-        navigate('/login');
-        return;
-      }
-
       try {
         // API 호출
-        const res = await axios.get('/api/orders/history', {
-          headers: {
-            Authorization: `Bearer ${token}` // ★ 백엔드 컨트롤러의 user를 채워줌
-          }
-        });
+        const res = await axios.get('/orders/history');
         
         setHistory(res.data);
       } catch (err) {

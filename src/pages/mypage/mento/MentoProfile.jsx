@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom'; 
 import { User, Edit, Lock, X } from 'lucide-react';
+import apiClient from '../../../api/apiClient';
 
 const MentoProfile = () => {
   const navigate = useNavigate();
@@ -19,19 +20,9 @@ const MentoProfile = () => {
 
   // [API] 내 정보 조회
   const fetchProfile = async () => {
-    const token = localStorage.getItem('accessToken');
-    
-    if (!token) {
-      alert("로그인이 필요합니다.");
-      navigate('/login');
-      return;
-    }
-
     try {
       // 조회는 기존에 성공했던 주소 그대로 유지 (/api/members/profile)
-      const res = await axios.get('/api/members/profile', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiClient.get('/members/profile');
       
       console.log("프로필 데이터:", res.data);
 
@@ -70,24 +61,16 @@ const MentoProfile = () => {
 
   const handleUpdateInfo = async () => {
     if (!editForm.password) return alert("본인 확인을 위해 현재 비밀번호를 입력해주세요.");
-    
-    const token = localStorage.getItem('accessToken');
 
     try {
-      // 
-      await axios.patch('/api/mypage/profile', 
-        {
-          password: editForm.password, // 검증용 비번 데이터 
-          myPageData: {                // 수정할 데이터 
-             name: editForm.name,
-             nickname: editForm.nickname,
-             phone: editForm.phone
-          }
+      await apiClient.patch("/mypage/profile", {
+        password: editForm.password,   // 검증용 비번
+        myPageData: {                  // 수정 데이터
+          name: editForm.name,
+          nickname: editForm.nickname,
+          phone: editForm.phone,
         },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      });
       
       alert("회원 정보가 수정되었습니다! 🎉");
       setIsEditModalOpen(false);
@@ -111,16 +94,10 @@ const MentoProfile = () => {
     const token = localStorage.getItem('accessToken');
 
     try {
-      // ★ 백엔드 PasswordUpdateDTO 구조에 맞춰 전송
-      await axios.patch('/api/mypage/password', 
-        {
-          oldPassword: pwForm.oldPassword, // 현재 비번
-          newPassword: pwForm.newPassword  // 바꿀 비번
-        }, 
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      await apiClient.patch("/mypage/password", {
+        oldPassword: pwForm.oldPassword, // 현재 비번
+        newPassword: pwForm.newPassword, // 변경 비번
+      });
       
       alert("비밀번호가 성공적으로 변경되었습니다.\n보안을 위해 다시 로그인해주세요.");
       setIsPwModalOpen(false);

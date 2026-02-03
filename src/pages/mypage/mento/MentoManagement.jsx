@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, ChevronRight, Video, Star, Plus, Calendar, BookOpen, Users 
 } from 'lucide-react';
+import apiClient from '../../../api/apiClient';
 
 /**
  * [멘토 홈 화면] MentoManagement
@@ -39,24 +40,12 @@ const MentoManagement = () => {
   // ----------------------------------------------------------------
   useEffect(() => {
     const fetchData = async () => {
-      // 1. 로컬 스토리지에서 JWT 토큰 가져오기
-      const token = localStorage.getItem('accessToken');
-      
-      // 2. 토큰이 없으면 로그인 페이지로 튕겨내기
-      if (!token) {
-        alert("로그인이 필요합니다.");
-        navigate('/login');
-        return;
-      }
-
       try {
         setLoading(true); // 로딩 시작
         
         // 3. 멘토용 홈 데이터 요청 (GET /api/mento/home)
         // 헤더에 토큰을 담아서 보냄 -> 백엔드에서 토큰으로 멘토 ID 식별
-        const res = await axios.get('/api/mento/home', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await apiClient.get('/mento/home');
         
         console.log("✅ 멘토 홈 데이터:", res.data); 
         

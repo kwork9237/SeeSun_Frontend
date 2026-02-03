@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, ChevronRight, Video, Star, Search, Calendar, BookOpen 
 } from 'lucide-react';
+import apiClient from '../../../api/apiClient';
 
 const MenteeHome = () => {
   const navigate = useNavigate(); // 페이지 이동을 위한 훅
@@ -38,23 +39,9 @@ const MenteeHome = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. 로컬 스토리지에서 JWT 토큰 가져오기
-        const token = localStorage.getItem('accessToken'); 
-
-        // 2. 토큰이 없으면 로그인 페이지로 리다이렉트 (보안 처리)
-        if (!token) {
-           alert("로그인이 필요합니다.");
-           navigate('/login');
-           return;
-        }
-
         // 3. API 요청 (헤더에 토큰 포함)
         // 백엔드 컨트롤러: /api/mentee/home (멘티용 홈 데이터)
-        const response = await axios.get('/api/mentee/home', {
-           headers: {
-              Authorization: `Bearer ${token}` 
-           }
-        });
+        const response = await apiClient.get('/mentee/home');
         
         // 4. 받아온 데이터 확인 및 상태 업데이트
         console.log("멘티 데이터:", response.data);

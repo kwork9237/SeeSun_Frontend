@@ -8,8 +8,8 @@ const SimpleFooter = () => {
       <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-center items-center gap-4 text-xs text-gray-400">
         <p>© 2026 SeeSun. All rights reserved.</p>
         <div className="flex gap-4">
-            <Link to="/Privacy" className="hover:text-gray-600">개인정보처리방침</Link>
-            <Link to="/Terms" className="hover:text-gray-600">이용약관</Link>
+            <Link to="/privacy" className="hover:text-gray-600">개인정보처리방침</Link>
+            <Link to="/terms" className="hover:text-gray-600">이용약관</Link>
         </div>
       </div>
     </footer>

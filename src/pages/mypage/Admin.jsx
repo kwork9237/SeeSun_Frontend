@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import apiClient from '../../api/apiClient';
 
 // --- 아이콘 컴포넌트 ---
 const Icons = {
@@ -36,7 +37,7 @@ const Admin = () => {
   useEffect(() => {
     const fetchAdminStats = async () => {
       try {
-        const response = await axios.get('/api/admin/dashboard-stats');
+        const response = await apiClient.get('/admin/dashboard-stats');
         setDashboardStats({
           newMentorCount: response.data.newMentorCount || 0,
           reportedLectureCount: response.data.reportedLectureCount || 0,

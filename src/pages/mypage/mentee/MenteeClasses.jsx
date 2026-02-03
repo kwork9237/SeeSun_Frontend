@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '../../../api/apiClient';
 
 const MenteeClasses = () => {
   const navigate = useNavigate();
@@ -15,23 +16,9 @@ const MenteeClasses = () => {
         setLoading(true);
         
         let response; 
-       
-        // 1. 로컬 스토리지에서 토큰 꺼내기 
-        const token = localStorage.getItem('accessToken'); 
-
-        // 2. 토큰 없으면 로그인 화면으로 쫓아내기
-        if (!token) {
-            alert("로그인이 필요합니다.");
-            navigate('/login');
-            return;
-        }
 
         // 3. 헤더에 토큰 실어서 보내기 
-        response = await axios.get('/api/mentee/home', {
-            headers: {
-                Authorization: `Bearer ${token}` //토큰 정보 넘기기
-            }
-        });
+        response = await apiClient.get('/mentee/home');
 
         setLectures(response.data.myLectures || []);
         
