@@ -112,6 +112,30 @@ const MentoManagement = () => {
   // 시간 포맷 (HH:mm:ss -> HH:mm)
   const formatTime = (time) => time ? time.substring(0, 5) : '';
 
+  // 강의실 입장 로직
+  const handleEnterLectureRoom = async (leId) => {
+  try {
+    const res = await apiClient.post(
+      "/lectures/sessions/create",
+      null,                   // body 항목에서 보낼 것이 없음
+      { params: { leId } }
+    );
+
+    const roomUuid = res.data.roomUuid;
+
+    // 멘토 실시간 강의실로 이동
+    navigate(`/mentor/lecture/${roomUuid}`);
+  } catch (e) {
+    console.error(e);
+    if (e.response?.status === 401) {
+      navigate("/login");
+      return;
+    }
+    alert("강의실 입장 실패");
+  }
+};
+
+
   // ----------------------------------------------------------------
   // 4. 렌더링 (UI Rendering)
   // ----------------------------------------------------------------
@@ -186,7 +210,9 @@ const MentoManagement = () => {
                   <div className="font-bold text-gray-800 group-hover:text-orange-600 transition-colors">{schedule.title}</div>
                 </div>
                 {/* 강의실 입장 버튼 */}
-                <button className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-orange-600 transition-colors shadow-sm">
+                <button 
+                  onClick={() => handleEnterLectureRoom(schedule.leId)}
+                  className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-orange-600 transition-colors shadow-sm">
                   <Video size={16} /> 입장
                 </button>
               </div>
