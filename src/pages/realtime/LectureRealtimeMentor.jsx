@@ -6,12 +6,10 @@ import ParticipantsPanel from "./components/ParticipantsPanel";
 import ChatPanel from "./components/ChatPanel";
 import ControlsBar from "./components/ControlsBar";
 import SessionGuard from "../../auth/SessionGuard";
+import apiClient from "../../api/apiClient";
 
 // mentorName 수정필요
-export default function LectureRealtimeMentor({ mentorName }) {
-  const { lectureId } = useParams();
-  const numericLectureId = Number(lectureId);
-
+export default function LectureRealtimeMentor() {
   const janusRef = useRef(null);
   const publisherHandleRef = useRef(null);
   const mentorVideoRef = useRef(null);
@@ -40,6 +38,10 @@ export default function LectureRealtimeMentor({ mentorName }) {
 
   // ✅ 채팅은 lectureId가 아니라 Janus roomId로 묶어야 함
   const [chatRoomId, setChatRoomId] = useState(null);
+  const [mentorName, setMentorName] = useState("");
+
+  // URL UUID
+  const { uuid } = useParams();
 
   // ---------------------------------
   // Chat
@@ -58,14 +60,14 @@ export default function LectureRealtimeMentor({ mentorName }) {
       text,
     };
 
-    await fetch("/api/seesun/janus/chat/send", {
+    await fetch("/api/seesun/live/chat/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(msg),
     });
 
     // UI에 즉시 추가
-    // setChatMessages((prev) => [...prev, msg]);
+    setChatMessages((prev) => [...prev, msg]);
   };
 
   // ---------------------------------
@@ -74,31 +76,31 @@ export default function LectureRealtimeMentor({ mentorName }) {
   const fetchBootstrap = async () => {
     if (bootRef.current) return bootRef.current;
 
-    const res = await fetch("/api/seesun/janus/bootstrap", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ lectureId, role: "MENTOR" }),
-    });
-
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      console.error("[MENTOR] bootstrap fail:", res.status, txt);
-      throw new Error(`bootstrap HTTP ${res.status}`);
+    let res;
+    try {
+      res = await apiClient.post(`/seesun/live/bootstrap/${uuid}`);
+    } catch (err) {
+      const status = err?.response?.status;
+      const body = err?.response?.data;
+      console.error("[MENTOR] bootstrap fail:", status, body ?? err.message);
+      throw err;
     }
 
-    const data = await res.json();
+    const data = res.data; // ✅ axios는 여기
+
     console.log("🔥 [MENTOR] BOOTSTRAP RESPONSE =", data);
 
-    const janusUrl = data?.janusUrl ?? data?.janus_url;
-    const roomId = Number(data?.roomId ?? data?.room_id);
+    const janusUrl = data.janusUrl;
+    const roomId = Number(data.roomId);
+    const name = data.displayName;
 
     if (!janusUrl) throw new Error("bootstrap 응답에 janusUrl이 없습니다.");
     if (!roomId) throw new Error("bootstrap 응답에 roomId가 없습니다.");
+    if (!name) throw new Error("bootstrap 응답에 displayName이 없습니다.");
 
-    bootRef.current = { janusUrl, roomId, raw: data };
-
-    // ✅ 채팅은 roomId로 고정
+    bootRef.current = { janusUrl, roomId, name, raw: data };
+    
+    setMentorName(name);
     setChatRoomId(roomId);
 
     return bootRef.current;
@@ -376,7 +378,7 @@ export default function LectureRealtimeMentor({ mentorName }) {
                     request: "join",
                     room: boot.roomId,
                     ptype: "publisher",
-                    display: `[MENTOR] ${mentorName}`,
+                    display: `[MENTOR] ${boot.name}`,
                   },
                 });
 
@@ -584,7 +586,7 @@ export default function LectureRealtimeMentor({ mentorName }) {
   useEffect(() => {
     if (!chatRoomId) return;
 
-    const url = `/api/seesun/janus/chat/stream?roomId=${chatRoomId}`;
+    const url = `/api/seesun/live/chat/stream?roomId=${chatRoomId}`;
     const evtSource = new EventSource(url, { withCredentials: true });
 
     const onChat = (e) => {

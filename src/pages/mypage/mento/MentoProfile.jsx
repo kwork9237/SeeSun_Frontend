@@ -131,8 +131,6 @@ const MentoProfile = () => {
     if (pwForm.newPassword.length < 8) {
         return alert("비밀번호는 최소 8자 이상이어야 합니다.");
     }
-    
-    const token = localStorage.getItem('accessToken');
 
     try {
       await apiClient.patch("/mypage/password", {

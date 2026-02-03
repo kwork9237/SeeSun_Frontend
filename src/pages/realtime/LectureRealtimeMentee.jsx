@@ -11,12 +11,10 @@ import ParticipantsPanel from "./components/ParticipantsPanel";
 import ChatPanel from "./components/ChatPanel";
 import ControlsBar from "./components/ControlsBar";
 import SessionGuard from "../../auth/SessionGuard";
+import apiClient from "../../api/apiClient";
 
 // menteeName 수정필요
-export default function LectureRealtimeMentee({ menteeName }) {
-  const { lectureId } = useParams();
-  const numericLectureId = Number(lectureId);
-
+export default function LectureRealtimeMentee() {
   const janusRef = useRef(null);
 
   const publisherDummyRef = useRef(null);
@@ -40,6 +38,10 @@ export default function LectureRealtimeMentee({ menteeName }) {
 
   // ✅ 채팅용 roomId (bootstrap에서 세팅)
   const [chatRoomId, setChatRoomId] = useState(null);
+  const [menteeName, setMenteeName] = useState("");
+  
+    // URL UUID
+    const { uuid } = useParams();
 
   // ---------------------------------
   // Chat send (MENTEE) - roomId 기준
@@ -58,7 +60,7 @@ export default function LectureRealtimeMentee({ menteeName }) {
       text,
     };
 
-    await fetch("/api/seesun/janus/chat/send", {
+    await fetch("/api/seesun/live/chat/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -74,32 +76,30 @@ export default function LectureRealtimeMentee({ menteeName }) {
   const fetchBootstrap = async () => {
     if (bootRef.current) return bootRef.current;
 
-    const res = await fetch("/api/seesun/janus/bootstrap", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        lectureId, // URL의 lectureId (강의 PK)
-        role: "MENTEE",
-      }),
-    });
-
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      throw new Error(`bootstrap HTTP ${res.status} ${txt}`);
+    let res;
+    try {
+      res = await apiClient.post(`/seesun/live/bootstrap/${uuid}`);
+    } catch (err) {
+      const status = err?.response?.status;
+      const body = err?.response?.data;
+      console.error("[MENTOR] bootstrap fail:", status, body ?? err.message);
+      throw err;
     }
 
-    const data = await res.json();
-    console.log("🔥 [MENTEE] BOOTSTRAP RESPONSE =", data);
+    const data = res.data; // ✅ axios는 여기
+
+    console.log("🔥 [MENTOR] BOOTSTRAP RESPONSE =", data);
 
     const janusUrl = data?.janusUrl ?? data?.janus_url;
     const roomId = Number(data?.roomId ?? data?.room_id);
+    const name = data?.displayName ?? data?.mentorDisplayName ?? "";
 
-    if (!janusUrl || !roomId) throw new Error("bootstrap 응답 누락(janusUrl/roomId)");
+    if (!janusUrl) throw new Error("bootstrap 응답에 janusUrl이 없습니다.");
+    if (!roomId) throw new Error("bootstrap 응답에 roomId가 없습니다.");
 
     bootRef.current = { janusUrl, roomId, raw: data };
-
-    // ✅ 채팅은 roomId로 고정
+    
+    setMenteeName(name);
     setChatRoomId(roomId);
 
     return bootRef.current;
@@ -540,7 +540,7 @@ export default function LectureRealtimeMentee({ menteeName }) {
       setSessionReady(false);
       startedRef.current = false;
     };
-  }, [lectureId, menteeName]);
+  }, [null, menteeName]); // 수정필요
 
   useEffect(() => {
     if (!sessionReady) return;
@@ -556,7 +556,7 @@ export default function LectureRealtimeMentee({ menteeName }) {
   useEffect(() => {
     if (!chatRoomId) return;
 
-    const url = `/api/seesun/janus/chat/stream?roomId=${chatRoomId}`;
+    const url = `/api/seesun/live/chat/stream?roomId=${chatRoomId}`;
     const evtSource = new EventSource(url, { withCredentials: true });
 
     const onChat = (e) => {
