@@ -42,6 +42,7 @@ export default function LectureRealtimeMentor() {
 
   // URL UUID
   const { uuid } = useParams();
+  const sseRef = useRef(null);
 
   // ---------------------------------
   // Chat
@@ -55,19 +56,20 @@ export default function LectureRealtimeMentor() {
 
     const msg = {
       roomId: rid, // ✅ roomId를 lectureId 자리에 넣어서 broadcast key 통일
-      sender: mentorName,
+      sender: mentorName || bootRef.current?.name || "ERROR",
       role: "mentor",
       text,
     };
 
-    await fetch("/api/seesun/live/chat/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(msg),
-    });
+    // await fetch("/api/seesun/live/chat/send", {
+    //   method: "POST",
+    //   headers: {"Content-Type" : "application/json"},
+    //   body: JSON.stringify(msg),
+    // });
 
-    // UI에 즉시 추가
-    setChatMessages((prev) => [...prev, msg]);
+    await apiClient.post("/seesun/live/chat/send", msg);
+
+    // setChatMessages((prev) => [...prev, msg]);
   };
 
   // ---------------------------------
@@ -134,7 +136,7 @@ export default function LectureRealtimeMentor() {
     if (!h) return;
 
     const rid = Number(roomId);
-    console.log("[MENTOR] listparticipants -> room", rid);
+    // console.log("[MENTOR] listparticipants -> room", rid);
 
     try {
       h.send({
@@ -146,7 +148,7 @@ export default function LectureRealtimeMentor() {
             res?.participants;
 
           if (Array.isArray(participants)) {
-            console.log("[MENTOR] listparticipants OK:", participants.length);
+            // console.log("[MENTOR] listparticipants OK:", participants.length);
             const list = participants.map((p) => ({ ...p, id: Number(p.id) }));
             setParticipants(list);
           } else {
@@ -586,28 +588,28 @@ export default function LectureRealtimeMentor() {
   useEffect(() => {
     if (!chatRoomId) return;
 
-    const url = `/api/seesun/live/chat/stream?roomId=${chatRoomId}`;
-    const evtSource = new EventSource(url, { withCredentials: true });
+    // 기존 연결 강제 종료
+    if (sseRef.current) {
+      sseRef.current.close();
+      sseRef.current = null;
+    }
 
-    const onChat = (e) => {
+    const es = new EventSource(`/api/seesun/live/chat/stream?roomId=${chatRoomId}`);
+    sseRef.current = es;
+
+    const handle = (e) => {
       try {
         const data = JSON.parse(e.data);
-        console.log("[SSE][MENTOR] RECEIVED:", data);
         setChatMessages((prev) => [...prev, data]);
-      } catch (err) {
-        console.error("[SSE][MENTOR] parse error:", err, e.data);
-      }
+      } catch {}
     };
 
-    evtSource.addEventListener("chat", onChat);
-
-    evtSource.onerror = (err) => {
-      console.warn("[SSE][MENTOR] error:", err);
-    };
+    es.onmessage = handle;
+    es.addEventListener("chat", handle);
 
     return () => {
-      evtSource.removeEventListener("chat", onChat);
-      evtSource.close();
+      es.close();
+      if (sseRef.current === es) sseRef.current = null;
     };
   }, [chatRoomId]);
 

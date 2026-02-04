@@ -60,12 +60,14 @@ export default function LectureRealtimeMentee() {
       text,
     };
 
-    await fetch("/api/seesun/live/chat/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(msg),
-    });
+    // await fetch("/api/seesun/live/chat/send", {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   credentials: "include",
+    //   body: JSON.stringify(msg),
+    // });
+
+    await apiClient.post("/seesun/live/chat/send", msg);
 
     // setChatMessages((prev) => [...prev, msg]);
   };
