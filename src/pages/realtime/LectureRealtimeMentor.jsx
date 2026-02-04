@@ -7,6 +7,7 @@ import ChatPanel from "./components/ChatPanel";
 import ControlsBar from "./components/ControlsBar";
 import SessionGuard from "../../auth/SessionGuard";
 import apiClient from "../../api/apiClient";
+import { useNavigate } from "react-router-dom";
 
 // mentorName 수정필요
 export default function LectureRealtimeMentor() {
@@ -42,7 +43,7 @@ export default function LectureRealtimeMentor() {
 
   // URL UUID
   const { uuid } = useParams();
-  const sseRef = useRef(null);
+  const navigate = useNavigate();
 
   // ---------------------------------
   // Chat
@@ -554,6 +555,10 @@ export default function LectureRealtimeMentor() {
     setIsSharing(false);
 
     startedRef.current = false;
+
+    // 세션 완전 종료 및 이동
+    apiClient.post(`/lectures/sessions/close/${uuid}`);
+    navigate("/mento/home");
   };
 
   // ---------------------------------
@@ -588,28 +593,36 @@ export default function LectureRealtimeMentor() {
   useEffect(() => {
     if (!chatRoomId) return;
 
-    // 기존 연결 강제 종료
-    if (sseRef.current) {
-      sseRef.current.close();
-      sseRef.current = null;
-    }
+    const es = new EventSource(`/api/seesun/live/chat/stream?roomId=${chatRoomId}`, {
+      withCredentials: true
+    });
 
-    const es = new EventSource(`/api/seesun/live/chat/stream?roomId=${chatRoomId}`);
-    sseRef.current = es;
-
-    const handle = (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        setChatMessages((prev) => [...prev, data]);
-      } catch {}
+    // 2. 통합 핸들러
+    const handleData = (e) => {
+      console.log(`🔔 [SSE 수신 - ${e.type}] raw:`, e.data); // 여기서 e.type이 "chat" 혹은 "ping"일 것임
+      if (e.type === 'chat') {
+        try {
+          const data = JSON.parse(e.data);
+          setChatMessages(prev => [...prev, data]);
+        } catch (err) {
+          console.error("JSON 파싱 에러:", err);
+        }
+      }
     };
 
-    es.onmessage = handle;
-    es.addEventListener("chat", handle);
+    // 3. ⭐ 핵심: 서버에서 .name()으로 보낸 것들을 각각 리스너로 등록
+    es.addEventListener("ping", (e) => console.log("📡 서버 연결 확인 (ping):", e.data));
+    es.addEventListener("chat", handleData); // 백엔드의 .name("chat")과 일치해야 함
+    
+    // 만약 서버에서 이름 없이 보내는 것도 있다면 대비
+    es.onmessage = handleData;
+
+    es.onopen = () => console.log("✅ SSE 통로 연결 성공! (readyState: 1)");
+    es.onerror = (err) => console.error("❌ SSE 연결 에러 발생:", err);
 
     return () => {
+      console.log("🔌 SSE 연결 종료");
       es.close();
-      if (sseRef.current === es) sseRef.current = null;
     };
   }, [chatRoomId]);
 

@@ -28,7 +28,7 @@ const MentoRequest = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/admin/pending');
+        const response = await axios.get('/api/admin/pending');
         console.log("멘토 신청 목록:", response.data); // 데이터 확인용 로그
         setRequests(response.data);
       } catch (error) {
@@ -44,7 +44,7 @@ const MentoRequest = () => {
 
     if (window.confirm(`회원번호 ${mbId}님의 멘토 신청을 승인하시겠습니까?`)) {
       try {
-        const response = await axios.post('http://localhost:8080/api/admin/approve', { reqId: reqId });
+        const response = await axios.post('/api/admin/approve', { reqId: reqId });
         
         if (response.data === "SUCCESS") {
             alert(`회원번호 ${mbId}님이 멘토로 승인되었습니다.`);
@@ -203,7 +203,7 @@ const MentoRequest = () => {
                         <td className="px-6 py-4 align-middle">
                           {req.fileId && req.fileId !== 0 && req.fileId !== '0' ? (
                             <a 
-                              href={`http://localhost:8080/api/file/download/${req.fileId}`} 
+                              href={`/api/file/download/${req.fileId}`} 
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="flex items-center p-2 border border-blue-200 rounded-lg bg-blue-50 hover:bg-blue-100 transition-all cursor-pointer no-underline w-fit"

@@ -558,28 +558,36 @@ export default function LectureRealtimeMentee() {
   useEffect(() => {
     if (!chatRoomId) return;
 
-    const url = `/api/seesun/live/chat/stream?roomId=${chatRoomId}`;
-    const evtSource = new EventSource(url, { withCredentials: true });
+    const es = new EventSource(`/api/seesun/live/chat/stream?roomId=${chatRoomId}`, {
+      withCredentials: true
+    });
 
-    const onChat = (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        console.log("[SSE][MENTEE] RECEIVED:", data);
-        setChatMessages((prev) => [...prev, data]);
-      } catch (err) {
-        console.error("[SSE][MENTEE] parse error:", err, e.data);
+    // 2. 통합 핸들러
+    const handleData = (e) => {
+      console.log(`🔔 [SSE 수신 - ${e.type}] raw:`, e.data); // 여기서 e.type이 "chat" 혹은 "ping"일 것임
+      if (e.type === 'chat') {
+        try {
+          const data = JSON.parse(e.data);
+          setChatMessages(prev => [...prev, data]);
+        } catch (err) {
+          console.error("JSON 파싱 에러:", err);
+        }
       }
     };
 
-    evtSource.addEventListener("chat", onChat);
+    // 3. ⭐ 핵심: 서버에서 .name()으로 보낸 것들을 각각 리스너로 등록
+    es.addEventListener("ping", (e) => console.log("📡 서버 연결 확인 (ping):", e.data));
+    es.addEventListener("chat", handleData); // 백엔드의 .name("chat")과 일치해야 함
+    
+    // 만약 서버에서 이름 없이 보내는 것도 있다면 대비
+    es.onmessage = handleData;
 
-    evtSource.onerror = () => {
-      console.warn("[SSE][MENTEE] error -> reconnect handled by browser");
-    };
+    es.onopen = () => console.log("✅ SSE 통로 연결 성공! (readyState: 1)");
+    es.onerror = (err) => console.error("❌ SSE 연결 에러 발생:", err);
 
     return () => {
-      evtSource.removeEventListener("chat", onChat);
-      evtSource.close();
+      console.log("🔌 SSE 연결 종료");
+      es.close();
     };
   }, [chatRoomId]);
 
@@ -633,18 +641,19 @@ export default function LectureRealtimeMentee() {
         }
         participantsPanel={<ParticipantsPanel participants={participants} />}
         chatPanel={<ChatPanel messages={chatMessages} onSend={handleSendMessage} />}
-        controlsBar={
-          <ControlsBar
-            camOn={false}
-            micOn={false}
-            screenSharing={false}
-            onToggleCam={() => {}}
-            onToggleMic={() => {}}
-            onStartShare={() => {}}
-            onStopShare={() => {}}
-            onEndSession={endSession}
-          />
-        }
+        // 컨트롤바 일부러 제거
+        // controlsBar={
+        //   <ControlsBar
+        //     camOn={false}
+        //     micOn={false}
+        //     screenSharing={false}
+        //     onToggleCam={() => {}}
+        //     onToggleMic={() => {}}
+        //     onStartShare={() => {}}
+        //     onStopShare={() => {}}
+        //     onEndSession={endSession}
+        //   />
+        // }
       />
     </SessionGuard>
   );
