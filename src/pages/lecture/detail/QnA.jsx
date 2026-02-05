@@ -9,7 +9,7 @@ const QnA = ({ leId, currentMemberId }) => {
   // 1. Q&A 목록 가져오기
   const fetchQnAs = async () => {
     try {
-      const response = await axios.get(`/api/lecture/qna/${leId}`);
+      const response = await axios.get(`/api/lectures/qna/${leId}`);
       setQnaList(response.data);
     } catch (error) {
       console.error("Q&A 로딩 실패:", error);
@@ -26,7 +26,7 @@ const QnA = ({ leId, currentMemberId }) => {
     if (!newQuestion.title || !newQuestion.content) return alert("내용을 입력해주세요.");
 
     try {
-      await axios.post("/api/lecture/qna", {
+      await axios.post("/api/lectures/qna", {
         ...newQuestion,
         leId: leId,
         mbId: currentMemberId, // 백엔드 DTO mbId가 Long이므로 숫자형태여야 함
