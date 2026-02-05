@@ -1,5 +1,5 @@
 import './App.css';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './components/layout/MainLayout';
 import MainPage from './pages/MainPage';
 import Login from './pages/member/Login';
@@ -9,7 +9,6 @@ import MyPage from './pages/mypage/MyPage';
 import LectureList from './pages/lecture/LectureList';
 import LectureDetail from './pages/lecture/LectureDetail';
 import LectureRealtime from './pages/realtime/LectureRealtime';
-import WebRTCTest from './pages/realtime/MentorRoom'
 
 // 회원가입
 import Join from './pages/member/join/JoinMain';
@@ -24,7 +23,6 @@ import SuccessPage from "./pages/lecture/detail/SuccessPage";
 import FailPage from "./pages/lecture/detail/FailPage";
 
 import MenteeLayout from './pages/mypage/Mentee';
-
 import MentoLayout from './pages/mypage/Mento';
 
 // 관리자
@@ -46,6 +44,16 @@ import ProtectedRoute from './auth/ProtectedRoute';
 // 디버그
 import DebugLivePage from './_debug/DebugLivePage';
 import DebugCreatePage from './_debug/DebugCreatePage';
+import RoleGuard from './auth/RoleGuard';
+import MenteeHome from './pages/mypage/mentee/MenteeHome';
+import MenteeClasses from './pages/mypage/mentee/MenteeClasses';
+import MenteeProfile from './pages/mypage/mentee/MenteeProfile';
+import MenteePayment from './pages/mypage/mentee/MenteePayments';
+import MentoHome from './pages/mypage/mento/MentoHome';
+import MentoClasses from './pages/mypage/mento/MentoClasses';
+import MentoManagement from './pages/mypage/mento/MentoManagement';
+import MentoProfile from './pages/mypage/mento/MentoProfile';
+import MentoPayment from './pages/mypage/mento/MentoPayments';
 
 function App() {
   return (
@@ -77,32 +85,58 @@ function App() {
               {/* 마이페이지 */}
               <Route path='/mypage' element={<MyPage/>}/>
 
-              {/* 강의 생성 (멘토) */}
-              <Route path='/lecture/create' element={<Create/>}/>
+              {/* 멘티만 접속 가능 */}
+              <Route element={<RoleGuard allow={["ROLE_MENTEE"]} fallback="/"/>}>
+                {/* 멘티 페이지 */}
+                <Route path="/mentee" element={<MenteeLayout />}>
+                  <Route index element={<Navigate to="home" replace />} />
+                  <Route path="home" element={<MenteeHome />} />
+                  <Route path="classes" element={<MenteeClasses />} />
+                  <Route path="profile" element={<MenteeProfile />} />
+                  <Route path="payments" element={<MenteePayment />} />
+                </Route>
 
-              {/* 멘티 페이지 */}
-              <Route path="/mentee/*" element={<MenteeLayout />}/>
+                {/* 멘티 강의페이지 */}
+                <Route path="/mentee/lecture/:uuid" element={<LectureRealtimeMentee />} />
+              </Route>
+
+              {/* 멘토만 접속 가능 */}
+              <Route element={<RoleGuard allow={["ROLE_MENTO"]} fallback="/"/>}>
+                {/* 멘토 페이지 */}
+                <Route path="/mento/*" element={<MentoLayout />}>
+                  <Route index element={<Navigate to="home" replace />} />
+                  <Route path="home" element={<MentoHome />} />
+                  <Route path="classes" element={<MentoClasses />} />
+                  <Route path="management" element={<MentoManagement />} />
+                  <Route path="profile" element={<MentoProfile />} />
+                  <Route path="payments" element={<MentoPayment />} />
+                </Route>
+
+                {/* 강의 생성 (멘토) */}
+                <Route path='/lecture/create' element={<Create/>}/>
+              </Route>
+
+              {/* 관리자만 접속 가능 */}
+              <Route element={<RoleGuard allow={["ROLE_ADMIN"]} fallback="/"/>}>
+                {/* 관리자 페이지 */}
+                <Route path='/mypage/mentorequests' element={<MentoRequest/>}/>
+                <Route path='/mypage/leturereport' element={<LectureReport/>}/>
+
+                {/* 회원 관리 라우트 */}
+                <Route path='/mypage/membermanage' element={<MemberManage/>}/>
+
+                {/* 건의사항 관리 라우트 */}
+                <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>
+                <Route path='/mypage/suggestonsmanage/:sgId' element={<SuggestionDetail/>}/>
+              </Route>
+
+              {/* 멘토 및 관리자 */}
+              <Route element={<RoleGuard allow={["ROLE_MENTO", "ROLE_ADMIN"]} fallback="/"/>}>
+                <Route path="/mentor/lecture/:uuid" element={<LectureRealtimeMentor />} />
+              </Route>
               
-              {/* 멘토 페이지 */}
-              <Route path="/mento/*" element={<MentoLayout />}/>
-
-              {/* 강의 실시간(WebRTC 테스트) */}
               <Route path='/lecture/realtime' element={<LectureRealtime/>}/>
-              <Route path="/mentor/lecture/:uuid" element={<LectureRealtimeMentor />} />
-              <Route path="/mentee/lecture/:uuid" element={<LectureRealtimeMentee />} />
-              <Route path='/webrtctest' element={<WebRTCTest/>}/>
 
-              {/* 관리자 페이지 */}
-              <Route path='/mypage/mentorequests' element={<MentoRequest/>}/>
-              <Route path='/mypage/leturereport' element={<LectureReport/>}/>
-
-              {/* 회원 관리 라우트 */}
-              <Route path='/mypage/membermanage' element={<MemberManage/>}/>
-
-              {/* 건의사항 관리 라우트 */}
-              <Route path='/mypage/suggestonsmanage' element={<SuggestionsManage/>}/>
-              <Route path='/mypage/suggestonsmanage/:sgId' element={<SuggestionDetail/>}/>
-              
               {/* 공지사항 라우트 */}
               <Route path='/mypage/notification' element={<Notification/>}/>
               <Route path="/mypage/notificationwrite" element={<NotificationWrite />}/>

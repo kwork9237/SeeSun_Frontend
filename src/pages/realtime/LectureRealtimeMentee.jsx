@@ -9,7 +9,7 @@ import LectureRealtimeLayout from "./LectureRealtimeLayout";
 import MentorMainVideo from "./components/MentorMainVideo";
 import ParticipantsPanel from "./components/ParticipantsPanel";
 import ChatPanel from "./components/ChatPanel";
-import ControlsBar from "./components/ControlsBar";
+// import ControlsBar from "./components/ControlsBar";
 import SessionGuard from "../../auth/SessionGuard";
 import apiClient from "../../api/apiClient";
 
@@ -39,9 +39,9 @@ export default function LectureRealtimeMentee() {
   // ✅ 채팅용 roomId (bootstrap에서 세팅)
   const [chatRoomId, setChatRoomId] = useState(null);
   const [menteeName, setMenteeName] = useState("");
-  
-    // URL UUID
-    const { uuid } = useParams();
+
+  // URL UUID
+  const { uuid } = useParams();
 
   // ---------------------------------
   // Chat send (MENTEE) - roomId 기준
@@ -100,7 +100,7 @@ export default function LectureRealtimeMentee() {
     if (!roomId) throw new Error("bootstrap 응답에 roomId가 없습니다.");
 
     bootRef.current = { janusUrl, roomId, raw: data };
-    
+
     setMenteeName(name);
     setChatRoomId(roomId);
 
@@ -559,16 +559,16 @@ export default function LectureRealtimeMentee() {
     if (!chatRoomId) return;
 
     const es = new EventSource(`/api/seesun/live/chat/stream?roomId=${chatRoomId}`, {
-      withCredentials: true
+      withCredentials: true,
     });
 
     // 2. 통합 핸들러
     const handleData = (e) => {
       console.log(`🔔 [SSE 수신 - ${e.type}] raw:`, e.data); // 여기서 e.type이 "chat" 혹은 "ping"일 것임
-      if (e.type === 'chat') {
+      if (e.type === "chat") {
         try {
           const data = JSON.parse(e.data);
-          setChatMessages(prev => [...prev, data]);
+          setChatMessages((prev) => [...prev, data]);
         } catch (err) {
           console.error("JSON 파싱 에러:", err);
         }
@@ -578,7 +578,7 @@ export default function LectureRealtimeMentee() {
     // 3. ⭐ 핵심: 서버에서 .name()으로 보낸 것들을 각각 리스너로 등록
     es.addEventListener("ping", (e) => console.log("📡 서버 연결 확인 (ping):", e.data));
     es.addEventListener("chat", handleData); // 백엔드의 .name("chat")과 일치해야 함
-    
+
     // 만약 서버에서 이름 없이 보내는 것도 있다면 대비
     es.onmessage = handleData;
 
