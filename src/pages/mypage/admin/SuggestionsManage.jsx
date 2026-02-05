@@ -75,7 +75,7 @@ const SuggestionsManage = () => {
             suggestions.map((item) => (
               <div
                 key={item.sgId}
-                onClick={() => navigate(`/mypage/suggestonsmanage/${item.sgId}`)}
+                onClick={() => navigate(`/mypage/admin/suggestonsmanage/${item.sgId}`)}
                 // [수정됨] grid-cols 수정 (상태 컬럼 제거에 맞춰서)
                 className="grid grid-cols-[80px_100px_1fr_120px_120px] py-4 px-6 items-center text-sm hover:bg-gray-50 transition-colors cursor-pointer text-center"
               >

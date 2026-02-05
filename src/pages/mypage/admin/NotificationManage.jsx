@@ -37,7 +37,7 @@ const NotificationManage = () => {
           </p>
         </div>
 
-        <Link to="/mypage/notificationwrite">
+        <Link to="/mypage/admin/notificationwrite">
           {/* [수정됨] 새 공지 작성 버튼 파란색으로 변경 */}
           <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm text-sm font-bold">
             <Edit3 />새 공지 작성
@@ -58,7 +58,7 @@ const NotificationManage = () => {
           {notices.map((notice) => (
             <div
               key={notice.ntId}
-              onClick={() => navigate(`/mypage/notification/${notice.ntId}`)}
+              onClick={() => navigate(`/mypage/admin/notification/${notice.ntId}`)}
               className="grid grid-cols-[80px_1fr_120px_120px_100px] py-4 px-6 items-center text-sm hover:bg-gray-50 transition-colors cursor-pointer text-center"
             >
               <div className="text-gray-400">{notice.ntId}</div>

@@ -82,7 +82,7 @@ const NotificationWrite = () => {
 
         <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
           <Link
-            to="/mypage/notification"
+            to="/mypage/admin/notification"
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-300 text-gray-600 font-medium text-sm hover:bg-gray-50 transition-colors"
           >
             <X />
