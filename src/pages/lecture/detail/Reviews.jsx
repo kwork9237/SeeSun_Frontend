@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Star, Send } from 'lucide-react';
 import axios from 'axios';
+import apiClient from '../../../api/apiClient';
 
 const Reviews = ({ leId }) => {
   const [reviews, setReviews] = useState([]);
@@ -13,8 +14,8 @@ const Reviews = ({ leId }) => {
   // 1. 후기 데이터 가져오기
   const fetchReviewData = useCallback(async () => {
     try {
-        const response = await axios.get(`http://localhost:8080/api/reviews`, {
-            params: { leId: leId, sort: sortType }
+        const response = await apiClient.get("/reviews", {
+          params: { leId, sort: sortType },
         });
         setReviews(response.data.list || []);
         setStats(response.data.stats || null);
@@ -29,9 +30,6 @@ const Reviews = ({ leId }) => {
   // 2. 후기 등록하기
   const handleSubmitReview = async () => {
     if (!comment.trim()) return alert("강의 후기 내용을 입력해주세요.");
-    
-    const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
-    if (!token) return alert("로그인이 필요한 서비스입니다.");
 
     try {
       const payload = { 
@@ -40,9 +38,7 @@ const Reviews = ({ leId }) => {
         content: comment 
       };
 
-      await axios.post('http://localhost:8080/api/reviews', payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await apiClient.post('/reviews', payload);
 
       alert("강의 후기가 등록되었습니다.");
       setComment('');

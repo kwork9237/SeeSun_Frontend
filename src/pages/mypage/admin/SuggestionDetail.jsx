@@ -38,7 +38,7 @@ const SuggestionDetail = () => {
 
   const fetchDetail = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/admin/suggestions/${sgId}`);
+      const response = await axios.get(`/api/admin/suggestions/${sgId}`);
       console.log("받아온 데이터:", response.data);
       setSuggestion(response.data);
     } catch (error) {
@@ -59,7 +59,7 @@ const SuggestionDetail = () => {
   const handleDelete = async () => {
     if (window.confirm('정말로 이 건의사항을 삭제하시겠습니까?')) {
       try {
-        await axios.delete(`http://localhost:8080/api/admin/suggestions/${sgId}`);
+        await axios.delete(`/api/admin/suggestions/${sgId}`);
         alert('삭제되었습니다.');
         navigate('/mypage/suggestonsmanage');
       } catch (error) {
@@ -77,7 +77,7 @@ const SuggestionDetail = () => {
 
     if (window.confirm("답변을 등록(수정)하시겠습니까?")) {
       try {
-        await axios.post('http://localhost:8080/api/admin/suggestions/answers', {
+        await axios.post('/api/admin/suggestions/answers', {
           sgId: sgId,
           content: answerText,
           mbId: 1

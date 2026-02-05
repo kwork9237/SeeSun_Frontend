@@ -38,7 +38,7 @@ const MemberManage = () => {
   const fetchMembers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8080/api/admin/members', {
+      const response = await axios.get('/api/admin/members', {
         params: { keyword: keyword } 
       });
       setMembers(response.data);

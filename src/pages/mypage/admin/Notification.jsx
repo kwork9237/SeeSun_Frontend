@@ -30,7 +30,7 @@ const Notification = () => {
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/admin/notices');
+        const response = await axios.get('/api/admin/notices');
         console.log('백엔드 응답 데이터:', response.data);
         setNotices(response.data);
       } catch (error) {

@@ -31,7 +31,7 @@ const NotificationEdit = () => {
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/admin/notices/${ntId}`);
+        const response = await axios.get(`/api/admin/notices/${ntId}`);
         setFormData({
             ntId: response.data.ntId,
             title: response.data.title,
@@ -66,7 +66,7 @@ const NotificationEdit = () => {
     }
 
     try {
-      await axios.put(`http://localhost:8080/api/admin/notices/${ntId}`, formData);
+      await axios.put(`/api/admin/notices/${ntId}`, formData);
       alert('공지사항이 수정되었습니다.');
       
       // [수정됨] 수정 완료 후 목록 페이지로 이동

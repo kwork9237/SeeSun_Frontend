@@ -31,7 +31,7 @@ const NotificationDetail = () => {
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/admin/notices/${ntId}`);
+        const response = await axios.get(`/api/admin/notices/${ntId}`);
         setNotice(response.data);
       } catch (error) {
         console.error('공지사항 상세 조회 실패:', error);
@@ -47,7 +47,7 @@ const NotificationDetail = () => {
   const handleDelete = async () => {
     if (window.confirm('정말로 이 공지사항을 삭제하시겠습니까?')) {
       try {
-        await axios.delete(`http://localhost:8080/api/admin/notices/${ntId}`);
+        await axios.delete(`/api/admin/notices/${ntId}`);
         alert('삭제되었습니다.');
         navigate('/mypage/notification'); // 삭제 후 목록으로 이동
       } catch (error) {

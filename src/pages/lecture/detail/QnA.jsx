@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import apiClient from "../../../api/apiClient";
 
 const QnA = ({ leId, currentMemberId }) => {
   const [qnaList, setQnaList] = useState([]);
@@ -9,7 +10,7 @@ const QnA = ({ leId, currentMemberId }) => {
   // 1. Q&A 목록 가져오기
   const fetchQnAs = async () => {
     try {
-      const response = await axios.get(`/api/lectures/qna/${leId}`);
+      const response = await apiClient.get(`/lectures/qna/${leId}`);
       setQnaList(response.data);
     } catch (error) {
       console.error("Q&A 로딩 실패:", error);
@@ -26,10 +27,10 @@ const QnA = ({ leId, currentMemberId }) => {
     if (!newQuestion.title || !newQuestion.content) return alert("내용을 입력해주세요.");
 
     try {
-      await axios.post("/api/lectures/qna", {
+      await apiClient.post("/lectures/qna", {
         ...newQuestion,
-        leId: leId,
-        mbId: currentMemberId, // 백엔드 DTO mbId가 Long이므로 숫자형태여야 함
+        leId,
+        mbId: currentMemberId,
       });
       alert("질문이 등록되었습니다.");
       setNewQuestion({ title: "", content: "" });

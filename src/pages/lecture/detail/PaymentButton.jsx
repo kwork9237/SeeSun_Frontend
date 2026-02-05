@@ -1,6 +1,7 @@
 import React, { useState } from "react"; // useState 추가
 import { loadTossPayments } from "@tosspayments/payment-sdk";
 import axios from "axios";
+import apiClient from "../../../api/apiClient";
 
 const clientKey = process.env.REACT_APP_TOSS_CLIENT_KEY; 
 
@@ -13,22 +14,13 @@ export default function PaymentButton({ lectureId, className, buttonText, disabl
     // ★ [방어막] 이미 로딩 중이거나, 정원이 꽉 찼으면 실행 안 함
     if (isLoading || disabled) return;
 
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      alert("로그인이 필요한 서비스입니다.");
-      return;
-    }
-
     try {
       setIsLoading(true); // ★ 클릭하자마자 로딩 시작 (중복 클릭 원천 봉쇄)
 
       // 2. 백엔드 주문 요청
-      const res = await axios.post("/api/orders/request", 
-        { le_id: lectureId },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      const res = await apiClient.post("/orders/request", {
+        le_id: lectureId,
+      });
 
       const { orderId, amount, orderName, customerName } = res.data;
 
