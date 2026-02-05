@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { ArrowLeft, Trash, Edit } from "lucide-react";
+import apiClient from "../../../api/apiClient";
 
 const NotificationDetail = () => {
   const { ntId } = useParams();
@@ -19,11 +19,11 @@ const NotificationDetail = () => {
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        const response = await axios.get(`/api/admin/notices/${ntId}`);
+        const response = await apiClient.get(`/admin/notices/${ntId}`);
         setNotice(response.data);
       } catch (error) {
         console.error("공지사항 상세 조회 실패:", error);
-        navigate("/mypage/notification");
+        navigate("/mypage/admin/notification");
       } finally {
         setLoading(false);
       }
@@ -35,9 +35,9 @@ const NotificationDetail = () => {
   const handleDelete = async () => {
     if (window.confirm("정말로 이 공지사항을 삭제하시겠습니까?")) {
       try {
-        await axios.delete(`/api/admin/notices/${ntId}`);
+        await apiClient.delete(`/admin/notices/${ntId}`);
         alert("삭제되었습니다.");
-        navigate("/mypage/notification"); // 삭제 후 목록으로 이동
+        navigate("/mypage/admin/notification"); // 삭제 후 목록으로 이동
       } catch (error) {
         console.error("삭제 실패:", error);
         alert("삭제 중 오류가 발생했습니다.");
@@ -47,7 +47,7 @@ const NotificationDetail = () => {
 
   // 수정 핸들러
   const handleEdit = () => {
-    navigate(`/mypage/notification/edit/${ntId}`);
+    navigate(`/mypage/admin/notification/edit/${ntId}`);
   };
 
   if (loading) return <div className="p-10 text-center text-gray-500">로딩 중...</div>;
@@ -62,7 +62,7 @@ const NotificationDetail = () => {
             <p className="text-sm text-gray-500 mt-2">공지사항 내용을 확인합니다.</p>
           </div>
           <button
-            onClick={() => navigate("/mypage/notification")}
+            onClick={() => navigate("/mypage/admin/notification")}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors shadow-sm text-sm font-bold"
           >
             <ArrowLeft /> 목록으로

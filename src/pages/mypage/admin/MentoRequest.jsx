@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { File, Clipboard, ChevronLeft, ChevronRight } from "lucide-react";
+import apiClient from "../../../api/apiClient";
 
 const MentoRequest = () => {
   const [requests, setRequests] = useState([]);
@@ -15,7 +15,7 @@ const MentoRequest = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const response = await axios.get("/api/admin/pending");
+        const response = await apiClient.get("/admin/pending");
         console.log("멘토 신청 목록:", response.data); // 데이터 확인용 로그
         setRequests(response.data);
       } catch (error) {
@@ -31,7 +31,7 @@ const MentoRequest = () => {
 
     if (window.confirm(`회원번호 ${mbId}님의 멘토 신청을 승인하시겠습니까?`)) {
       try {
-        const response = await axios.post("/api/admin/approve", { reqId: reqId });
+        const response = await apiClient.post("/admin/approve", { reqId });
 
         if (response.data === "SUCCESS") {
           alert(`회원번호 ${mbId}님이 멘토로 승인되었습니다.`);
@@ -47,6 +47,40 @@ const MentoRequest = () => {
         alert("서버 오류로 승인하지 못했습니다.");
       }
     }
+  };
+
+  // 파일 다운로드
+  const downloadFile = async (fileId) => {
+    const res = await apiClient.get(`/admin/file/download/${fileId}`, {
+      responseType: "blob",
+    });
+
+    // ✅ 파일명 뽑기 (서버가 filename/filename* 내려줌)
+    const cd = res.headers["content-disposition"] || "";
+    let filename = "download";
+
+    // filename*=UTF-8''...
+    const mStar = cd.match(/filename\*\=UTF-8''([^;]+)/i);
+    if (mStar?.[1]) {
+      filename = decodeURIComponent(mStar[1]);
+    } else {
+      // filename="..."
+      const m = cd.match(/filename="([^"]+)"/i);
+      if (m?.[1]) filename = m[1];
+    }
+
+    const blob = new Blob([res.data], {
+      type: res.headers["content-type"] || "application/octet-stream",
+    });
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
   };
 
   return (
@@ -108,18 +142,17 @@ const MentoRequest = () => {
 
                     {/* [수정됨] 첨부 파일 영역: fileId 확인 */}
                     <td className="px-6 py-4 align-middle">
-                      {req.fileId && req.fileId !== 0 && req.fileId !== "0" ? (
-                        <a
-                          href={`/api/file/download/${req.fileId}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center p-2 border border-blue-200 rounded-lg bg-blue-50 hover:bg-blue-100 transition-all cursor-pointer no-underline w-fit"
+                      {req.fileid && req.fileid !== 0 && req.fileid !== "0" ? (
+                        <button
+                          type="button"
+                          onClick={() => downloadFile(req.fileid)}
+                          className="flex items-center p-2 border border-blue-200 rounded-lg bg-blue-50 hover:bg-blue-100 transition-all cursor-pointer w-fit"
                         >
                           <File className="text-blue-500 mr-2" />
                           <span className="text-sm text-blue-700 font-medium underline decoration-blue-300 underline-offset-2">
                             첨부파일 보기
                           </span>
-                        </a>
+                        </button>
                       ) : (
                         <span className="text-sm text-gray-400 pl-2">-</span>
                       )}

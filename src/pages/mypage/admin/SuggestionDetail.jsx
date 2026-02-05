@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ArrowLeft, CheckCircle, Trash, Edit, Pen } from "lucide-react";
+import apiClient from "../../../api/apiClient";
 
 const SuggestionDetail = () => {
   const { sgId } = useParams();
@@ -23,13 +24,13 @@ const SuggestionDetail = () => {
 
   const fetchDetail = async () => {
     try {
-      const response = await axios.get(`/api/admin/suggestions/${sgId}`);
+      const response = await apiClient.get(`/admin/suggestions/${sgId}`);
       console.log("받아온 데이터:", response.data);
       setSuggestion(response.data);
     } catch (error) {
       console.error("건의사항 상세 조회 실패:", error);
       alert("존재하지 않거나 삭제된 게시글입니다.");
-      navigate("/mypage/suggestonsmanage");
+      navigate("/mypage/admin/suggestonsmanage");
     } finally {
       setLoading(false);
     }
@@ -44,9 +45,9 @@ const SuggestionDetail = () => {
   const handleDelete = async () => {
     if (window.confirm("정말로 이 건의사항을 삭제하시겠습니까?")) {
       try {
-        await axios.delete(`/api/admin/suggestions/${sgId}`);
+        await apiClient.delete(`/admin/suggestions/${sgId}`);
         alert("삭제되었습니다.");
-        navigate("/mypage/suggestonsmanage");
+        navigate("/mypage/admin/suggestonsmanage");
       } catch (error) {
         console.error("삭제 실패:", error);
         alert("삭제 중 오류가 발생했습니다.");
@@ -62,7 +63,7 @@ const SuggestionDetail = () => {
 
     if (window.confirm("답변을 등록(수정)하시겠습니까?")) {
       try {
-        await axios.post("/api/admin/suggestions/answers", {
+        await apiClient.post("/admin/suggestions/answers", {
           sgId: sgId,
           content: answerText,
           mbId: 1,

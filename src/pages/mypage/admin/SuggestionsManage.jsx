@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // useNavigate 추가
 import axios from "axios";
 import { FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import apiClient from "../../../api/apiClient";
 
 const SuggestionsManage = () => {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ const SuggestionsManage = () => {
   useEffect(() => {
     const fetchSuggestions = async () => {
       try {
-        const response = await axios.get("/api/admin/suggestions");
+        const response = await apiClient.get("/admin/suggestions");
         console.log("건의사항 데이터:", response.data);
         setSuggestions(response.data);
       } catch (error) {

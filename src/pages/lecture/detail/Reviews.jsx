@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Star, Send } from 'lucide-react';
-import axios from 'axios';
 import apiClient from '../../../api/apiClient';
 
 const Reviews = ({ leId }) => {

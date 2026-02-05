@@ -12,6 +12,7 @@ import Curriculum from '../lecture/detail/Curriculum';
 import Reviews from '../lecture/detail/Reviews';
 import QnA from '../lecture/detail/QnA';
 import EnrollCard from '../lecture/detail/EnrollCard';
+import apiClient from '../../api/apiClient';
 
 const LectureDetail = () => {
   const { id } = useParams();
@@ -36,7 +37,7 @@ const LectureDetail = () => {
   const getProfileImage = (img) => {
     if (!img) return `https://ui-avatars.com/api/?name=${lecture?.instructorName || 'Mentor'}&background=random`;
     if (img.startsWith('http')) return img;
-    return `http://localhost:8080/uploads/${img}`; 
+    return `/uploads/${img}`; 
   };
 
   // ✅ [수정 포인트] API 호출 로직 강화
@@ -44,12 +45,8 @@ const LectureDetail = () => {
     const fetchDetail = async () => {
       try {
         setLoading(true);
-        // 토큰이 필요한 경우를 대비해 헤더 설정
-        const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-        
-        const response = await axios.get(`http://localhost:8080/api/lectures/${id}`, {
-          headers: { Authorization: token ? `Bearer ${token}` : '' }
-        });
+
+        const response = await apiClient.get(`/lectures/${id}`);
 
         if (response.data) {
           setLecture(response.data);

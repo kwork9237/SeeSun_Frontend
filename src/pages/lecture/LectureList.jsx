@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import MainHeader from '../../components/layout/MainHeader';
 import LectureCard from '../../components/common/LectureCard';
+import apiClient from '../../api/apiClient';
 
 const LectureList = () => {
   // =================================================================
@@ -45,14 +46,8 @@ const LectureList = () => {
       if (selectedTags.length > 0) params.tags = selectedTags.join(',');
       params.sortBy = sortBy;
       
-      // ✅ 토큰 키 이름 통합 확인 (accessToken 권장)
-      const token = localStorage.getItem('accessToken') || localStorage.getItem('token'); 
-
-      const response = await axios.get('http://localhost:8080/api/lectures', { 
+      const response = await apiClient.get("/lectures", {
         params,
-        headers: {
-          Authorization: token ? `Bearer ${token}` : ''
-        }
       });
       
       // 데이터가 없을 경우 빈 배열 처리

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Save, X } from "lucide-react";
+import apiClient from "../../../api/apiClient";
 
 const NotificationWrite = () => {
   const navigate = useNavigate();
@@ -28,9 +29,9 @@ const NotificationWrite = () => {
       return;
     }
     try {
-      await axios.post("/api/admin/notices", formData);
+      await apiClient.post("/admin/notices", formData);
       alert("공지사항이 등록되었습니다.");
-      navigate("/mypage/notification");
+      navigate("/mypage/admin/notification");
     } catch (error) {
       console.error("공지사항 등록 실패:", error);
       alert("등록 중 오류가 발생했습니다.");

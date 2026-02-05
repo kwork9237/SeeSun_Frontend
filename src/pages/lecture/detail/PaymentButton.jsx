@@ -1,6 +1,5 @@
 import React, { useState } from "react"; // useState 추가
 import { loadTossPayments } from "@tosspayments/payment-sdk";
-import axios from "axios";
 import apiClient from "../../../api/apiClient";
 
 const clientKey = process.env.REACT_APP_TOSS_CLIENT_KEY; 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, GripVertical, Calendar, Clock, Users, AlertCircle } from "lucide-react";
+import { Trash2, GripVertical, Calendar, Clock, Users, AlertCircle } from "lucide-react";
 import apiClient from '../../../api/apiClient';
 
 const Create = () => {
@@ -90,7 +90,7 @@ const Create = () => {
       };
 
       // 전역 처리에 따른 axios post 변경
-      const response = await apiClient.post('/lectures', payload);
+      await apiClient.post('/lectures', payload);
 
       alert(`강의가 생성되었습니다!`);
       window.location.reload();

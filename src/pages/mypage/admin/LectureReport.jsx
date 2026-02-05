@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import apiClient from "../../../api/apiClient";
 
 const LectureReport = () => {
   const [reports, setReports] = useState([]);
@@ -8,7 +8,7 @@ const LectureReport = () => {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const response = await axios.get("/api/admin/reports");
+        const response = await apiClient.get("/admin/reports");
         setReports(response.data);
       } catch (error) {
         console.error("강의 신고 목록 조회 실패:", error);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import apiClient from "../../../api/apiClient";
 
 const MemberManage = () => {
   const [members, setMembers] = useState([]);
@@ -41,8 +41,8 @@ const MemberManage = () => {
   const fetchMembers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/api/admin/members", {
-        params: { keyword: keyword },
+      const response = await apiClient.get("/admin/members", {
+        params: { keyword },
       });
       setMembers(response.data);
     } catch (error) {

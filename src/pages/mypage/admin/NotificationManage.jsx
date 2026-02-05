@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { Bell, ChevronLeft, ChevronRight, Edit3 } from "lucide-react";
+import apiClient from "../../../api/apiClient";
 
 const NotificationManage = () => {
   const [notices, setNotices] = useState([]);
@@ -17,7 +17,7 @@ const NotificationManage = () => {
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        const response = await axios.get("/api/admin/notices");
+        const response = await apiClient.get("/admin/notices");
         console.log("백엔드 응답 데이터:", response.data);
         setNotices(response.data);
       } catch (error) {

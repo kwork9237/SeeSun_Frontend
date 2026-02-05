@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import { ArrowLeft, Save, X } from "lucide-react";
+import apiClient from "../../../api/apiClient";
 
 const NotificationEdit = () => {
   const { ntId } = useParams();
@@ -19,7 +19,7 @@ const NotificationEdit = () => {
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        const response = await axios.get(`/api/admin/notices/${ntId}`);
+        const response = await apiClient.get(`/admin/notices/${ntId}`);
         setFormData({
           ntId: response.data.ntId,
           title: response.data.title,
@@ -54,11 +54,11 @@ const NotificationEdit = () => {
     }
 
     try {
-      await axios.put(`/api/admin/notices/${ntId}`, formData);
+      await apiClient.put(`/admin/notices/${ntId}`, formData);
       alert("공지사항이 수정되었습니다.");
 
       // [수정됨] 수정 완료 후 목록 페이지로 이동
-      navigate("/mypage/notification");
+      navigate("/mypage/admin/notification");
     } catch (error) {
       console.error("공지사항 수정 실패:", error);
       alert("수정 중 오류가 발생했습니다.");
@@ -76,7 +76,7 @@ const NotificationEdit = () => {
           <p className="text-sm text-gray-500 mt-2">등록된 공지사항의 내용을 수정합니다.</p>
         </div>
         <button
-          onClick={() => navigate("/mypage/notification")}
+          onClick={() => navigate("/mypage/admin/notification")}
           className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors shadow-sm text-sm font-bold"
         >
           <ArrowLeft /> 목록으로
