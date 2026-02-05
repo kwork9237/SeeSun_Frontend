@@ -104,16 +104,16 @@ const Mentee = () => {
         {/* 메뉴 리스트 (경로 수정됨) */}
         <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
           <MenuGroup label="대시보드">
-            <SidebarItem to="/mentee/home" icon={<Home size={18} />} label="홈" />
+            <SidebarItem to="home" icon={<Home size={18} />} label="홈" />
           </MenuGroup>
 
           <MenuGroup label="강의">
-            <SidebarItem to="/mentee/classes" icon={<BookOpen size={18} />} label="내 강의실" />
+            <SidebarItem to="classes" icon={<BookOpen size={18} />} label="내 강의실" />
           </MenuGroup>
 
           <MenuGroup label="회원 설정">
-            <SidebarItem to="/mentee/profile" icon={<User size={18} />} label="프로필 설정" />
-            <SidebarItem to="/mentee/payments" icon={<CreditCard size={18} />} label="결제 내역" />
+            <SidebarItem to="profile" icon={<User size={18} />} label="프로필 설정" />
+            <SidebarItem to="payments" icon={<CreditCard size={18} />} label="결제 내역" />
           </MenuGroup>
         </nav>
 

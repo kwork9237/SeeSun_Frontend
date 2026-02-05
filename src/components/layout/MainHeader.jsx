@@ -92,12 +92,12 @@ const MainHeader = () => {
             </>
           ) : (
             <>
-              <Link to="/Join">
+              <Link to="/join">
                 <Button variant="primary" size="small">
                   회원가입
                 </Button>
               </Link>
-              <Link to="/Login">
+              <Link to="/login">
                 <Button variant="ghost" size="small">
                   로그인
                 </Button>

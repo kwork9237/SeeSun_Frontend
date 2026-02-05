@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../../api/apiClient';
 
-const MentoClasses = () => {
+const MenteeClasses = () => {
   const navigate = useNavigate();
   
   const [lectures, setLectures] = useState([]);
@@ -170,4 +169,4 @@ const MentoClasses = () => {
   );
 };
 
-export default MentoClasses;
+export default MenteeClasses;

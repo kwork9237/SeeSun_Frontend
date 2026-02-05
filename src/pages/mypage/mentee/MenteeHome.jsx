@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, ChevronRight, Video, Star, Search, Calendar, BookOpen 
@@ -203,7 +202,6 @@ const MenteeHome = () => {
                 </div>
                 
                 {/* 강의실 입장 버튼 */}
-                {/* 아까 이야기한 대로, 여기서 onClick에 navigate(`/classroom/${schedule.leId}`) 추가 가능 */}
                 <button 
                   onClick={() => handleEnterLectureRoom(schedule.leId)}
                   className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-600 transition-colors shadow-sm">

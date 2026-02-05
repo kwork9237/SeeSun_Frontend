@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, ChevronRight, Video, Star, Plus, Calendar, BookOpen, Users 
@@ -43,8 +42,7 @@ const MentoManagement = () => {
       try {
         setLoading(true); // 로딩 시작
         
-        // 3. 멘토용 홈 데이터 요청 (GET /api/mento/home)
-        // 헤더에 토큰을 담아서 보냄 -> 백엔드에서 토큰으로 멘토 ID 식별
+        // 멘토용 홈 데이터 요청 (GET /api/mento/home)
         const res = await apiClient.get('/mento/home');
         
         console.log("✅ 멘토 홈 데이터:", res.data); 
