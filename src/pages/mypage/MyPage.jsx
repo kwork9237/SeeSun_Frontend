@@ -1,11 +1,7 @@
-// 마이페이지 메인화면
+import { Outlet } from "react-router-dom";
 
 const MyPage = () => {
-    return (
-        <div>
-
-        </div>
-    );
-}
+  return <Outlet />;
+};
 
 export default MyPage;

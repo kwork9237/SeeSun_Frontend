@@ -1,22 +1,33 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import MainFooter from "./MainFooter";
 import MainHeader from "./MainHeader";
+import SimpleFooter from "./SimpleFooter";
 
 const MainLayout = () => {
-    // 주요 레이아웃 출력입니다.
+  const location = useLocation();
 
-    return (
-        <div>
-            {/* 메인 헤더 */}
-            <MainHeader/>
+  // ▼ SimpleFooter를 사용할 경로
+  const simpleFooterPaths = ["/mypage", "/login", "/join", "/mento", "/mentee"];
+  const showSimpleFooter = simpleFooterPaths.some((path) => location.pathname.startsWith(path));
 
-            {/* 페이지 항목 출력 */}
-            <Outlet/>
+  // ▼ 실시간 강의 페이지 판별
+  const isRealtimePage = location.pathname.startsWith("/realtime");
 
-            {/* 메인 푸터 */}
-            <MainFooter/>
-        </div>
-    );
-}
+  return (
+    <div className="flex flex-col min-h-screen">
+      {/* ▼ 실시간 강의 페이지에서는 헤더 숨기기 */}
+      {!isRealtimePage && <MainHeader />}
+
+      {/* 페이지 항목 출력 (flex-1을 주면 남은 공간을 차지합니다) */}
+      {/* 26 02 01 상단 헤더 묻힘 현상 수정 */}
+      <main className={`flex-1 ${isRealtimePage ? "mt-0" : "pt-16"}`}>
+        <Outlet />
+      </main>
+
+      {/* ▼ 실시간 강의 페이지에서는 푸터도 숨김 */}
+      {!isRealtimePage && (showSimpleFooter ? <SimpleFooter /> : <MainFooter />)}
+    </div>
+  );
+};
 
 export default MainLayout;
