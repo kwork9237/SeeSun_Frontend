@@ -146,7 +146,7 @@ function App() {
               </Route>
               
               {/* 실시간 강의 */}
-              <Route path='/lecture/realtime' element={<LectureRealtime/>}/>
+              {/* <Route path='/lecture/realtime' element={<LectureRealtime/>}/> */}
             </Route>
           </Route>
         </Routes>

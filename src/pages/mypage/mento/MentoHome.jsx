@@ -38,7 +38,7 @@ const MentoHome = () => {
       try {
         // 3. API 요청 (헤더에 토큰 포함)
         // 백엔드 컨트롤러: /api/mentee/home (멘티용 홈 데이터)
-        const response = await apiClient.get("mento/home");
+        const response = await apiClient.get("mentee/home");
 
         // 4. 받아온 데이터 확인 및 상태 업데이트
         console.log("멘티 데이터:", response.data);

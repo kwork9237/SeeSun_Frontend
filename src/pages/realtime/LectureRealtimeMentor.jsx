@@ -463,6 +463,8 @@ export default function LectureRealtimeMentor() {
 
         janusRef.current = janus;
       });
+
+      apiClient.post(`/lectures/sessions/start/${uuid}`);
     } catch (e) {
       console.error("[MENTOR] startSession failed:", e);
       startedRef.current = false;
