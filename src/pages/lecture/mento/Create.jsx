@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // 1. 이동을 위한 useNavigate 임포트
 import { Trash2, GripVertical, Calendar, Clock, Users, AlertCircle } from "lucide-react";
 import apiClient from '../../../api/apiClient';
 
 const Create = () => {
+  const navigate = useNavigate(); // 2. navigate 함수 선언
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -67,7 +69,7 @@ const Create = () => {
     setStep(prev => prev - 1);
   };
 
-  // ✅ 수정된 결제 요청 함수
+  // ✅ 강의 생성 및 마이페이지 이동 함수
   const handleCreateLecture = async () => {
     if (!validateStep()) return;
     
@@ -89,11 +91,14 @@ const Create = () => {
         price: parseInt(formData.price)
       };
 
-      // 전역 처리에 따른 axios post 변경
+      // API 호출
       await apiClient.post('/lectures', payload);
 
-      alert(`강의가 생성되었습니다!`);
-      window.location.reload();
+      alert(`강의가 성공적으로 생성되었습니다! 마이페이지로 이동합니다.`);
+      
+      // ✅ [중요] 새로고침 대신 마이페이지로 경로 이동
+      navigate('/mypage'); 
+
     } catch (error) {
       console.error('강의 생성 실패:', error);
       alert(error.response?.status === 403 ? '권한이 없습니다 (멘토 계정 확인)' : '강의 생성에 실패했습니다.');
@@ -140,7 +145,8 @@ const Create = () => {
   );
 };
 
-// --- Step 1: 강의 정보 ---
+// --- 하위 컴포넌트들 (기존과 동일) ---
+
 const BasicInfo = ({ data, setData, errors }) => (
   <div className="space-y-6">
     <h2 className="text-2xl font-black text-gray-900 mb-8">Step 1. 강의 정보입력</h2>
@@ -187,7 +193,6 @@ const BasicInfo = ({ data, setData, errors }) => (
   </div>
 );
 
-// --- Step 2: 커리큘럼 ---
 const Curriculum = ({ data, updateData, errors }) => {
   const addSection = () => updateData({ sections: [...data.sections, { id: crypto.randomUUID(), title: `Section ${data.sections.length + 1}`, lessons: [{ id: crypto.randomUUID(), title: '', duration: '50' }] }] });
   const removeSection = (id) => updateData({ sections: data.sections.filter(s => s.id !== id) });
@@ -227,7 +232,6 @@ const Curriculum = ({ data, updateData, errors }) => {
   );
 };
 
-// --- Step 3: 강의 스케쥴 & 가격 설정 ---
 const Schedule = ({ data, updateData, errors }) => {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   
@@ -317,7 +321,6 @@ const Schedule = ({ data, updateData, errors }) => {
   );
 };
 
-// --- Step 4: Review ---
 const Review = ({ data }) => {
   const totalWeeks = data.sections.length;
   const totalLessons = data.sections.reduce((acc, s) => acc + s.lessons.length, 0);
@@ -327,7 +330,6 @@ const Review = ({ data }) => {
       <h2 className="text-2xl font-black text-gray-900 mb-2">강의 정보 확인</h2>
       <p className="text-sm text-gray-500 mb-8">마지막으로 입력하신 정보를 확인해주세요.</p>
 
-      {/* 1. Course Details */}
       <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4 text-orange-600">
           <Calendar size={18} />
@@ -339,7 +341,6 @@ const Review = ({ data }) => {
         </div>
       </div>
 
-      {/* 2. Curriculum Summary */}
       <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-6 text-orange-600">
           <GripVertical size={18} />
@@ -367,7 +368,6 @@ const Review = ({ data }) => {
         </div>
       </div>
 
-      {/* 3. Schedule */}
       <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4 text-orange-600">
           <Clock size={18} />
@@ -379,7 +379,6 @@ const Review = ({ data }) => {
         </div>
       </div>
 
-      {/* 4. Total Price */}
       <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm flex justify-between items-center">
         <div className="flex items-center gap-2 text-orange-600">
           <span className="text-lg font-bold">$</span>
