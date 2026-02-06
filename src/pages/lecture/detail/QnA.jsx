@@ -5,149 +5,122 @@ const QnA = ({ leId, currentMemberId }) => {
   const [qnaList, setQnaList] = useState([]);
   const [isWriting, setIsWriting] = useState(false);
   const [newQuestion, setNewQuestion] = useState({ title: "", content: "" });
+  const [answerTexts, setAnswerTexts] = useState({});
 
-  // 1. Q&A 목록 가져오기
   const fetchQnAs = async () => {
     try {
+      // ★ /api 제거: apiClient에 이미 설정되어 있음
       const response = await apiClient.get(`/lectures/qna/${leId}`);
-      // 백엔드 데이터가 정상적으로 들어오는지 확인용 (나중에 지우셔도 됩니다)
-      console.log("Q&A Data:", response.data);
       setQnaList(response.data);
     } catch (error) {
-      console.error("Q&A 로딩 실패:", error);
+      console.error("로딩 실패:", error);
     }
   };
 
-  useEffect(() => {
-    if (leId) fetchQnAs();
-  }, [leId]);
+  useEffect(() => { if (leId) fetchQnAs(); }, [leId]);
 
-  // 2. 질문 등록 처리
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newQuestion.title || !newQuestion.content) return alert("내용을 입력해주세요.");
-
     try {
-      await apiClient.post("/lectures/qna", {
-        ...newQuestion,
-        leId,
-        mbId: currentMemberId,
+      // ★ /api 제거
+      await apiClient.post("/lectures/qna", { 
+        ...newQuestion, le_id: leId, mb_id: currentMemberId 
       });
-      alert("질문이 등록되었습니다.");
-      setNewQuestion({ title: "", content: "" });
+      alert("질문 등록 완료");
       setIsWriting(false);
+      setNewQuestion({ title: "", content: "" }); // 입력창 초기화
       fetchQnAs();
-    } catch (error) {
-      console.error("등록 에러:", error);
-      alert("질문 등록에 실패했습니다.");
+    } catch (error) { 
+      console.error("등록 실패 상세:", error.response);
+      alert("질문 등록에 실패했습니다."); 
     }
   };
 
-  // 날짜 포맷팅 함수 (1970년 방지용)
+  const handleAnswerSubmit = async (qnaId) => {
+    const text = answerTexts[qnaId];
+    if (!text?.trim()) return alert("내용을 입력해주세요.");
+    try {
+      // ★ /api 제거
+      await apiClient.put("/lectures/qna/answer", {
+        qna_id: qnaId,
+        answer: text,
+        ans_mb_id: currentMemberId
+      });
+      alert("답변 등록 완료");
+      setAnswerTexts({ ...answerTexts, [qnaId]: "" });
+      fetchQnAs();
+    } catch (error) { 
+      console.error("답변 실패 상세 (403 확인용):", error.response);
+      alert("답변 권한이 없거나 등록에 실패했습니다."); 
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return "날짜 정보 없음";
     const date = new Date(dateString);
-    // 유효하지 않은 날짜(Invalid Date) 체크
-    return isNaN(date.getTime()) ? "날짜 정보 없음" : date.toLocaleDateString();
+    return `${date.getFullYear()}. ${date.getMonth() + 1}. ${date.getDate()}.`;
   };
 
-  // --- 인라인 스타일 ---
   const styles = {
     container: { maxWidth: "850px", margin: "30px auto", fontFamily: '"Inter", sans-serif' },
     header: { display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #eee", paddingBottom: "15px", marginBottom: "20px" },
     writeBtn: { backgroundColor: "#FF6B35", color: "white", border: "none", borderRadius: "4px", padding: "8px 16px", cursor: "pointer", fontWeight: "bold" },
-    formBox: { background: "#fff", padding: "20px", border: "1px solid #ddd", borderRadius: "8px", marginBottom: "20px", display: "flex", flexDirection: "column", gap: "10px" },
-    input: { padding: "10px", border: "1px solid #ddd", borderRadius: "4px" },
-    textarea: { padding: "10px", border: "1px solid #ddd", borderRadius: "4px", height: "100px", resize: "none" },
     questionCard: { backgroundColor: "#F8F9FA", padding: "25px", borderRadius: "12px", marginBottom: "10px", border: "1px solid #E9ECEF" },
     answerCard: { backgroundColor: "#FFF5F2", padding: "25px", borderRadius: "12px", marginLeft: "50px", marginBottom: "30px", borderLeft: "5px solid #FF6B35" },
-    profileRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" },
-    userInfo: { display: "flex", alignItems: "center", gap: "12px" },
-    avatar: { width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "#CED4DA" },
-    mentorAvatar: { width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "#FF6B35" },
-    nickname: { fontWeight: "bold", fontSize: "15px" },
-    date: { color: "#ADB5BD", fontSize: "13px" },
-    mentorBadge: { backgroundColor: "#FF6B35", color: "white", fontSize: "10px", padding: "2px 8px", borderRadius: "20px", marginLeft: "8px" },
-    contentText: { margin: 0, color: "#495057", lineHeight: "1.6", fontSize: "15px" },
+    answerInputBox: { marginLeft: "50px", marginTop: "10px", padding: "15px", border: "1px dashed #FF6B35", borderRadius: "8px", background: "#fff9f7" },
+    textarea: { width: "100%", padding: "10px", border: "1px solid #ddd", borderRadius: "4px", height: "100px", resize: "none", boxSizing: "border-box" },
+    ansSubmitBtn: { backgroundColor: "#333", color: "white", border: "none", padding: "8px 15px", borderRadius: "4px", cursor: "pointer", marginTop: "10px", float: "right" }
   };
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h2 style={{ fontSize: "24px", color: "#212529" }}>Q&A</h2>
-        <button style={styles.writeBtn} onClick={() => setIsWriting(!isWriting)}>
-          {isWriting ? "취소" : "Q&A 작성"}
-        </button>
+        <h2 style={{ fontSize: "24px" }}>Q&A</h2>
+        <button style={styles.writeBtn} onClick={() => setIsWriting(!isWriting)}>{isWriting ? "취소" : "Q&A 작성"}</button>
       </div>
 
       {isWriting && (
-        <form style={styles.formBox} onSubmit={handleSubmit}>
-          <input
-            style={styles.input}
-            type="text"
-            placeholder="궁금한 점을 적어주세요."
-            value={newQuestion.title}
-            onChange={(e) => setNewQuestion({ ...newQuestion, title: e.target.value })}
-          />
-          <textarea
-            style={styles.textarea}
-            placeholder="내용을 상세히 적어주시면 멘토가 더 정확한 답변을 드릴 수 있습니다."
-            value={newQuestion.content}
-            onChange={(e) => setNewQuestion({ ...newQuestion, content: e.target.value })}
-          />
-          <button type="submit" style={{ ...styles.writeBtn, width: "100px", alignSelf: "flex-end" }}>
-            등록하기
-          </button>
+        <form style={{ marginBottom: "20px" }} onSubmit={handleSubmit}>
+          <input style={{ width: "100%", padding: "10px", marginBottom: "10px" }} type="text" placeholder="제목" value={newQuestion.title} onChange={(e) => setNewQuestion({ ...newQuestion, title: e.target.value })} />
+          <textarea style={styles.textarea} placeholder="질문을 입력하세요" value={newQuestion.content} onChange={(e) => setNewQuestion({ ...newQuestion, content: e.target.value })} />
+          <button type="submit" style={styles.writeBtn}>등록하기</button>
         </form>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-        {qnaList.length > 0 ? (
-          qnaList.map((qna) => (
-            <div key={qna.qnaId}>
-              {/* 멘티 질문 카드 */}
-              <div style={styles.questionCard}>
-                <div style={styles.profileRow}>
-                  <div style={styles.userInfo}>
-                    <div style={styles.avatar}></div>
-                    {/* DTO의 authorNickname 필드 사용 */}
-                    <span style={styles.nickname}>{qna.authorNickname || "수강생"}</span>
-                  </div>
-                  {/* DTO의 createdAt 필드 사용 */}
-                  <span style={styles.date}>{formatDate(qna.createdAt)}</span>
-                </div>
-                <h4 style={{ margin: "0 0 10px 0", color: "#212529" }}>{qna.title}</h4>
-                <p style={styles.contentText}>{qna.content}</p>
-              </div>
+      {qnaList.map((qna) => {
+        const isMentor = String(currentMemberId) === String(qna.mentor_id);
 
-              {/* 멘토 답변 카드 */}
-              {qna.answer && (
-                <div style={styles.answerCard}>
-                  <div style={styles.profileRow}>
-                    <div style={styles.userInfo}>
-                      <div style={styles.mentorAvatar}></div>
-                      <span style={styles.nickname}>
-                        {/* 멘토 닉네임 필드가 없다면 임시로 "멘토" 표시 */}
-                        {qna.mentorNickname || "담당 멘토"}
-                        <span style={styles.mentorBadge}>Mentor</span>
-                      </span>
-                    </div>
-                    <span style={styles.date}>
-                      {/* DTO의 modified_at(언더바 주의!) 필드 사용 */}
-                      {formatDate(qna.modified_at || qna.createdAt)}
-                    </span>
-                  </div>
-                  <p style={styles.contentText}>{qna.answer}</p>
-                </div>
-              )}
+        return (
+          <div key={qna.qna_id}>
+            <div style={styles.questionCard}>
+              <div style={{ marginBottom: "10px", fontSize: "14px" }}>{qna.authorNickname} | {formatDate(qna.created_at)}</div>
+              <h4>{qna.title}</h4>
+              <p>{qna.content}</p>
             </div>
-          ))
-        ) : (
-          <div style={{ textAlign: "center", padding: "50px", color: "#ADB5BD" }}>
-            아직 질문이 없습니다. 질문을 남겨보세요!
+
+            {qna.answer ? (
+              <div style={styles.answerCard}>
+                <div style={{ fontWeight: "bold", color: "#FF6B35" }}>Mentor 답변</div>
+                <p>{qna.answer}</p>
+              </div>
+            ) : (
+              isMentor && (
+                <div style={styles.answerInputBox}>
+                  <textarea 
+                    style={styles.textarea}
+                    placeholder="멘토님, 답변을 입력하세요."
+                    value={answerTexts[qna.qna_id] || ""}
+                    onChange={(e) => setAnswerTexts({ ...answerTexts, [qna.qna_id]: e.target.value })}
+                  />
+                  <div style={{ height: "40px" }}>
+                    <button style={styles.ansSubmitBtn} onClick={() => handleAnswerSubmit(qna.qna_id)}>답변 등록</button>
+                  </div>
+                </div>
+              )
+            )}
           </div>
-        )}
-      </div>
+        );
+      })}
     </div>
   );
 };
