@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Edit, Lock, X, AlertCircle } from "lucide-react";
+// [수정] 아이콘 추가 (Award, Upload, CheckCircle)
+import { User, Edit, Lock, X, AlertCircle, Award, Upload, CheckCircle } from "lucide-react";
 import { useAuth } from "../../../auth/AuthContext";
 import apiClient from "../../../api/apiClient";
+import axios from 'axios'; // axios import 필수!
 
 const Profile = () => {
   const navigate = useNavigate();
   
-  const { role } = useAuth();
+  const { role, logout } = useAuth(); // logout 함수도 필요 시 사용
   const roleLabel = role === "ROLE_MENTOR" ? "멘토" : "멘티";
 
   const [userInfo, setUserInfo] = useState(null);
@@ -16,10 +18,16 @@ const Profile = () => {
   // --- 모달 상태 ---
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPwModalOpen, setIsPwModalOpen] = useState(false);
+  const [isMentoModalOpen, setIsMentoModalOpen] = useState(false); // [추가] 멘토 모달
 
   // --- 폼 데이터 ---
   const [editForm, setEditForm] = useState({ name: "", nickname: "", phone: "", password: "" });
   const [pwForm, setPwForm] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
+
+  // --- [추가] 멘토 신청용 데이터 ---
+  const [mentoDetails, setMentoDetails] = useState("");
+  const [mentoFile, setMentoFile] = useState(null);
+  const [mentoLoading, setMentoLoading] = useState(false);
 
   // --- 유효성 검사 에러 메시지 상태 ---
   const [nicknameError, setNicknameError] = useState("");
@@ -28,8 +36,6 @@ const Profile = () => {
   const fetchProfile = async () => {
     try {
       const res = await apiClient.get("/members/profile");
-
-      // console.log("프로필 데이터:", res.data);
 
       setUserInfo({
         mbId: res.data.mbId,
@@ -66,50 +72,113 @@ const Profile = () => {
     const newNickname = e.target.value;
     setEditForm({ ...editForm, nickname: newNickname });
 
-    // 유효성 검사 로직
-    // 1. 최대 16글자 제한
     if (newNickname.length > 16) {
       setNicknameError("최대 16글자까지 입력 가능합니다.");
       return;
     }
 
-    // 2. 영어 알파벳이 최소 1글자 포함되어야 함
     const hasEnglish = /[a-zA-Z]/.test(newNickname);
-
     if (!hasEnglish) {
       setNicknameError("영어가 최소 1글자는 포함되어야 합니다.");
     } else {
-      setNicknameError(""); // 조건 만족 시 에러 제거
+      setNicknameError("");
     }
   };
 
-  // 정보 수정 요청
+  // --- [최종 수정] 멘토 신청 핸들러 (순수 axios 사용) ---
+  const handleMentoSubmit = async () => {
+    if (!mentoDetails || !mentoFile) return alert("신청 사유와 증빙 서류를 모두 입력해주세요.");
+
+    try {
+      setMentoLoading(true);
+      
+      const token = localStorage.getItem("accessToken");
+      
+      // 토큰 확인용 로그
+      console.log("현재 전송하려는 토큰:", token); 
+
+      if (!token) {
+        alert("로그인 정보가 없습니다. 다시 로그인해주세요.");
+        navigate("/login");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("details", mentoDetails);
+      formData.append("file", mentoFile);
+
+      // [핵심 변경] apiClient 대신 그냥 'axios' 사용 (JSON 강제 설정 회피)
+      await axios.post("/api/mento/apply", formData, {
+        headers: {
+          "Authorization": `Bearer ${token}`, // 토큰 직접 부착
+          "Content-Type": "multipart/form-data", // 파일 전송 명시
+        }
+      });
+
+      alert("멘토 신청이 완료되었습니다! 🎉\n관리자 승인을 기다려주세요.");
+      
+      setMentoDetails("");
+      setMentoFile(null);
+      setIsMentoModalOpen(false);
+      
+    } catch (err) {
+      console.error("멘토 신청 에러:", err);
+      
+      // 에러 메시지 상세 확인
+      if (err.response) {
+         console.log("서버 에러 응답:", err.response.data);
+         console.log("에러 상태 코드:", err.response.status);
+      }
+
+      if (err.response && err.response.status === 401) {
+         alert("인증에 실패했습니다. (401)\n로그인 토큰 문제일 수 있으니, 완전히 로그아웃 후 다시 시도해주세요.");
+      } else if (err.response && err.response.status === 400) {
+         alert("잘못된 요청입니다. 파일 용량이 너무 크거나 형식이 맞지 않을 수 있습니다.");
+      } else {
+         alert("신청 중 오류가 발생했습니다.");
+      }
+    } finally {
+      setMentoLoading(false);
+    }
+  };
+
+  // 비밀번호 변경
+  const handleUpdatePassword = async () => {
+    if (pwForm.newPassword !== pwForm.confirmPassword) return alert("새 비밀번호가 서로 일치하지 않습니다.");
+    if (pwForm.newPassword.length < 8) return alert("비밀번호는 최소 8자 이상이어야 합니다.");
+
+    try {
+      await apiClient.patch("/mypage/password", {
+        oldPassword: pwForm.oldPassword,
+        newPassword: pwForm.newPassword,
+      });
+
+      alert("비밀번호가 성공적으로 변경되었습니다.\n보안을 위해 다시 로그인해주세요.");
+      setIsPwModalOpen(false);
+
+      if (logout) logout();
+      else {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("userInfo");
+        navigate("/login");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("변경 실패: 현재 비밀번호가 틀렸습니다.");
+    }
+  };
+
+  // 정보 수정 요청 (누락된 부분 복구)
   const handleUpdateInfo = async () => {
     if (!editForm.password) return alert("본인 확인을 위해 현재 비밀번호를 입력해주세요.");
-
-    // 1. 에러 상태가 남아있으면 중단
     if (nicknameError) return alert(nicknameError);
-
-    // 2. [수정] 닉네임 길이 강제 확인 (최대 16자)
-    if (editForm.nickname.length > 16) {
-      return alert("닉네임은 최대 16글자까지만 가능합니다.");
-    }
-
-    // 3. 영어 포함 여부 확인
-    if (!/[a-zA-Z]/.test(editForm.nickname)) {
-      return alert("닉네임에 영어가 최소 1글자는 포함되어야 합니다.");
-    }
-
-    // 4. 비밀번호 입력 확인
-    if (!editForm.password) {
-      return alert("본인 확인을 위해 현재 비밀번호를 입력해주세요.");
-    }
+    if (editForm.nickname.length > 16) return alert("닉네임은 최대 16글자까지만 가능합니다.");
+    if (!/[a-zA-Z]/.test(editForm.nickname)) return alert("닉네임에 영어가 최소 1글자는 포함되어야 합니다.");
 
     try {
       await apiClient.patch("/mypage/profile", {
-        password: editForm.password, // 검증용 비번
+        password: editForm.password,
         myPageData: {
-          // 수정 데이터
           name: editForm.name,
           nickname: editForm.nickname,
           phone: editForm.phone,
@@ -125,32 +194,6 @@ const Profile = () => {
     }
   };
 
-  // 비밀번호 변경
-  const handleUpdatePassword = async () => {
-    if (pwForm.newPassword !== pwForm.confirmPassword) {
-      return alert("새 비밀번호가 서로 일치하지 않습니다.");
-    }
-    if (pwForm.newPassword.length < 8) {
-      return alert("비밀번호는 최소 8자 이상이어야 합니다.");
-    }
-
-    try {
-      await apiClient.patch("/mypage/password", {
-        oldPassword: pwForm.oldPassword, // 현재 비번
-        newPassword: pwForm.newPassword, // 변경 비번
-      });
-
-      alert("비밀번호가 성공적으로 변경되었습니다.\n보안을 위해 다시 로그인해주세요.");
-      setIsPwModalOpen(false);
-
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("userInfo");
-      navigate("/login");
-    } catch (err) {
-      console.error(err);
-      alert("변경 실패: 현재 비밀번호가 틀렸습니다.");
-    }
-  };
 
   const formatDate = (d) => {
     if (!d) return "-";
@@ -183,7 +226,7 @@ const Profile = () => {
                 </h3>
               </div>
               <div className="flex items-center gap-2">
-                <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${role === "ROLE_MENTOR" ? "bg-blue-50 text-blue-600" : "bg-green-50 text-green-600"}`}>
                   {roleLabel}
                 </span>
               </div>
@@ -191,6 +234,16 @@ const Profile = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+            {/* [핵심] role이 MENTEE일 때만 '멘토 신청' 버튼 표시 -> 모달 열기 */}
+            {role === "ROLE_MENTEE" && (
+              <button
+                onClick={() => setIsMentoModalOpen(true)}
+                className="flex items-center justify-center gap-2 px-5 py-3 border border-blue-200 bg-blue-50 rounded-xl text-sm font-bold text-blue-700 hover:bg-blue-100 transition shadow-sm whitespace-nowrap"
+              >
+                <Award size={16} /> 멘토 신청
+              </button>
+            )}
+
             <button
               onClick={() => {
                 setIsEditModalOpen(true);
@@ -238,7 +291,6 @@ const Profile = () => {
                 />
               </div>
 
-              {/* 닉네임 입력 (16글자 제한) */}
               <div>
                 <label className="text-sm font-bold text-gray-600 block mb-1">
                   닉네임(영어포함 최대 16글자)
@@ -247,7 +299,7 @@ const Profile = () => {
                   className={`w-full border rounded-lg p-3 ${nicknameError ? "border-red-500 focus:ring-red-500" : "border-gray-300"}`}
                   value={editForm.nickname}
                   onChange={handleNicknameChange}
-                  maxLength={16} // HTML 속성 제한
+                  maxLength={16}
                 />
                 {nicknameError && (
                   <p className="text-red-500 text-xs font-bold mt-1 flex items-center gap-1">
@@ -280,7 +332,7 @@ const Profile = () => {
 
               <button
                 onClick={handleUpdateInfo}
-                disabled={!!nicknameError} // 에러 있으면 버튼 비활성화
+                disabled={!!nicknameError}
                 className={`w-full font-bold py-4 rounded-xl transition ${nicknameError ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-black text-white hover:bg-gray-800"}`}
               >
                 수정 완료
@@ -327,6 +379,68 @@ const Profile = () => {
                 className="w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-gray-800 transition"
               >
                 변경하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* [추가] 모달 3: 멘토 신청 (옛날 코드 스타일 통합 + 기능 수정) */}
+      {isMentoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsMentoModalOpen(false)} />
+          <div className="relative bg-white w-full max-w-[450px] rounded-[32px] shadow-2xl p-8 animate-in fade-in zoom-in duration-200">
+            {/* 모달 헤더 */}
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h2 className="text-2xl font-black text-gray-900">멘토 신청 🎓</h2>
+                <p className="text-xs text-gray-400 mt-1 font-bold">당신의 전문성을 증명해주세요.</p>
+              </div>
+              <button onClick={() => setIsMentoModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <X size={20} className="text-gray-400" />
+              </button>
+            </div>
+
+            {/* 입력 폼 */}
+            <div className="space-y-5">
+              <div>
+                <label className="text-[11px] font-black text-gray-300 uppercase mb-2 block ml-1">신청 상세 (경력 및 소개)</label>
+                <textarea 
+                  value={mentoDetails}
+                  onChange={(e) => setMentoDetails(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-[20px] p-4 text-sm focus:outline-none focus:border-[#FF6B4E] focus:bg-white transition-all resize-none h-32 placeholder:text-gray-300"
+                  placeholder="이곳에 경력을 기입해주세요."
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-black text-gray-300 uppercase mb-2 block ml-1">증빙 서류 (PDF, 이미지)</label>
+                <label className={`group block w-full border-2 border-dashed rounded-[20px] p-6 text-center cursor-pointer transition-all ${mentoFile ? 'border-green-400 bg-green-50' : 'border-gray-100 bg-gray-50 hover:border-[#FF6B4E] hover:bg-orange-50'}`}>
+                    {mentoFile ? (
+                      <div className="flex flex-col items-center text-green-600">
+                        <CheckCircle size={24} className="mb-2" />
+                        <span className="text-xs font-bold truncate max-w-[200px]">{mentoFile.name}</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center text-gray-400 group-hover:text-[#FF6B4E] transition-colors">
+                        <Upload size={24} className="mb-2" />
+                        <span className="text-xs font-bold">클릭하여 파일 업로드</span>
+                      </div>
+                    )}
+                    <input type="file" className="hidden" onChange={(e) => setMentoFile(e.target.files[0])} />
+                </label>
+              </div>
+            </div>
+
+            {/* 버튼 */}
+            <div className="mt-8 flex gap-3">
+              <button onClick={() => setIsMentoModalOpen(false)} className="flex-1 py-3.5 bg-gray-100 rounded-[18px] font-bold text-gray-500 hover:bg-gray-200 transition-all">취소</button>
+              <button 
+                onClick={handleMentoSubmit} 
+                disabled={mentoLoading || !mentoDetails || !mentoFile}
+                className="flex-1 py-3.5 bg-[#FF6B4E] text-white rounded-[18px] font-bold shadow-lg shadow-orange-100 hover:bg-[#FF5A36] disabled:opacity-50 disabled:shadow-none transition-all"
+              >
+                {mentoLoading ? "전송 중..." : "신청하기"}
               </button>
             </div>
           </div>
