@@ -463,6 +463,8 @@ export default function LectureRealtimeMentor() {
 
         janusRef.current = janus;
       });
+
+      apiClient.post(`/lectures/sessions/start/${uuid}`);
     } catch (e) {
       console.error("[MENTOR] startSession failed:", e);
       startedRef.current = false;
@@ -558,7 +560,11 @@ export default function LectureRealtimeMentor() {
 
     // 세션 완전 종료 및 이동
     apiClient.post(`/lectures/sessions/close/${uuid}`);
-    navigate("/mento/home");
+    if (window.history.length > 1) {
+    navigate(-1);
+    } else {
+      navigate("/", { replace: true });
+    }
   };
 
   // ---------------------------------

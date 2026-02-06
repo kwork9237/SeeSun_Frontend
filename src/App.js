@@ -141,12 +141,12 @@ function App() {
               </Route>
 
               {/* 멘토 및 관리자 */}
-              <Route element={<RoleGuard allow={["ROLE_MENTO", "ROLE_ADMIN"]} fallback="/"/>}>
+              <Route element={<RoleGuard allow={["ROLE_MENTOR", "ROLE_ADMIN"]} fallback="/"/>}>
                 <Route path="/mentor/lecture/:uuid" element={<LectureRealtimeMentor />} />
               </Route>
               
               {/* 실시간 강의 */}
-              <Route path='/lecture/realtime' element={<LectureRealtime/>}/>
+              {/* <Route path='/lecture/realtime' element={<LectureRealtime/>}/> */}
             </Route>
           </Route>
         </Routes>

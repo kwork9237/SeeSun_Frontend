@@ -6,6 +6,7 @@ import apiClient from "../../../api/apiClient";
 
 const Profile = () => {
   const navigate = useNavigate();
+  
   const { role } = useAuth();
   const roleLabel = role === "ROLE_MENTOR" ? "멘토" : "멘티";
 
