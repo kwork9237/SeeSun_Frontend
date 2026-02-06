@@ -14,10 +14,10 @@ const MenteeHome = () => {
       // 백엔드: 강의별 ACTIVE 세션 조회 (없으면 404 같은 걸로)
       const res = await apiClient.get(`/lectures/sessions/check/${leId}`);
 
-      const { uuid } = res.data;
+      const uuid = res.data;
 
       // 방이 있는데 시작 전이면, uuid 라우트로 보내서 대기화면 보여주는 게 UX가 좋음
-      navigate(`/mentee/session/${uuid}`);
+      navigate(`/mentee/lecture/${uuid}`);
     } catch (err) {
       // ACTIVE 세션이 없으면 입장 불가
       alert("강의 방이 준비되지 않았습니다. (멘토가 아직 방을 열지 않았습니다)");
