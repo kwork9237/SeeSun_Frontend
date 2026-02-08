@@ -1,19 +1,23 @@
 import { useState, useEffect } from "react";
 import { NavLink, useNavigate, Outlet } from "react-router-dom";
 import { Home, BookOpen, User, CreditCard, UserX, AlertTriangle, X } from "lucide-react";
-
-// 페이지들 import
 import apiClient from "../../api/apiClient";
+
+// AuthContext import
+import { useAuth } from "../../auth/AuthContext";
 
 const Mento = () => {
   const navigate = useNavigate();
+  
+  // [추가] 로그아웃 함수 가져오기
+  const { logout } = useAuth();
 
-  // 1. 상태(State) 정의: 백엔드 DTO 구조에 맞춰서 준비
+  // 1. 상태(State) 정의
   const [userInfo, setUserInfo] = useState({
-    mbId: null, // 회원 번호
-    name: "", // 실명
-    nickname: "로딩중...", // 화면에 보여줄 이름 (초기값)
-    email: "", // 아이디 (username이지만 email로 옴)
+    mbId: null, 
+    name: "", 
+    nickname: "로딩중...", 
+    email: "", 
   });
 
   const [loading, setLoading] = useState(true);
@@ -22,32 +26,30 @@ const Mento = () => {
   useEffect(() => {
     const fetchMyInfo = async () => {
       try {
-        //membercontroller 에서 값 가져오기
         const response = await apiClient.get("/members/profile");
-
         console.log("백엔드에서 받은 데이터:", response.data);
-        // 콘솔 꼭 확인해보세요! { mbId: 1, email: "...", nickname: "..." } 이렇게 와야 함
 
-        // ★ 데이터 매핑 (여기가 핵심!)
         setUserInfo({
           mbId: response.data.mbId,
           name: response.data.name,
-          nickname: response.data.nickname, // 닉네임을 화면에 띄울 예정
-          email: response.data.email, // @JsonProperty("email") 때문에 username이 아니라 email로 옴
+          nickname: response.data.nickname, 
+          email: response.data.email, 
         });
       } catch (error) {
         console.error("정보 로딩 실패:", error);
         if (error.response && error.response.status === 401) {
-          navigate("/login");
+          // 회원탈퇴후에 메인화면으로 이동하고자 변경함
+          logout();
+          navigate("/");
         }
       } finally {
         setLoading(false);
       }
     };
     fetchMyInfo();
-  }, [navigate]); // navigate 의존성 추가 (노란줄 해결)
+  }, [navigate, logout]); // ✅ 의존성 추가
 
-  // 3. 회원 탈퇴 /me 사용)
+  // 3. 회원 탈퇴
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [leavePw, setLeavePw] = useState("");
   const [confirmText, setConfirmText] = useState("");
@@ -63,22 +65,20 @@ const Mento = () => {
     if (confirmText !== "회원탈퇴") return alert("'회원탈퇴'라는 문구를 정확히 입력해주세요.");
 
     try {
-      // 회원탈퇴 로직 사용
       await apiClient.delete("/members/me", {
         data: {
-          password: leavePw, // @RequestBody LeaveRequestDTO
+          password: leavePw, 
         },
       });
 
       alert("탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다. 🙇‍♂️");
 
-      // 로그아웃 처리
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("userInfo");
+      // [수정] AuthContext logout 실행 (헤더 갱신)
+      logout();
+      
       navigate("/");
     } catch (err) {
       console.error(err);
-      // 백엔드 에러 메시지 대응 (비번 틀림 등)
       alert("탈퇴 실패: 비밀번호가 일치하지 않거나 서버 오류입니다.");
     }
   };
@@ -94,7 +94,7 @@ const Mento = () => {
               <User size={20} />
             </div>
             <div>
-              {/* ★ 받아온 닉네임 표시 */}
+              {/* 받아온 닉네임 표시 */}
               <div className="font-bold text-gray-900 text-sm">
                 {loading ? "..." : userInfo.nickname}
               </div>
@@ -103,7 +103,7 @@ const Mento = () => {
           </div>
         </div>
 
-        {/* 메뉴 리스트 (경로 수정됨) */}
+        {/* 메뉴 리스트 */}
         <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
           <MenuGroup label="대시보드">
             <SidebarItem to="home" icon={<Home size={18} />} label="홈" />
@@ -111,6 +111,7 @@ const Mento = () => {
 
           <MenuGroup label="강의">
             <SidebarItem to="classes" icon={<BookOpen size={18} />} label="내 강의실" />
+            {/* ✨ [차이점 2] 멘토에게만 있는 '강의 관리' 메뉴 */}
             <SidebarItem
               to="management"
               icon={<BookOpen size={18} />}
@@ -146,7 +147,6 @@ const Mento = () => {
       {isDeleteModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
           <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl border border-red-100 transform transition-all scale-100">
-            {/* 1. 헤더 영역 (경고 아이콘 + 문구) */}
             <div className="flex flex-col items-center mb-6 text-center">
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4 animate-bounce-short">
                 <AlertTriangle className="text-red-600" size={32} />
@@ -160,9 +160,7 @@ const Mento = () => {
               </p>
             </div>
 
-            {/* 2. 입력 폼 영역 */}
             <div className="space-y-4">
-              {/* 비밀번호 입력 */}
               <div>
                 <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">비밀번호</label>
                 <input
@@ -174,7 +172,6 @@ const Mento = () => {
                 />
               </div>
 
-              {/* 확인 문구 입력 */}
               <div>
                 <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">확인 문구</label>
                 <input
@@ -187,7 +184,6 @@ const Mento = () => {
                 />
               </div>
 
-              {/* 버튼 그룹 */}
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={closeDeleteModal}
@@ -205,7 +201,6 @@ const Mento = () => {
               </div>
             </div>
 
-            {/* 닫기(X) 버튼 */}
             <button
               onClick={closeDeleteModal}
               className="absolute top-4 right-4 text-gray-300 hover:text-gray-600"
