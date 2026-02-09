@@ -23,16 +23,17 @@ export default function MentorMainVideo({
                 "
       >
         {/* 비디오 출력 */}
-        {isCamOn ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            playsInline
-            className="w-full h-full object-contain bg-black rounded-lg"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-800 text-gray-300 text-xl font-semibold">
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          className={`w-full h-full object-contain bg-black rounded-lg ${!isCamOn ? "hidden" : "block"}`}
+        />
+
+        {/* 카메라가 꺼졌을 때만 보여줄 대체 UI */}
+        {!isCamOn && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-800 text-gray-300 text-xl font-semibold">
             {mentorName}
           </div>
         )}

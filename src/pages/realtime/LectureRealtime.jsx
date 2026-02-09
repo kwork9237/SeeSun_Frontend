@@ -67,6 +67,10 @@ const LectureRealtime = ({ lectureId }) => {
     videoEl.srcObject = stream || null;
 
     videoEl?.play?.().catch(() => {});
+
+    if (stream) {
+      videoEl.play().catch((e) => console.error("Video Play Error:", e));
+    }
   };
 
   /** 스트림 내부 track 모두 stop */
@@ -423,13 +427,23 @@ const LectureRealtime = ({ lectureId }) => {
     const t = s.getVideoTracks()[0];
     if (!t) return;
 
-    t.enabled = !t.enabled;
-    setCamOn(t.enabled);
+    const newStatus = !t.enabled;
+    t.enabled = newStatus;
+    setCamOn(newStatus); // 1. 상태 변경
 
+    // 2. 멘토인 경우 Janus 서버에도 상태 알림
     if (isMentor) {
       pubHandle.current?.send({
-        message: { request: "configure", audio: micOn, video: t.enabled },
+        message: { request: "configure", audio: micOn, video: newStatus },
       });
+    }
+
+    // 3. 만약 MentorMainVideo를 쓰고 있다면, 
+    // setCamOn(true)가 되어 video태그가 다시 나타난 직후에 attachStream을 호출해야 합니다.
+    if (newStatus) {
+      setTimeout(() => {
+        attachStream(mentorVideoRef.current, s);
+      }, 100); // DOM이 렌더링될 시간을 아주 잠깐 줍니다.
     }
   };
 
